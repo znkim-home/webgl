@@ -7,17 +7,18 @@
 </template>
 
 <script>
-const vertexShaderContext = `
-  attribute vec3 aVertexPosition;
-  uniform mat4 uMVMatrix;
-  uniform mat4 uPMatrix;
+
+const vertexShaderSource = `
+  attribute vec4 aVertexPosition;
+  uniform mat4 uModelViewMatrix;
+  uniform mat4 uProjectionMatrix;
   void main(void) {
-    gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
+    gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
   }
 `;
-const fragmentShaderContext = `
+const fragmentShaderSource = `
   void main(void) {
-    gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+    gl_FragColor = vec4(0.0, 0.0, 1.0, 1.0);
   }
 `;
 export default {
@@ -30,14 +31,14 @@ export default {
       fragmentShader: null,
       vertexShader: null,
       squareVerticesBuffer: null,
+      squareVerticesBuffer2: null,
       mvMatrxi: null,
       perspectiveMatrix: null,
+      programInfo: null
     }
   },
   mounted() {
     this.init();
-    this.drawScene();
-    this.gl.useProgram(this.shaderProgram);
   },
   methods: {
     init() {
@@ -45,6 +46,8 @@ export default {
       this.canvas = document.getElementById("glcanvas");
       this.initWebGL();
       this.initShader();
+      this.initBuffers();
+      this.drawScene();
     },
     initWebGL() {
       try {
@@ -59,40 +62,52 @@ export default {
       this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
       return this.gl;
     },
-    initShader() {
-      this.fragmentShader = this.getShader("x-shader/x-fragment");
-      this.vertexShader = this.getShader("x-shader/x-vertex");
+    setShaderProgram(vertexShader, fragmentShader) {
       this.shaderProgram = this.gl.createProgram();
-      this.gl.attachShader(this.shaderProgram, this.vertexShader);
-      this.gl.attachShader(this.shaderProgram, this.fragmentShader);
+      this.gl.attachShader(this.shaderProgram, vertexShader);
+      this.gl.attachShader(this.shaderProgram, fragmentShader);
       this.gl.linkProgram(this.shaderProgram);
       if (!this.gl.getProgramParameter(this.shaderProgram, this.gl.LINK_STATUS)) {
         alert("Unable to initialize the shader program.");
       }
-      let vertexPositionAttribute = this.gl.getAttribLocation(this.shaderProgram, "aVertexPosition");
-      this.gl.enableVertexAttribArray(vertexPositionAttribute);
+      this.programInfo = {
+        program: this.shaderProgram,
+        attribLocations: {
+          vertexPosition: this.gl.getAttribLocation(this.shaderProgram, 'aVertexPosition'),
+        },
+        uniformLocations: {
+          projectionMatrix: this.gl.getUniformLocation(this.shaderProgram, 'uProjectionMatrix'),
+          modelViewMatrix: this.gl.getUniformLocation(this.shaderProgram, 'uModelViewMatrix'),
+        },
+      };
+      this.gl.useProgram(this.shaderProgram);
+    },
+    initShader() {
+      this.fragmentShader = this.getShader("x-shader/x-fragment");
+      this.vertexShader = this.getShader("x-shader/x-vertex");
+      this.setShaderProgram(this.vertexShader, this.fragmentShader);
     },
     initBuffers() {
+      const positions = [
+        1.0,  1.0,
+        -1.0,  1.0,
+        1.0, -1.0,
+        -1.0, -1.0,
+      ];
       let gl = this.gl;
       this.squareVerticesBuffer = gl.createBuffer();
       gl.bindBuffer(gl.ARRAY_BUFFER, this.squareVerticesBuffer);
-      var vertices = [
-        1.0,  1.0,  0.0,
-        -1.0, 1.0,  0.0,
-        1.0,  -1.0, 0.0,
-        -1.0, -1.0, 0.0
-      ];
-      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
     },
     getShader(type) {
       let gl = this.gl;
       let shader;
       if (type == "x-shader/x-fragment") {
         shader = gl.createShader(gl.FRAGMENT_SHADER);
-        gl.shaderSource(shader, fragmentShaderContext);
+        gl.shaderSource(shader, fragmentShaderSource);
       } else if (type == "x-shader/x-vertex") {
         shader = gl.createShader(gl.VERTEX_SHADER);
-        gl.shaderSource(shader, vertexShaderContext);
+        gl.shaderSource(shader, vertexShaderSource);
       } else {
         return null;
       }
@@ -110,28 +125,24 @@ export default {
         gl.enable(gl.DEPTH_TEST);
         gl.depthFunc(gl.LEQUAL);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
         this.createPerspective();
       }
     },
     createPerspective() {
-      const fieldOfView = 45 * Math.PI / 180;   // in radians
+      const fieldOfView = 45 * Math.PI / 180;
       const aspect = this.gl.canvas.clientWidth / this.gl.canvas.clientHeight;
       const zNear = 0.1;
       const zFar = 100.0;
       const projectionMatrix = self.glMatrix.mat4.create();
       self.glMatrix.mat4.perspective(projectionMatrix, fieldOfView, aspect, zNear, zFar);
-
       const modelViewMatrix = self.glMatrix.mat4.create();
       self.glMatrix.mat4.translate(modelViewMatrix, modelViewMatrix, [-0.0, 0.0, -6.0]);
-
       {
         const numComponents = 2;
         const type = this.gl.FLOAT;
         const normalize = false;
         const stride = 0;
         const offset = 0;
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.buffers.position);
         this.gl.vertexAttribPointer(
             this.programInfo.attribLocations.vertexPosition,
             numComponents,
@@ -142,7 +153,6 @@ export default {
         this.gl.enableVertexAttribArray(
             this.programInfo.attribLocations.vertexPosition);
       }
-      
       this.gl.uniformMatrix4fv(
         this.programInfo.uniformLocations.projectionMatrix,
         false,
@@ -151,6 +161,7 @@ export default {
         this.programInfo.uniformLocations.modelViewMatrix,
         false,
         modelViewMatrix);
+      this.gl.drawArrays(this.gl.TRIANGLE_STRIP, 0, 4);
     }
   }
 }
