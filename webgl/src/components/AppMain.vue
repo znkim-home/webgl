@@ -10,17 +10,24 @@
 
 const vertexShaderSource = `
   attribute vec4 aVertexPosition;
+  attribute vec4 aVertexColor;
+
   uniform mat4 uModelViewMatrix;
   uniform mat4 uProjectionMatrix;
+
+  varying lowp vec4 vColor;
   void main(void) {
     gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
+    vColor = aVertexColor;
   }
 `;
 const fragmentShaderSource = `
+  varying lowp vec4 vColor;
   void main(void) {
-    gl_FragColor = vec4(0.0, 0.0, 1.0, 1.0);
+    gl_FragColor = vColor;
   }
 `;
+//gl_FragColor = vec4(0.0, 0.0, 1.0, 1.0);
 export default {
   name: 'WebGL',
   data() {
@@ -31,7 +38,7 @@ export default {
       fragmentShader: null,
       vertexShader: null,
       squareVerticesBuffer: null,
-      squareVerticesBuffer2: null,
+      squareVerticesColorBuffer: null,
       mvMatrxi: null,
       perspectiveMatrix: null,
       programInfo: null
@@ -44,10 +51,20 @@ export default {
     init() {
       this.gl = null;
       this.canvas = document.getElementById("glcanvas");
+      this.setScreenSize();
+      window.addEventListener("resize", this.setScreenSize);
       this.initWebGL();
       this.initShader();
       this.initBuffers();
       this.drawScene();
+    },
+    setScreenSize() {
+      this.canvas.width = window.innerWidth;
+      this.canvas.height = window.innerHeight;
+      if (this.gl) {
+        this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
+        this.drawScene()
+      }
     },
     initWebGL() {
       try {
@@ -59,7 +76,7 @@ export default {
         alert("Unable to initialize WebGL. Your browser may not support it.");
         this.gl = null;
       }
-      this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
+      //this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
       return this.gl;
     },
     setShaderProgram(vertexShader, fragmentShader) {
@@ -70,6 +87,10 @@ export default {
       if (!this.gl.getProgramParameter(this.shaderProgram, this.gl.LINK_STATUS)) {
         alert("Unable to initialize the shader program.");
       }
+
+      let vertexColorAttribute = this.gl.getAttribLocation(this.shaderProgram, "aVertexColor");
+      this.gl.enableVertexAttribArray(vertexColorAttribute);
+
       this.programInfo = {
         program: this.shaderProgram,
         attribLocations: {
@@ -94,10 +115,20 @@ export default {
         1.0, -1.0,
         -1.0, -1.0,
       ];
+      const colors = [
+        1.0,  1.0,  1.0,  1.0,    // 흰색
+        1.0,  0.0,  0.0,  1.0,    // 빨간색
+        0.0,  1.0,  0.0,  1.0,    // 녹색
+        0.0,  0.0,  1.0,  1.0     // 파란색
+      ];
       let gl = this.gl;
       this.squareVerticesBuffer = gl.createBuffer();
       gl.bindBuffer(gl.ARRAY_BUFFER, this.squareVerticesBuffer);
       gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+
+      this.squareVerticesColorBuffer = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.squareVerticesColorBuffer);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
     },
     getShader(type) {
       let gl = this.gl;
@@ -161,7 +192,7 @@ export default {
         this.programInfo.uniformLocations.modelViewMatrix,
         false,
         modelViewMatrix);
-      this.gl.drawArrays(this.gl.TRIANGLE_STRIP, 0, 4);
+      this.gl.drawArrays(this.gl.TRIANGLE_STRIP, 1, 4);
     }
   }
 }
