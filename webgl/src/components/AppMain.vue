@@ -1,5 +1,5 @@
 <template>
-  <div class="home">
+  <div id="home">
     <canvas id="glcanvas" width="1024" height="800">
       Your browser doesn't appear to support the HTML5 <code>&lt;canvas&gt;</code> element.
     </canvas>
@@ -46,6 +46,13 @@ export default {
   },
   mounted() {
     this.init();
+    let canvas = this.canvas;
+    function resize() {
+      canvas.width  = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
   },
   methods: {
     init() {
@@ -228,6 +235,10 @@ export default {
         gl.depthFunc(gl.LEQUAL);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
         this.createPerspective();
+
+        this.resizeCanvasToDisplaySize(gl.canvas);
+        gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+
         this.squareRotation += deltaTime;
       }
     },
@@ -240,7 +251,7 @@ export default {
       self.glMatrix.mat4.perspective(projectionMatrix, fieldOfView, aspect, zNear, zFar);
 
       const modelViewMatrix = self.glMatrix.mat4.create();
-      self.glMatrix.mat4.translate(modelViewMatrix, modelViewMatrix, [-0.0, 0.0, -7.0]);
+      self.glMatrix.mat4.translate(modelViewMatrix, modelViewMatrix, [-0.0, 0.0, -10.0]);
 
       /*self.glMatrix.mat4.rotate(modelViewMatrix,  // destination matrix
                   modelViewMatrix,  // matrix to rotate
@@ -318,10 +329,32 @@ export default {
         const type = this.gl.UNSIGNED_SHORT;
         this.gl.drawElements(this.gl.TRIANGLES, vertexCount, type, offset);
       }
+    },
+
+    resizeCanvasToDisplaySize(canvas) {
+      // Lookup the size the browser is displaying the canvas in CSS pixels.
+      const displayWidth  = canvas.clientWidth;
+      const displayHeight = canvas.clientHeight;
+      // Check if the canvas is not the same size.
+      const needResize = canvas.width  !== displayWidth ||
+                        canvas.height !== displayHeight;
+      if (needResize) {
+        // Make the canvas the same size
+        canvas.width  = displayWidth;
+        canvas.height = displayHeight;
+      }
+      return needResize;
     }
+
+
   }
 }
 </script>
 <style scoped>
-
+ #home {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow :hidden;
+ }
 </style>
