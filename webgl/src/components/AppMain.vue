@@ -40,6 +40,8 @@ export default {
       mvMatrxi: null,
       perspectiveMatrix: null,
       programInfo: null,
+      squareRotation : 0,
+      then : 0,
     }
   },
   mounted() {
@@ -52,7 +54,16 @@ export default {
       this.initWebGL();
       this.initShader();
       this.initBuffers();
-      this.drawScene();
+
+      requestAnimationFrame(this.render);
+    },
+    render(now) {
+      now *= 0.001;  // convert to seconds
+      const factor = 1;
+      const deltaTime = (now - this.then) * factor;
+      this.then = now;
+      this.drawScene(deltaTime);
+      requestAnimationFrame(this.render);
     },
     initWebGL() {
       try {
@@ -97,29 +108,97 @@ export default {
     initBuffers() {
       let gl = this.gl;
 
-      const positions = [
+      /*const positions = [
         1.0,  1.0,
         -1.0,  1.0,
         1.0, -1.0,
         -1.0, -1.0,
+      ];*/
+
+      const positions = [
+        // Front face
+        -1.0, -1.0,  1.0,
+        1.0, -1.0,  1.0,
+        1.0,  1.0,  1.0,
+        -1.0,  1.0,  1.0,
+
+        // Back face
+        -1.0, -1.0, -1.0,
+        -1.0,  1.0, -1.0,
+        1.0,  1.0, -1.0,
+        1.0, -1.0, -1.0,
+
+        // Top face
+        -1.0,  1.0, -1.0,
+        -1.0,  1.0,  1.0,
+        1.0,  1.0,  1.0,
+        1.0,  1.0, -1.0,
+
+        // Bottom face
+        -1.0, -1.0, -1.0,
+        1.0, -1.0, -1.0,
+        1.0, -1.0,  1.0,
+        -1.0, -1.0,  1.0,
+
+        // Right face
+        1.0, -1.0, -1.0,
+        1.0,  1.0, -1.0,
+        1.0,  1.0,  1.0,
+        1.0, -1.0,  1.0,
+
+        // Left face
+        -1.0, -1.0, -1.0,
+        -1.0, -1.0,  1.0,
+        -1.0,  1.0,  1.0,
+        -1.0,  1.0, -1.0,
       ];
       let squareVerticesBuffer = gl.createBuffer();
       gl.bindBuffer(gl.ARRAY_BUFFER, squareVerticesBuffer);
       gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
 
-      const colors = [
-        1.0,  1.0,  1.0,  1.0,    // 흰색
-        1.0,  0.0,  0.0,  1.0,    // 빨간색
-        0.0,  1.0,  0.0,  1.0,    // 녹색
-        0.0,  0.0,  1.0,  1.0     // 파란색
+      /*const colors = [
+        1.0,  1.0,  1.0,  1.0,
+        1.0,  0.0,  0.0,  1.0,
+        0.0,  1.0,  0.0,  1.0,
+        0.0,  0.0,  1.0,  1.0,
+      ];*/
+
+      const faceColors = [
+        [1.0,  1.0,  1.0,  1.0],    // Front face: white
+        [1.0,  0.0,  0.0,  1.0],    // Back face: red
+        [0.0,  1.0,  0.0,  1.0],    // Top face: green
+        [0.0,  0.0,  1.0,  1.0],    // Bottom face: blue
+        [1.0,  1.0,  0.0,  1.0],    // Right face: yellow
+        [1.0,  0.0,  1.0,  1.0],    // Left face: purple
       ];
+
+      var colors = [];
+
+      for (var j = 0; j < faceColors.length; ++j) {
+        const c = faceColors[j];
+        colors = colors.concat(c, c, c, c);
+      }
+
       let squareVerticesColorBuffer = gl.createBuffer();
       gl.bindBuffer(gl.ARRAY_BUFFER, squareVerticesColorBuffer);
       gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
 
+      const indices = [
+        0,  1,  2,      0,  2,  3,    // front
+        4,  5,  6,      4,  6,  7,    // back
+        8,  9,  10,     8,  10, 11,   // top
+        12, 13, 14,     12, 14, 15,   // bottom
+        16, 17, 18,     16, 18, 19,   // right
+        20, 21, 22,     20, 22, 23,   // left
+      ];
+      let indexBuffer = gl.createBuffer();
+      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+      gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
+
       this.programInfo.buffers = {
         positionBuffer : squareVerticesBuffer,
-        colorBuffer : squareVerticesColorBuffer
+        colorBuffer : squareVerticesColorBuffer,
+        indicesBuffer : indexBuffer,
       }
     },
     getShader(type) {
@@ -141,7 +220,7 @@ export default {
       }
       return shader;
     },
-    drawScene() {
+    drawScene(deltaTime) {
       let gl = this.gl;
       if (gl) {
         gl.clearColor(0.0, 0.0, 0.0, 1.0);
@@ -149,6 +228,7 @@ export default {
         gl.depthFunc(gl.LEQUAL);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
         this.createPerspective();
+        this.squareRotation += deltaTime;
       }
     },
     createPerspective() {
@@ -160,10 +240,32 @@ export default {
       self.glMatrix.mat4.perspective(projectionMatrix, fieldOfView, aspect, zNear, zFar);
 
       const modelViewMatrix = self.glMatrix.mat4.create();
-      self.glMatrix.mat4.translate(modelViewMatrix, modelViewMatrix, [-0.0, 0.0, -6.0]);
+      self.glMatrix.mat4.translate(modelViewMatrix, modelViewMatrix, [-0.0, 0.0, -7.0]);
+
+      /*self.glMatrix.mat4.rotate(modelViewMatrix,  // destination matrix
+                  modelViewMatrix,  // matrix to rotate
+                  this.squareRotation,   // amount to rotate in radians
+                  [0, 0, 1]);       // axis to rotate around*/
+
+      self.glMatrix.mat4.translate(modelViewMatrix,     // destination matrix
+                 modelViewMatrix,     // matrix to translate
+                 [-0.0, 0.0, -6.0]);  // amount to translate
+      self.glMatrix.mat4.rotate(modelViewMatrix,  // destination matrix
+                  modelViewMatrix,  // matrix to rotate
+                  this.squareRotation,     // amount to rotate in radians
+                  [0, 0, 1]);       // axis to rotate around (Z)
+      self.glMatrix.mat4.rotate(modelViewMatrix,  // destination matrix
+                  modelViewMatrix,  // matrix to rotate
+                  this.squareRotation * .7,// amount to rotate in radians
+                  [0, 1, 0]);       // axis to rotate around (Y)
+      self.glMatrix.mat4.rotate(modelViewMatrix,  // destination matrix
+                  modelViewMatrix,  // matrix to rotate
+                  this.squareRotation * .3,// amount to rotate in radians
+                  [1, 0, 0]);       // axis to rotate around (X)
+
 
       {
-        const numComponents = 2;
+        const numComponents = 3;
         const type = this.gl.FLOAT;
         const normalize = false;
         const stride = 0;
@@ -196,6 +298,9 @@ export default {
         this.gl.enableVertexAttribArray(this.programInfo.attribLocations.vertexColor);
       }
 
+      // Tell WebGL which indices to use to index the vertices
+      this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.programInfo.buffers.indicesBuffer);
+
       this.gl.uniformMatrix4fv(
         this.programInfo.uniformLocations.projectionMatrix,
         false,
@@ -207,8 +312,11 @@ export default {
         
       {
         const offset = 0;
-        const vertexCount = 4;
-        this.gl.drawArrays(this.gl.TRIANGLE_STRIP, offset, vertexCount);
+        //const vertexCount = 4;
+        //this.gl.drawArrays(this.gl.TRIANGLE_STRIP, offset, vertexCount);
+        const vertexCount = 36;
+        const type = this.gl.UNSIGNED_SHORT;
+        this.gl.drawElements(this.gl.TRIANGLES, vertexCount, type, offset);
       }
     }
   }
