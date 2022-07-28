@@ -66,12 +66,26 @@ export default class EzWebGL {
     self.glMatrix.mat4.perspective(projectionMatrix, fieldOfView, aspect, zNear, zFar);
 
     const modelViewMatrix = self.glMatrix.mat4.create();
-    self.glMatrix.mat4.translate(modelViewMatrix, modelViewMatrix, [0.0, 0.0, -15.0]);        
+    self.glMatrix.mat4.translate(modelViewMatrix, modelViewMatrix, [-2, -2, -20.0]);        
     self.glMatrix.mat4.rotate(modelViewMatrix, modelViewMatrix, this.squareRotation, [0, 0, 1]);
     self.glMatrix.mat4.rotate(modelViewMatrix, modelViewMatrix, this.squareRotation * 0.7, [0, 1, 0]);
     self.glMatrix.mat4.rotate(modelViewMatrix, modelViewMatrix, this.squareRotation * 0.3, [1, 0, 0]);
 
+    const modelViewMatrix2 = self.glMatrix.mat4.create();
+    self.glMatrix.mat4.translate(modelViewMatrix2, modelViewMatrix2, [2, -2, -20.0]);        
+    self.glMatrix.mat4.rotate(modelViewMatrix2, modelViewMatrix2, -this.squareRotation * 0.7, [0, 0, 1]);
+    self.glMatrix.mat4.rotate(modelViewMatrix2, modelViewMatrix2, -this.squareRotation * 0.3, [0, 1, 0]);
+    self.glMatrix.mat4.rotate(modelViewMatrix2, modelViewMatrix2, -this.squareRotation, [1, 0, 0]);
+
+    const modelViewMatrix3 = self.glMatrix.mat4.create();
+    self.glMatrix.mat4.translate(modelViewMatrix3, modelViewMatrix3, [0.0, 2, -20.0]);        
+    self.glMatrix.mat4.rotate(modelViewMatrix3, modelViewMatrix3, -this.squareRotation * 0.3, [0, 0, 1]);
+    self.glMatrix.mat4.rotate(modelViewMatrix3, modelViewMatrix3, -this.squareRotation, [0, 1, 0]);
+    self.glMatrix.mat4.rotate(modelViewMatrix3, modelViewMatrix3, -this.squareRotation * 0.7, [1, 0, 0]);
+
+
     let buffers = this.ezBuffer.getBuffers();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.index);
     {
       const numComponents = 3;
       const type = gl.FLOAT;
@@ -82,7 +96,6 @@ export default class EzWebGL {
       gl.vertexAttribPointer(this.ezShader.getAttribLocations().vertexPosition, numComponents, type, normalize, stride, offset);
       gl.enableVertexAttribArray(this.ezShader.getAttribLocations().vertexPosition);
     }
-
     {
       const numComponents = 4;
       const type = gl.FLOAT;
@@ -93,15 +106,18 @@ export default class EzWebGL {
       gl.vertexAttribPointer(this.ezShader.getAttribLocations().vertexColor, numComponents, type, normalize, stride, offset);
       gl.enableVertexAttribArray(this.ezShader.getAttribLocations().vertexColor);
     }
-
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.index);
-    gl.uniformMatrix4fv(this.ezShader.getUniformLocations().projectionMatrix, false, projectionMatrix);
-    gl.uniformMatrix4fv(this.ezShader.getUniformLocations().modelViewMatrix, false, modelViewMatrix);
-      
     {
+      gl.uniformMatrix4fv(this.ezShader.getUniformLocations().projectionMatrix, false, projectionMatrix);
       const offset = 0;
       const vertexCount = 36;
       const type = gl.UNSIGNED_SHORT;
+      gl.uniformMatrix4fv(this.ezShader.getUniformLocations().modelViewMatrix, false, modelViewMatrix);
+      gl.drawElements(gl.TRIANGLES, vertexCount, type, offset);
+
+      gl.uniformMatrix4fv(this.ezShader.getUniformLocations().modelViewMatrix, false, modelViewMatrix2);
+      gl.drawElements(gl.TRIANGLES, vertexCount, type, offset);
+
+      gl.uniformMatrix4fv(this.ezShader.getUniformLocations().modelViewMatrix, false, modelViewMatrix3);
       gl.drawElements(gl.TRIANGLES, vertexCount, type, offset);
     }
   }
