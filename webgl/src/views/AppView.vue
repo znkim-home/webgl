@@ -6,12 +6,12 @@
 import AppMain from '@/components/AppMain.vue';
 
 export default {
-  name: 'WebGlTestView',
+  name: 'AppMain',
   components: {
     AppMain
   },
   created () {
-    console.log("test");
+    
   }
 }
 

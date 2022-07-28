@@ -1,11 +1,17 @@
-import WebGlTestViewVue from '@/views/WebGlTestView.vue'
-import { createRouter, createWebHashHistory } from 'vue-router'
+import ZnkimView from '@/views/ZnkimView.vue'
+import AppView from '@/views/AppView.vue'
+import { createRouter, createWebHistory } from 'vue-router'
 
 const routes = [
   {
     path: '/',
-    name: 'test',
-    component: WebGlTestViewVue
+    name: 'znkim',
+    component: ZnkimView
+  },
+  {
+    path: '/old',
+    name: 'app',
+    component: AppView
   },
   /*{
     path: '/',
@@ -24,7 +30,7 @@ const routes = [
 ]
 
 const router = createRouter({
-  history: createWebHashHistory(),
+  history: createWebHistory(),
   routes
 })
 
