@@ -251,7 +251,7 @@ export default {
       self.glMatrix.mat4.perspective(projectionMatrix, fieldOfView, aspect, zNear, zFar);
 
       const modelViewMatrix = self.glMatrix.mat4.create();
-      self.glMatrix.mat4.translate(modelViewMatrix, modelViewMatrix, [-0.0, 0.0, -10.0]);
+      self.glMatrix.mat4.translate(modelViewMatrix, modelViewMatrix, [-0.0, 0.0, -6.0]);
 
       /*self.glMatrix.mat4.rotate(modelViewMatrix,  // destination matrix
                   modelViewMatrix,  // matrix to rotate
@@ -261,6 +261,7 @@ export default {
       self.glMatrix.mat4.translate(modelViewMatrix,     // destination matrix
                  modelViewMatrix,     // matrix to translate
                  [-0.0, 0.0, -6.0]);  // amount to translate
+                 
       self.glMatrix.mat4.rotate(modelViewMatrix,  // destination matrix
                   modelViewMatrix,  // matrix to rotate
                   this.squareRotation,     // amount to rotate in radians
@@ -273,8 +274,6 @@ export default {
                   modelViewMatrix,  // matrix to rotate
                   this.squareRotation * .3,// amount to rotate in radians
                   [1, 0, 0]);       // axis to rotate around (X)
-
-
       {
         const numComponents = 3;
         const type = this.gl.FLOAT;
@@ -345,8 +344,6 @@ export default {
       }
       return needResize;
     }
-
-
   }
 }
 </script>
