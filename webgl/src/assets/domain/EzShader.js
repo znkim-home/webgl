@@ -22,11 +22,15 @@ export class EzShader {
     }
     this.attribLocations = {
       vertexPosition: gl.getAttribLocation(this.shaderProgram, 'aVertexPosition'),
-      vertexColor: gl.getAttribLocation(this.shaderProgram, "aVertexColor")
+      vertexNormal: gl.getAttribLocation(this.shaderProgram, 'aVertexNormal'),
+      textureCoord: gl.getAttribLocation(this.shaderProgram, 'aTextureCoord'),
+      //vertexColor: gl.getAttribLocation(this.shaderProgram, "aVertexColor")
     };
     this.uniformLocations = {
       projectionMatrix: gl.getUniformLocation(this.shaderProgram, 'uProjectionMatrix'),
       modelViewMatrix: gl.getUniformLocation(this.shaderProgram, 'uModelViewMatrix'),
+      normalMatrix: gl.getUniformLocation(this.shaderProgram, 'uNormalMatrix'),
+      uSampler: gl.getUniformLocation(this.shaderProgram, 'uSampler'),
     };
     gl.useProgram(this.shaderProgram);
   }

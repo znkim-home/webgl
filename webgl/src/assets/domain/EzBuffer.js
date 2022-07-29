@@ -1,9 +1,14 @@
-import {indices, faceColors, positions} from './EzData.js';
+import {indices, positions, textureCoordinates, vertexNormals} from './EzData.js';
 
 export class EzBuffer {
   constructor(ezWebGL) {
     this.ezWebGL = ezWebGL;
     this.buffers = this.initBuffer();
+    this.texture = this.loadTexture('./image/cubetexture_256.png');
+  }
+
+  getTexture() {
+    return this.texture;
   }
 
   getBuffers() {
@@ -11,10 +16,12 @@ export class EzBuffer {
   }
 
   initBuffer() {
-    let colors = this.convertFaceColor(faceColors);
+    //let colors = this.convertFaceColor(faceColors);
     return {
       position : this.createBuffer(positions),
-      color : this.createBuffer(colors),
+      normal : this.createBuffer(vertexNormals),
+      //color : this.createBuffer(colors),
+      textureCoord:  this.createBuffer(textureCoordinates),
       index : this.createIndexBuffer(indices),
     }
   }
@@ -41,5 +48,41 @@ export class EzBuffer {
       colors = colors.concat(color, color, color, color)
     });
     return colors;
+  }
+
+  loadTexture(url) {
+    let gl = this.ezWebGL.getGl();
+    const texture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    const level = 0;
+    const internalFormat = gl.RGBA;
+    const width = 1;
+    const height = 1;
+    const border = 0;
+    const srcFormat = gl.RGBA;
+    const srcType = gl.UNSIGNED_BYTE;
+    const pixel = new Uint8Array([10, 10, 16, 256]);
+    gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, width, height, border, srcFormat, srcType, pixel);
+  
+    const image = new Image();
+    const that = this;
+    image.onload = function() {
+      gl.bindTexture(gl.TEXTURE_2D, texture);
+      gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, srcFormat, srcType, image);
+      if (that.isPowerOf2(image.width) && that.isPowerOf2(image.height)) {
+         gl.generateMipmap(gl.TEXTURE_2D);
+      } else {
+         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      }
+    };
+    image.src = url;
+  
+    return texture;
+  }
+
+  isPowerOf2(value) {
+    return (value & (value - 1)) == 0;
   }
 }
