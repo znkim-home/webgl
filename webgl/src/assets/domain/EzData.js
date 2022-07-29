@@ -24,11 +24,11 @@ export const vertexShaderSource = `
     //vColor = aVertexColor;
     vTextureCoord = aTextureCoord;
 
-    highp vec3 ambientLight = vec3(0.3, 0.3, 0.3);
+    highp vec3 ambientLight = vec3(0.9, 0.9, 0.9);
     highp vec3 directionalLightColor = vec3(1, 1, 1);
     highp vec3 directionalVector = normalize(vec3(0.85, 0.8, 0.75));
     highp vec4 transformedNormal = uNormalMatrix * vec4(aVertexNormal, 1.0);
-    highp float directional = max(dot(transformedNormal.xyz, directionalVector), 0.0);
+    highp float directional = max(dot(transformedNormal.xyz, directionalVector), 5.0);
     vLighting = ambientLight + (directionalLightColor * directional);
   }
 `;
@@ -58,7 +58,7 @@ export const faceColors = [
   [1.0,  0.0,  1.0,  1.0], // Left face: purple
 ];
 
-export const positions = [
+/*export const positions = [
   // Front face
   -1.0, -1.0,  1.0,
   1.0, -1.0,  1.0,
@@ -89,6 +89,39 @@ export const positions = [
   -1.0, -1.0,  1.0,
   -1.0,  1.0,  1.0,
   -1.0,  1.0, -1.0,
+];*/
+
+export const positions = [
+  // Front face
+  -0.1, -0.1,  0.1,
+  0.1, -0.1,  0.1,
+  0.1,  0.1,  0.1,
+  -0.1,  0.1,  0.1,
+  // Back face
+  -0.1, -0.1, -0.1,
+  -0.1,  0.1, -0.1,
+  0.1,  0.1, -0.1,
+  0.1, -0.1, -0.1,
+  // Top face
+  -0.1,  0.1, -0.1,
+  -0.1,  0.1,  0.1,
+  0.1,  0.1,  0.1,
+  0.1,  0.1, -0.1,
+  // Bottom face
+  -0.1, -0.1, -0.1,
+  0.1, -0.1, -0.1,
+  0.1, -0.1,  0.1,
+  -0.1, -0.1,  0.1,
+  // Right face
+  0.1, -0.1, -0.1,
+  0.1,  0.1, -0.1,
+  0.1,  0.1,  0.1,
+  0.1, -0.1,  0.1,
+  // Left face
+  -0.1, -0.1, -0.1,
+  -0.1, -0.1,  0.1,
+  -0.1,  0.1,  0.1,
+  -0.1,  0.1, -0.1,
 ];
 
 export const vertexNormals = [

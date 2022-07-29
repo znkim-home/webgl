@@ -12,9 +12,11 @@ export default class EzWebGL {
     this.then = 0;
     this.deltaTime = 0;
 
+    this.modelMatrixs = [];
     this.initWebgl(canvas);
     this.initShader();
     this.initBuffer();
+    this.randomPositions();
     requestAnimationFrame(this.render.bind(this));
 
     this.ezKey = new EzKey(this);
@@ -46,6 +48,20 @@ export default class EzWebGL {
     this.ezBuffer = new EzBuffer(this);
   }
 
+  randomPositions() {
+    this.modelMatrixs = [];
+    const count = 100000;
+    const range = 1000;
+    for (let loop = 0; loop < count; loop++) {
+      let sampleX = (Math.floor(Math.random() * range) -(range/2));
+      let sampleY = (Math.floor(Math.random() * range) -(range/2));
+      let sampleZ = (Math.floor(Math.random() * range) - range);
+      let modelMatrix = self.glMatrix.mat4.create();
+      self.glMatrix.mat4.translate(modelMatrix, modelMatrix, [sampleX, sampleY, sampleZ]);
+      this.modelMatrixs.push(modelMatrix);
+    }
+  }
+
   drawScene() {
     let gl = this.gl;
     if (gl) {
@@ -65,21 +81,13 @@ export default class EzWebGL {
     const fieldOfView = 45 * Math.PI / 180;
     const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
     const zNear = 0.1;
-    const zFar = 100.0;
+    const zFar = 100000.0;
 
     const projectionMatrix = self.glMatrix.mat4.create();
     self.glMatrix.mat4.perspective(projectionMatrix, fieldOfView, aspect, zNear, zFar);
     
-    const modelViewMatrix = self.glMatrix.mat4.create();
-    self.glMatrix.mat4.translate(modelViewMatrix, modelViewMatrix, [-2, -2, -20.0]);
-    //self.glMatrix.mat4.rotate(modelViewMatrix, modelViewMatrix, this.squareRotation, [0, 1, 1]); 
-    const modelViewMatrix2 = self.glMatrix.mat4.create();
-    self.glMatrix.mat4.translate(modelViewMatrix2, modelViewMatrix2, [2, -2, -20.0]);
-    const modelViewMatrix3 = self.glMatrix.mat4.create();
-    self.glMatrix.mat4.translate(modelViewMatrix3, modelViewMatrix3, [0, 2, -20.0]);
-
     const normalMatrix = self.glMatrix.mat4.create();
-    self.glMatrix.mat4.invert(normalMatrix, modelViewMatrix);
+    self.glMatrix.mat4.invert(normalMatrix, normalMatrix);
     self.glMatrix.mat4.transpose(normalMatrix, normalMatrix);
 
     cameraAngle.toggle.forEach((toggle, index) => {
@@ -91,6 +99,7 @@ export default class EzWebGL {
       self.glMatrix.mat4.rotate(projectionMatrix, projectionMatrix, radian, axis);
     });
 
+    cameraPosition[2] += 0.01;
     self.glMatrix.mat4.translate(projectionMatrix, projectionMatrix, cameraPosition);
 
     let buffers = this.ezBuffer.getBuffers();
@@ -138,14 +147,11 @@ export default class EzWebGL {
       const offset = 0;
       const vertexCount = 36;
       const type = gl.UNSIGNED_SHORT;
-      gl.uniformMatrix4fv(this.ezShader.getUniformLocations().modelViewMatrix, false, modelViewMatrix);
-      gl.drawElements(gl.TRIANGLES, vertexCount, type, offset);
 
-      gl.uniformMatrix4fv(this.ezShader.getUniformLocations().modelViewMatrix, false, modelViewMatrix2);
+      this.modelMatrixs.forEach((modelMatrix) => {
+        gl.uniformMatrix4fv(this.ezShader.getUniformLocations().modelViewMatrix, false, modelMatrix);
       gl.drawElements(gl.TRIANGLES, vertexCount, type, offset);
-
-      gl.uniformMatrix4fv(this.ezShader.getUniformLocations().modelViewMatrix, false, modelViewMatrix3);
-      gl.drawElements(gl.TRIANGLES, vertexCount, type, offset);
+      });
     }
   }
 
