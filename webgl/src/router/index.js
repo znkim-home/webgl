@@ -1,17 +1,23 @@
 import ZnkimView from '@/views/ZnkimView.vue'
 import AppView from '@/views/AppView.vue'
+import WebGraphicsLibraryView from '@/views/WebGraphicsLibraryView.vue'
 import { createRouter, createWebHistory } from 'vue-router'
 
 const routes = [
   {
     path: '/',
-    name: 'znkim',
-    component: ZnkimView
+    name: 'WebGraphicsLibraryView',
+    component: WebGraphicsLibraryView
   },
   {
     path: '/old',
     name: 'app',
     component: AppView
+  },
+  {
+    path: '/znkim',
+    name: 'znkim',
+    component: ZnkimView
   },
   /*{
     path: '/',
