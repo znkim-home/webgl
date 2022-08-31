@@ -53,7 +53,7 @@ export class EzKey {
   }
 
   moveMouseWheel(e) {
-    const factor = 0.5;
+    const factor = 0.75;
     if (e.wheelDelta > 0) {
       cameraPosition[2] += factor;
     } else if (e.wheelDelta < 0) {

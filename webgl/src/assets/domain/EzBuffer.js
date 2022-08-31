@@ -2,9 +2,21 @@ import {indices, positions, textureCoordinates, vertexNormals} from './EzData.js
 
 export class EzBuffer {
   constructor(ezWebGL) {
+    this.fixedUrl = 'https://picsum.photos/256/256';
     this.ezWebGL = ezWebGL;
     this.buffers = this.initBuffer();
-    this.texture = this.loadTexture('./image/cubetexture_256.png');
+    this.texture = this.loadTexture('https://picsum.photos/256/256');
+    this.savedImage = undefined;
+    this.hasImage = false;
+  }
+
+  reloadTexture() {
+    this.loadTexture(`${this.fixedUrl}?ver=${new Date().getTime()}`);
+  }
+
+  startInterval() {
+    //setInterval(this.reloadTexture.bind(this), 16);
+    setInterval(this.reloadTexture.bind(this), 500);
   }
 
   getTexture() {
@@ -62,23 +74,23 @@ export class EzBuffer {
     const srcFormat = gl.RGBA;
     const srcType = gl.UNSIGNED_BYTE;
     const pixel = new Uint8Array([10, 10, 16, 256]);
-    gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, width, height, border, srcFormat, srcType, pixel);
-  
-    const image = new Image();
+    
+    let image = new Image();
     const that = this;
+    gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, width, height, border, srcFormat, srcType, pixel);
+    image.crossOrigin = "";
     image.onload = function() {
-      gl.bindTexture(gl.TEXTURE_2D, texture);
       gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, srcFormat, srcType, image);
       if (that.isPowerOf2(image.width) && that.isPowerOf2(image.height)) {
-         gl.generateMipmap(gl.TEXTURE_2D);
+          gl.generateMipmap(gl.TEXTURE_2D);
       } else {
-         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
       }
+      that.hasImage = true;
     };
     image.src = url;
-  
     return texture;
   }
 

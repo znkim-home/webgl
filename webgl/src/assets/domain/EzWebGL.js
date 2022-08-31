@@ -17,8 +17,8 @@ export default class EzWebGL {
     this.initShader();
     this.initBuffer();
     this.randomPositions();
+    this.ezBuffer.startInterval();
     requestAnimationFrame(this.render.bind(this));
-
     this.ezKey = new EzKey(this);
   }
   
@@ -50,12 +50,12 @@ export default class EzWebGL {
 
   randomPositions() {
     this.modelMatrixs = [];
-    const count = 100000;
-    const range = 1000;
+    const count = 60000;
+    const range = 600;
     for (let loop = 0; loop < count; loop++) {
-      let sampleX = (Math.floor(Math.random() * range) -(range/2));
-      let sampleY = (Math.floor(Math.random() * range) -(range/2));
-      let sampleZ = (Math.floor(Math.random() * range) - range);
+      let sampleX = (Math.floor(Math.random() * range) - (range/2));
+      let sampleY = (Math.floor(Math.random() * range) - (range/2));
+      let sampleZ = (Math.floor(Math.random() * range) - (range/2));
       let modelMatrix = self.glMatrix.mat4.create();
       self.glMatrix.mat4.translate(modelMatrix, modelMatrix, [sampleX, sampleY, sampleZ]);
       this.modelMatrixs.push(modelMatrix);
@@ -81,7 +81,7 @@ export default class EzWebGL {
     const fieldOfView = 45 * Math.PI / 180;
     const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
     const zNear = 0.1;
-    const zFar = 100000.0;
+    const zFar = 10000.0;
 
     const projectionMatrix = self.glMatrix.mat4.create();
     self.glMatrix.mat4.perspective(projectionMatrix, fieldOfView, aspect, zNear, zFar);
@@ -99,7 +99,7 @@ export default class EzWebGL {
       self.glMatrix.mat4.rotate(projectionMatrix, projectionMatrix, radian, axis);
     });
 
-    cameraPosition[2] += 0.01;
+    cameraPosition[2] += 0.005;
     self.glMatrix.mat4.translate(projectionMatrix, projectionMatrix, cameraPosition);
 
     let buffers = this.ezBuffer.getBuffers();
@@ -171,6 +171,7 @@ export default class EzWebGL {
     this.deltaTime = (now - this.then);
     this.then = now;
     this.drawScene(this.deltaTime);
+    //console.log(Math.round(this.deltaTime * 1000));
     requestAnimationFrame(this.render.bind(this));
   }
 }
