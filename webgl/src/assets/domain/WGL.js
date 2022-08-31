@@ -111,7 +111,8 @@ export default class WGL {
       const type = gl.UNSIGNED_SHORT;
 
       const random = () => Math.floor(Math.random() * 10 % 2);
-      model.setRotation((random() ? 1 : -1) * 0.1, [random(), random() ,random()]);
+      const velocity = Math.floor(Math.random() * 10) / 100;
+      model.setRotation((random() ? 1 : -1) * velocity, [random(), random() ,random()]);
 
       gl.uniformMatrix4fv(shaderInfo.uniformLocations.modelViewMatrix, false, model.modelMatrix);
       gl.drawElements(gl.TRIANGLES, vertexCount, type, offset);

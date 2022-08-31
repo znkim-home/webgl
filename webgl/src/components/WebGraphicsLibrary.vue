@@ -1,7 +1,7 @@
 <template>
   <div id="controller">
     <label>개수</label>
-    <input type="range" name="count" min="1" max="10000" v-model="count" @input="setModels()"/>
+    <input type="range" name="count" min="1" max="25000" v-model="count" @input="setModels()"/>
     <input type="text" name="count" v-model="count" readonly />
   </div>
   <div id="home">
@@ -21,7 +21,7 @@ export default {
     return {
       canvas : null,
       webGraphicsLibrary : null,
-      count : 1000
+      count : 500
     }
   },
   mounted() {
