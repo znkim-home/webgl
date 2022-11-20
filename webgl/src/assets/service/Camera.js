@@ -40,14 +40,15 @@ export default class Camera {
     mat4.identity(pitchMatrix);
     mat4.rotate(pitchMatrix, pitchMatrix, this.toRadian(this.pitch), this.right);
 
-    // let rollMatrix = mat4.create();
-    // mat4.identity(rollMatrix);
-    // mat4.rotate(rollMatrix, rollMatrix, this.toRadian(this.roll), this.dir);
+    let rollMatrix = mat4.create();
+    mat4.identity(rollMatrix);
+    mat4.rotate(rollMatrix, rollMatrix, this.toRadian(this.roll), this.dir);
 
     mat4.multiply(resultMatrix, pitchMatrix, resultMatrix);
     mat4.multiply(resultMatrix, headingMatrix, resultMatrix);
-    this.tm = undefined;
-    let tm = this.getTrasformMatrix();
+    mat4.multiply(resultMatrix, rollMatrix, resultMatrix);
+
+    let tm = this.getTrasformMatrix(true);
     mat4.multiply(tm, tm, resultMatrix);
   }
 
@@ -61,19 +62,52 @@ export default class Camera {
     mat4.rotate(this.tm, tm, this.toRadian(angle), axis);
     return this.tm;
   }*/
+  moveForward(factor) {
+    const mat4 = self.glMatrix.mat4;
+    let moveMatrix = mat4.create();
+    mat4.identity(moveMatrix);
+    mat4.translate(moveMatrix, moveMatrix, [0, 0, factor]);
+    mat4.multiply(this.tm, this.tm, moveMatrix);
+    console.log(mat4);
+    this.pos[0] = this.tm[12];
+    this.pos[1] = this.tm[13];
+    this.pos[2] = this.tm[14];
+  }
 
+  moveRight(factor) {
+    const mat4 = self.glMatrix.mat4;
+    let moveMatrix = mat4.create();
+    mat4.identity(moveMatrix);
+    mat4.translate(moveMatrix, moveMatrix, [factor, 0, 0]);
+    mat4.multiply(this.tm, this.tm, moveMatrix);
+    this.pos[0] = this.tm[12];
+    this.pos[1] = this.tm[13];
+    this.pos[2] = this.tm[14];
+  }
+
+  moveUp(factor) {
+    const mat4 = self.glMatrix.mat4;
+    let moveMatrix = mat4.create();
+    mat4.identity(moveMatrix);
+    mat4.translate(moveMatrix, moveMatrix, [0, factor, 0]);
+    mat4.multiply(this.tm, this.tm, moveMatrix);
+    this.pos[0] = this.tm[12];
+    this.pos[1] = this.tm[13];
+    this.pos[2] = this.tm[14];
+  }
+  
   translate(x, y, z) {
     this.pos[0] += x;
     this.pos[1] += y;
     this.pos[2] += z;
-    this.tm = undefined;
+    this.getTrasformMatrix(true);
   }
 
   setPosition(x, y, z) {
     this.pos[0] = x;
     this.pos[1] = y;
     this.pos[2] = z;
-    this.tm = undefined;
+    this.getTrasformMatrix(true);
   }
 
   getModelViewMatrix() {
@@ -83,18 +117,22 @@ export default class Camera {
     return mat4.invert(mvm, tm);
   }
 
-  getTrasformMatrix() {
+  getTrasformMatrix(isOverride = false) {
     const mat4 = self.glMatrix.mat4;
-    let tm = this.tm ? this.tm : mat4.fromValues(
-      this.right[0], this.right[1], this.right[2], 0, 
-      this.up[0], this.up[1], this.up[2], 0, 
-      -this.dir[0], -this.dir[1], -this.dir[2], 0, 
-      this.pos[0], this.pos[1], this.pos[2], 1);
-    this.tm = tm;
-    return tm;
+    if (!this.tm || isOverride) {
+      this.tm = mat4.fromValues(
+        this.right[0], this.right[1], this.right[2], 0, 
+        this.up[0], this.up[1], this.up[2], 0, 
+        -this.dir[0], -this.dir[1], -this.dir[2], 0, 
+        this.pos[0], this.pos[1], this.pos[2], 1);
+    }
+    return this.tm;
   }
 
   toRadian(degree) {
     return degree * Math.PI / 180;
+  }
+  toDegree(radian) {
+    return radian * 180 / Math.PI;
   }
 }

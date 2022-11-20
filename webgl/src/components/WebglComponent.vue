@@ -32,28 +32,33 @@ export default {
         console.log(e);
 
         const webGl = this.webGl;
+        const camera = webGl.camera;
         const factor = 0.1;
         let key = e.key;
         if (key == 'w') {
-          webGl.camera.rotate(0, 1, 0);
+          camera.moveForward(-factor);
         } else if (key == 's') { 
-          webGl.camera.rotate(0, -1, 0);
+          camera.moveForward(factor);
         } else if (key == 'a') {
-          webGl.camera.rotate(-1, 0, 0);
+          camera.moveRight(-factor);
         } else if (key == 'd') {
-          webGl.camera.rotate(1, 0, 0);
-        } else if (key == 'e') {
-          webGl.camera.rotate(0, 0, 1);
+          camera.moveRight(factor);
         } else if (key == 'q') {
-          webGl.camera.rotate(0, 0, -1);
+          camera.moveUp(factor);
+        } else if (key == 'e') {
+          camera.moveUp(-factor);
         } else if (key == 'ArrowUp') {
-          webGl.camera.translate(0, 0, factor);
+          camera.rotate(0, 1, 0);
         } else if (key == 'ArrowDown') {
-          webGl.camera.translate(0, 0, -factor);
+          camera.rotate(0, -1, 0);
         } else if (key == 'ArrowRight') {
-          webGl.camera.translate(0, factor, 0);
+          camera.rotate(-1, 0, 0);
         } else if (key == 'ArrowLeft') {
-          webGl.camera.translate(0, -factor, 0);
+          camera.rotate(1, 0, 0);
+        } else if (key == ',') {
+          camera.rotate(0, 0, -1);
+        } else if (key == '.') {
+          camera.rotate(0, 0, 1);
         }
       };
     }
