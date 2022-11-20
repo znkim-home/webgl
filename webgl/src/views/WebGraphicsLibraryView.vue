@@ -1,14 +1,14 @@
 <template>
-  <web-graphics-library></web-graphics-library>
+  <webgl-component></webgl-component>
 </template>
 
 <script>
-import WebGraphicsLibrary from '@/components/WebGraphicsLibrary.vue';
+import WebglComponent from '@/components/WebglComponent.vue';
 
 export default {
-  name: 'WebGraphicsLibraryView',
+  name: 'WebglComponentView',
   components: {
-    WebGraphicsLibrary
+    WebglComponent
   },
 }
 </script>

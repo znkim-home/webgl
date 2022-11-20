@@ -27,38 +27,45 @@ export default {
       this.initKey();
     },
     initKey() {
+      window.onkeyup = (e) => {
+        console.log(e);
+      };
+      window.onkeypress = (e) => {
+        console.log(e);
+      };
       window.onkeydown = (e) => {
         this.isPressd = true;
         console.log(e);
-
         const webGl = this.webGl;
         const camera = webGl.camera;
-        const factor = 0.1;
+
+        const MOVE_FACTOR = 0.3;
+        const ROTATE_FACTOR = 1; // degree
         let key = e.key;
         if (key == 'w') {
-          camera.moveForward(-factor);
+          camera.moveForward(-MOVE_FACTOR);
         } else if (key == 's') { 
-          camera.moveForward(factor);
+          camera.moveForward(MOVE_FACTOR);
         } else if (key == 'a') {
-          camera.moveRight(-factor);
+          camera.moveRight(-MOVE_FACTOR);
         } else if (key == 'd') {
-          camera.moveRight(factor);
+          camera.moveRight(MOVE_FACTOR);
         } else if (key == 'q') {
-          camera.moveUp(factor);
+          camera.moveUp(MOVE_FACTOR);
         } else if (key == 'e') {
-          camera.moveUp(-factor);
+          camera.moveUp(-MOVE_FACTOR);
         } else if (key == 'ArrowUp') {
-          camera.rotate(0, 1, 0);
+          camera.rotate(0, ROTATE_FACTOR, 0);
         } else if (key == 'ArrowDown') {
-          camera.rotate(0, -1, 0);
+          camera.rotate(0, -ROTATE_FACTOR, 0);
         } else if (key == 'ArrowRight') {
-          camera.rotate(-1, 0, 0);
+          camera.rotate(-ROTATE_FACTOR, 0, 0);
         } else if (key == 'ArrowLeft') {
-          camera.rotate(1, 0, 0);
+          camera.rotate(ROTATE_FACTOR, 0, 0);
         } else if (key == ',') {
-          camera.rotate(0, 0, -1);
+          camera.rotate(0, 0, -ROTATE_FACTOR);
         } else if (key == '.') {
-          camera.rotate(0, 0, 1);
+          camera.rotate(0, 0, ROTATE_FACTOR);
         }
       };
     }

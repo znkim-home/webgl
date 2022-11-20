@@ -8,10 +8,6 @@ export default class WebGL {
   shader = undefined;
   buffer = undefined;
   camera = undefined;
-  //testTransform = [0, 0, -5];
-  //testRotate = [0, 0, 0];
-  //testDirection = [0, 0, 0];
-
 
   now = undefined;
 
@@ -60,8 +56,8 @@ export default class WebGL {
     this.shader.init(data.vertexShaderSource, data.fragmentShaderSource);
     this.buffer.init(data);
     this.camera = new Camera();
-    this.camera.setPosition(0, -5, 10);
-    
+    this.camera.setPosition(15, 5, 15);
+    this.camera.rotate(45, -15, 0);
     requestAnimationFrame(this.render.bind(this));
   }
   render(now) {
@@ -78,7 +74,6 @@ export default class WebGL {
     const gl = this.gl;
     const canvas = this.canvas;
     const mat4 = self.glMatrix.mat4;
-    //const vec3 = self.glMatrix.vec3;
     const shader = this.shader;
     const buffer = this.buffer;
 
@@ -97,9 +92,6 @@ export default class WebGL {
 
     let projectionMatrix = mat4.create();
     mat4.perspective(projectionMatrix, fov, aspect, near, far);
-    
-    //this.camera.setPosition(0, -5, 10);
-    //this.camera.rotate([1, 0, 0], 1);
     let modelViewMatrix = this.camera.getModelViewMatrix();
     
     this.bindBuffer(3, buffers.positions, shaderInfo.attributeLocations.vertexPosition);
