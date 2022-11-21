@@ -26,7 +26,7 @@ export default {
       webGl.startRender(Data);
 
       let cube = new Cube({
-        positions : {
+        position : {
           x : 0,
           y : 0,
           z : 0
@@ -36,8 +36,33 @@ export default {
           height : 2
         }
       });
-
       webGl.renderableObjs.push(cube);
+      
+      let cube2 = new Cube({
+        position : {
+          x : 5,
+          y : 5,
+          z : -15
+        }, size : {
+          width : 7,
+          length : 1,
+          height : 7
+        }
+      });
+      webGl.renderableObjs.push(cube2);
+
+      let cube3 = new Cube({
+        position : {
+          x : -10,
+          y : 5,
+          z : 5
+        }, size : {
+          width : 3,
+          length : 3,
+          height : 3
+        }
+      });
+      webGl.renderableObjs.push(cube3);
 
       this.webGl = webGl;
       this.initKey();

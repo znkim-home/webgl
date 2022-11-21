@@ -21,10 +21,10 @@ export default class Buffer {
     return result;
   }
 
-  bindBuffer(glBuffer) {
+  bindBuffer(glBuffer, size = 3, attributeLocation) {
     let gl = this.gl;
     gl.bindBuffer(gl.ARRAY_BUFFER, glBuffer);
-    gl.vertexAttribPointer(glBuffer, 3, gl.FLOAT, false, 0, 0);
+    gl.vertexAttribPointer(attributeLocation, size, gl.FLOAT, false, 0, 0);
   }
 
   createBuffer(data) {
@@ -34,7 +34,7 @@ export default class Buffer {
     gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
     return buffer;
   }
-  
+
   createIndexBuffer(data) {
     let gl = this.gl;
     let buffer = gl.createBuffer();

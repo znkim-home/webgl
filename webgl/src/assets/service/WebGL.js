@@ -99,7 +99,7 @@ export default class WebGL {
     // this.bindBuffer(4, buffers.colors, shaderInfo.attributeLocations.vertexColor);//
     
     gl.uniformMatrix4fv(shaderInfo.uniformLocations.projectionMatrix, false, projectionMatrix);
-    gl.uniformMatrix4fv(shaderInfo.uniformLocations.ModelViewMatrix, false, modelViewMatrix);
+    gl.uniformMatrix4fv(shaderInfo.uniformLocations.modelViewMatrix, false, modelViewMatrix);
 
     this.renderableObjs.forEach((renderableObj) => {
       renderableObj.render(gl, shaderInfo);

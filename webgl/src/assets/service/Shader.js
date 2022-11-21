@@ -28,7 +28,8 @@ export default class Shader {
     };
     const uniformLocations = {
       projectionMatrix: gl.getUniformLocation(shaderProgram, 'uProjectionMatrix'),
-      ModelViewMatrix: gl.getUniformLocation(shaderProgram, 'uModelViewMatrix')
+      modelViewMatrix: gl.getUniformLocation(shaderProgram, 'uModelViewMatrix'),
+      objectMatrix : gl.getUniformLocation(shaderProgram, 'uObjectMatrix'),
     };
     this.shaderInfo = {
       shaderProgram,
