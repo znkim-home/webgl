@@ -5,6 +5,7 @@
 </template>
 <script>
 import WebGL from '@/assets/service/WebGL.js';
+import Cube from '@/assets/service/Cube.js';
 import {Data} from '@/assets/domain/Data.js';
 
 export default {
@@ -23,6 +24,21 @@ export default {
       let webGl = new WebGL(canvas);
       webGl.test = [0,0,-10];
       webGl.startRender(Data);
+
+      let cube = new Cube({
+        positions : {
+          x : 0,
+          y : 0,
+          z : 0
+        }, size : {
+          width : 5,
+          length : 3,
+          height : 2
+        }
+      });
+
+      webGl.renderableObjs.push(cube);
+
       this.webGl = webGl;
       this.initKey();
     },

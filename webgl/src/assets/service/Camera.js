@@ -2,12 +2,13 @@ export default class Camera {
   constructor() {
     const vec3 = self.glMatrix.vec3;
     this.pos = vec3.fromValues(0, 0, 0); //xyz
-    this.dir = vec3.fromValues(0, 0, -1);
-    this.up = vec3.fromValues(0, 1, 0);
-    this.right = vec3.fromValues(1, 0, 0);
     this.heading = 0;
     this.pitch = 0;
     this.roll = 0;
+
+    this.dir = vec3.fromValues(0, 0, -1);
+    this.up = vec3.fromValues(0, 1, 0);
+    this.right = vec3.fromValues(1, 0, 0);
     this.getTransformMatrix(true);
   }
 

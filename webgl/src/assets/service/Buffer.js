@@ -21,21 +21,25 @@ export default class Buffer {
     return result;
   }
 
-  createBuffer(data, dataType) {
+  bindBuffer(glBuffer) {
     let gl = this.gl;
-    let buffer = gl.createBuffer();
-    const DataType = dataType || Float32Array;
-    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new DataType(data), gl.STATIC_DRAW);
-    return buffer;
+    gl.bindBuffer(gl.ARRAY_BUFFER, glBuffer);
+    gl.vertexAttribPointer(glBuffer, 3, gl.FLOAT, false, 0, 0);
   }
 
-  createIndexBuffer(data, dataType) {
+  createBuffer(data) {
     let gl = this.gl;
     let buffer = gl.createBuffer();
-    const DataType = dataType || Uint16Array;
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffer); 
+    gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
+    return buffer;
+  }
+  
+  createIndexBuffer(data) {
+    let gl = this.gl;
+    let buffer = gl.createBuffer();
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffer);
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new DataType(data), gl.STATIC_DRAW);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, data, gl.STATIC_DRAW);
     return buffer;
   }
 

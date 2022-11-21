@@ -8,7 +8,7 @@ export default class WebGL {
   shader = undefined;
   buffer = undefined;
   camera = undefined;
-
+  renderableObjs = [];
   now = undefined;
 
   constructor(canvas) {
@@ -75,10 +75,10 @@ export default class WebGL {
     const canvas = this.canvas;
     const mat4 = self.glMatrix.mat4;
     const shader = this.shader;
-    const buffer = this.buffer;
+    //const buffer = this.buffer;
 
     const shaderInfo = shader.shaderInfo;
-    const buffers = buffer.buffers;
+    //const buffers = buffer.buffers;
 
     this.resizeCanvas();
     gl.viewport(0, 0, canvas.width, canvas.height);
@@ -94,16 +94,21 @@ export default class WebGL {
     mat4.perspective(projectionMatrix, fov, aspect, near, far);
     let modelViewMatrix = this.camera.getModelViewMatrix();
     
-    this.bindBuffer(3, buffers.positions, shaderInfo.attributeLocations.vertexPosition);
-    this.bindBuffer(4, buffers.colors, shaderInfo.attributeLocations.vertexColor);
+    // gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.indices); //
+    // this.bindBuffer(3, buffers.positions, shaderInfo.attributeLocations.vertexPosition);//
+    // this.bindBuffer(4, buffers.colors, shaderInfo.attributeLocations.vertexColor);//
     
     gl.uniformMatrix4fv(shaderInfo.uniformLocations.projectionMatrix, false, projectionMatrix);
     gl.uniformMatrix4fv(shaderInfo.uniformLocations.ModelViewMatrix, false, modelViewMatrix);
 
-    const offset = 0;
-    const vertexCount = 36;
-    const type = gl.UNSIGNED_SHORT;
-    gl.drawElements(gl.TRIANGLES, vertexCount, type, offset);
+    this.renderableObjs.forEach((renderableObj) => {
+      renderableObj.render(gl, shaderInfo);
+    });
+
+    // const offset = 0;
+    // const vertexCount = 36;
+    // const type = gl.UNSIGNED_SHORT;
+    // gl.drawElements(gl.TRIANGLES, vertexCount, type, offset);//
   }
 
   bindBuffer(numComponents, buffer, position) {

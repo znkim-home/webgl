@@ -8,7 +8,7 @@ const vertexShaderSource = `
   varying lowp vec4 vColor;
   void main(void) {
     gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;
-    vColor = aVertexColor;
+    vColor = vec4(0.5, 0.25, 1.0, 1.0);
   }
 `;
 
