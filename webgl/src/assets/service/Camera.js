@@ -6,7 +6,7 @@ export default class Camera {
   dir;
   up;
   right;
-  
+
   constructor(options) {
     this.init(options);
     this.getTransformMatrix(true);
@@ -25,6 +25,15 @@ export default class Camera {
       this.rot = vec3.set(this.pos, options.rotation.heading, options.rotation.pitch, options.rotation.roll);
     }
   }
+
+  getNormalMatrix() {
+    let normalMatrix4 = mat4.create();
+    let modelViewMatrixInv = this.getModelViewMatrix();
+    mat4.invert(modelViewMatrixInv, modelViewMatrixInv);
+    mat4.transpose(normalMatrix4, modelViewMatrixInv);
+    return normalMatrix4;
+  }
+
   rotate(heading, pitch, roll) {
     this.rot[0] += heading;
     this.rot[1] += pitch;

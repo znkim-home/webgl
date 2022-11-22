@@ -5,7 +5,7 @@ export default class Buffer {
   constructor(gl) {
     this.gl = gl;
   }
-
+  
   get buffers() {
     return this.buffers;
   }

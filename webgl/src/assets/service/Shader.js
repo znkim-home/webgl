@@ -13,8 +13,6 @@ export default class Shader {
   }
 
   init(vertexShaderSource, fragmentShaderSource) {
-    console.info(fragmentShaderSource);
-    console.info(vertexShaderSource);
     const gl = this.gl;
     const vertexShader = this.createShader(gl.VERTEX_SHADER, vertexShaderSource);
     const fragmentShader = this.createShader(gl.FRAGMENT_SHADER, fragmentShaderSource);
@@ -26,13 +24,14 @@ export default class Shader {
     gl.useProgram(shaderProgram);
     const attributeLocations = {
       vertexPosition: gl.getAttribLocation(shaderProgram, 'aVertexPosition'),
-      normalPosition: gl.getAttribLocation(shaderProgram, 'aNormalPosition'),
+      vertexNormal: gl.getAttribLocation(shaderProgram, 'aVertexNormal'),
       vertexColor: gl.getAttribLocation(shaderProgram, 'aVertexColor'),
     };
     const uniformLocations = {
       projectionMatrix: gl.getUniformLocation(shaderProgram, 'uProjectionMatrix'),
       modelViewMatrix: gl.getUniformLocation(shaderProgram, 'uModelViewMatrix'),
       objectMatrix : gl.getUniformLocation(shaderProgram, 'uObjectMatrix'),
+      normalMatrix : gl.getUniformLocation(shaderProgram, 'uNormalMatrix'),
     };
     this.shaderInfo = {
       shaderProgram,

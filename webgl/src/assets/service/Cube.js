@@ -1,13 +1,15 @@
 import Buffer from './Buffer.js';
+import Renderable from './abstract/Renderable';
 const {mat2, mat3, mat4, vec2, vec3, vec4} = self.glMatrix; // eslint-disable-line no-unused-vars
 
-export default class Cube {
+export default class Cube extends Renderable {
   pos;
   rot;
   size;
   buffer;
-  
+
   constructor(options) {
+    super();
     this.init(options);
   }
   
@@ -27,7 +29,7 @@ export default class Cube {
       this.rot = vec3.set(this.rot, options.rotation.pitch, options.rotation.roll, options.rotation.heading);
     }
   }
-
+  // overriding
   render(gl, shaderInfo) {
     let tm = this.getTransformMatrix();
     gl.uniformMatrix4fv(shaderInfo.uniformLocations.objectMatrix, false, tm);
@@ -41,7 +43,7 @@ export default class Cube {
 
     buffer.bindBuffer(buffer.postionsGlBuffer, 3, shaderInfo.attributeLocations.vertexPosition);
     buffer.bindBuffer(buffer.colorGlBuffer, 4, shaderInfo.attributeLocations.vertexColor);
-    buffer.bindBuffer(buffer.normalGlBuffer, 3, shaderInfo.attributeLocations.normalPosition);
+    buffer.bindBuffer(buffer.normalGlBuffer, 3, shaderInfo.attributeLocations.vertexNormal);
 
     gl.drawElements(gl.TRIANGLES, buffer.indicesLength, gl.UNSIGNED_SHORT, 0);//
   }
@@ -56,6 +58,15 @@ export default class Cube {
     tm[13] = this.pos[1];
     tm[14] = this.pos[2];
     return tm;
+  }
+
+  calcNormal(pa, pb, pc) { // cc
+    let d0 = vec3.fromValues(pb[0] - pa[0], pb[1] - pa[1], pb[2] - pa[2]);
+    let d1 = vec3.fromValues(pc[0] - pb[0], pc[1] - pb[1], pc[2] - pb[2]);
+    let normal = vec3.create();
+    vec3.cross(normal, d0, d1);
+    vec3.normalize(normal, normal);
+    return normal;
   }
 
   getBuffer(gl) {
@@ -74,7 +85,6 @@ export default class Cube {
       // let c5 = vec4.fromValues(0.0, 1.0, 1.0, alpha);
       // let c6 = vec4.fromValues(1.0, 1.0, 1.0, alpha);
       // let c7 = vec4.fromValues(0.0, 0.0, 0.0, alpha);
-
       let colorYellow = vec4.fromValues(1.0, 1.0, 0.0, alpha);
       // let colorRed = vec4.fromValues(1.0, 0.0, 0.0, alpha);
       // let colorBlue = vec4.fromValues(0.0, 0.0, 1.0, alpha);
@@ -126,7 +136,7 @@ export default class Cube {
         colorYellow[0], colorYellow[1], colorYellow[2], colorYellow[3],
       ]);
       this.buffer.colorGlBuffer = this.buffer.createBuffer(this.buffer.colorVBO); 
-
+      
       let p0 = vec3.fromValues(-w, -l, 0);
       let p1 = vec3.fromValues(w, -l, 0);
       let p2 = vec3.fromValues(w, l, 0);
@@ -136,19 +146,75 @@ export default class Cube {
       let p6 = vec3.fromValues(w, l, h);
       let p7 = vec3.fromValues(-w, l, h);
 
-      let d0 = vec3.fromValues(p1[0] - p0[0], p1[1] - p0[1], p1[2] - p0[2]);
-      let d1 = vec3.fromValues(p2[0] - p1[0], p2[1] - p1[1], p2[2] - p1[2]);
-      let n0 = vec3.fromValues(d0[0] * d1[0], d0[1] * d1[1], d0[2] * d1[2]);
-      console.log(n0);
-       
-      this.buffer.normalVBO = new Float32Array([
+      let n0 = this.calcNormal(p0, p2, p1);
+      let n1 = this.calcNormal(p0, p3, p2);
+      let n2 = this.calcNormal(p4, p5, p6);
+      let n3 = this.calcNormal(p4, p6, p7);
+      let n4 = this.calcNormal(p3, p0, p4);
+      let n5 = this.calcNormal(p3, p4, p7);
+      let n6 = this.calcNormal(p1, p2, p6);
+      let n7 = this.calcNormal(p1, p6, p5);
+      let n8 = this.calcNormal(p0, p1, p5);
+      let n9 = this.calcNormal(p0, p5, p4);
+      let n10 = this.calcNormal(p2, p3, p7);
+      let n11 = this.calcNormal(p2, p7, p6);
 
+      this.buffer.normalVBO = new Float32Array([
+        n0[0], n0[1], n0[2],
+        n0[0], n0[1], n0[2],
+        n0[0], n0[1], n0[2],
+
+        n1[0], n1[1], n1[2],
+        n1[0], n1[1], n1[2],
+        n1[0], n1[1], n1[2],
+
+        n2[0], n2[1], n2[2],
+        n2[0], n2[1], n2[2],
+        n2[0], n2[1], n2[2],
+
+        n3[0], n3[1], n3[2],
+        n3[0], n3[1], n3[2],
+        n3[0], n3[1], n3[2],
+
+        n4[0], n4[1], n4[2],
+        n4[0], n4[1], n4[2],
+        n4[0], n4[1], n4[2],
+
+        n5[0], n5[1], n5[2],
+        n5[0], n5[1], n5[2],
+        n5[0], n5[1], n5[2],
+
+        n6[0], n6[1], n6[2],
+        n6[0], n6[1], n6[2],
+        n6[0], n6[1], n6[2],
+
+        n7[0], n7[1], n7[2],
+        n7[0], n7[1], n7[2],
+        n7[0], n7[1], n7[2],
+
+        n8[0], n8[1], n8[2],
+        n8[0], n8[1], n8[2],
+        n8[0], n8[1], n8[2],
+
+        n9[0], n9[1], n9[2],
+        n9[0], n9[1], n9[2],
+        n9[0], n9[1], n9[2],
+
+        n10[0], n10[1], n10[2],
+        n10[0], n10[1], n10[2],
+        n10[0], n10[1], n10[2],
+
+        n11[0], n11[1], n11[2],
+        n11[0], n11[1], n11[2],
+        n11[0], n11[1], n11[2],
       ]);
+      this.buffer.normalGlBuffer = this.buffer.createBuffer(this.buffer.normalVBO); 
 
       this.buffer.positionsVBO = new Float32Array([
         p0[0], p0[1], p0[2], // bottom face
         p2[0], p2[1], p2[2],
         p1[0], p1[1], p1[2],
+
         p0[0], p0[1], p0[2],
         p3[0], p3[1], p3[2],
         p2[0], p2[1], p2[2],
@@ -156,6 +222,7 @@ export default class Cube {
         p4[0], p4[1], p4[2], // top face
         p5[0], p5[1], p5[2],
         p6[0], p6[1], p6[2],
+
         p4[0], p4[1], p4[2],
         p6[0], p6[1], p6[2],
         p7[0], p7[1], p7[2],
@@ -163,6 +230,7 @@ export default class Cube {
         p3[0], p3[1], p3[2], // left face
         p0[0], p0[1], p0[2],
         p4[0], p4[1], p4[2],
+
         p3[0], p3[1], p3[2],
         p4[0], p4[1], p4[2],
         p7[0], p7[1], p7[2],
@@ -170,6 +238,7 @@ export default class Cube {
         p1[0], p1[1], p1[2], // right face
         p2[0], p2[1], p2[2],
         p6[0], p6[1], p6[2],
+
         p1[0], p1[1], p1[2],
         p6[0], p6[1], p6[2],
         p5[0], p5[1], p5[2],
@@ -177,6 +246,7 @@ export default class Cube {
         p0[0], p0[1], p0[2], // forward Face
         p1[0], p1[1], p1[2],
         p5[0], p5[1], p5[2],
+
         p0[0], p0[1], p0[2],
         p5[0], p5[1], p5[2],
         p4[0], p4[1], p4[2],
@@ -184,6 +254,7 @@ export default class Cube {
         p2[0], p2[1], p2[2], // backward Face
         p3[0], p3[1], p3[2],
         p7[0], p7[1], p7[2],
+
         p2[0], p2[1], p2[2],
         p7[0], p7[1], p7[2],
         p6[0], p6[1], p6[2],

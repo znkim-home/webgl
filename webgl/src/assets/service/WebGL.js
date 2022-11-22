@@ -94,6 +94,8 @@ export default class WebGL {
     gl.viewport(0, 0, canvas.width, canvas.height);
     gl.clearColor(0, 0.2, 0.2, 1);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    gl.frontFace(gl.CCW);
+    gl.enable(gl.CULL_FACE);
 
     const fov = Math.radian(75); // FieldOfView
     const aspect = canvas.width / canvas.height; // Aspect ratio
@@ -103,9 +105,11 @@ export default class WebGL {
     let projectionMatrix = mat4.create();
     mat4.perspective(projectionMatrix, fov, aspect, near, far);
     let modelViewMatrix = this.camera.getModelViewMatrix();
+    let normalMatrix = this.camera.getNormalMatrix();
 
     gl.uniformMatrix4fv(shaderInfo.uniformLocations.projectionMatrix, false, projectionMatrix);
     gl.uniformMatrix4fv(shaderInfo.uniformLocations.modelViewMatrix, false, modelViewMatrix);
+    gl.uniformMatrix4fv(shaderInfo.uniformLocations.normalMatrix, false, normalMatrix);
 
     this.renderableObjs.forEach((renderableObj) => {
       renderableObj.render(gl, shaderInfo);

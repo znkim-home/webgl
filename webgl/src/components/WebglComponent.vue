@@ -24,48 +24,33 @@ export default {
       let webGl = new WebGL(canvas);
       webGl.test = [0,0,-10];
       webGl.startRender(Data);
-
-      let cube = new Cube({
-        position : {
-          x : 0,
-          y : 0,
-          z : 0
-        }, size : {
-          width : 5,
-          length : 3,
-          height : 2
-        }
-      });
-      webGl.renderableObjs.push(cube);
-      
-      let cube2 = new Cube({
-        position : {
-          x : 5,
-          y : 5,
-          z : -15
-        }, size : {
-          width : 7,
-          length : 1,
-          height : 7
-        }
-      });
-      webGl.renderableObjs.push(cube2);
-
-      let cube3 = new Cube({
-        position : {
-          x : -10,
-          y : 5,
-          z : 5
-        }, size : {
-          width : 3,
-          length : 3,
-          height : 3
-        }
-      });
-      webGl.renderableObjs.push(cube3);
-
       this.webGl = webGl;
+
+      this.createCube({
+        position : {x : 0, y : 0, z : 0},
+        size : {width : 6, length : 3, height : 10}
+      });
+
+      this.createCube({
+        position : {x : -5, y : -3, z : 3},
+        size : {width : 3, length : 9, height : 3}
+      });
+
+      this.createCube({
+        position : {x : 5, y : 5, z : -5},
+        size : {width : 3, length : 3, height : 3}
+      });
+
+      this.createCube({
+        position : {x : 0, y : 10, z : -5},
+        size : {width : 3, length : 3, height : 3}
+      });
+
       this.initKey();
+    },
+    createCube(options) {
+      let cube = new Cube(options);
+      this.webGl.renderableObjs.push(cube);
     },
     initKey() {
       window.onkeyup = (e) => {
@@ -76,12 +61,12 @@ export default {
       };
       window.onkeydown = (e) => {
         this.isPressd = true;
-        console.log(e);
+        //console.log(e);
         const webGl = this.webGl;
         const camera = webGl.camera;
 
-        const MOVE_FACTOR = 0.3;
-        const ROTATE_FACTOR = 1; // degree
+        const MOVE_FACTOR = 2;
+        const ROTATE_FACTOR = 5; // degree
         let key = e.key;
         if (key == 'w') {
           camera.moveForward(-MOVE_FACTOR);

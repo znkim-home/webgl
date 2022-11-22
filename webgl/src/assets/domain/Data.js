@@ -1,31 +1,40 @@
 const vertexShaderSource = `
   attribute vec3 aVertexPosition;
   attribute vec4 aVertexColor;
-  //attribute vec3 aNormalPosition;
+  attribute vec3 aVertexNormal;
   
   uniform mat4 uModelViewMatrix;
   uniform mat4 uProjectionMatrix;
   uniform mat4 uObjectMatrix;
-
+  uniform mat4 uNormalMatrix;
+  
   varying lowp vec4 vColor;
-  //varying lowp vec3 vLighting;
+  varying lowp vec3 vLighting;
   void main(void) {
-    vec4 transformedPos = uObjectMatrix * vec4(aVertexPosition, 1.0);
-    gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(transformedPos.xyz, 1.0);
-    //vColor = vec4(0.5, 0.25, 1.0, 1.0);
     vColor = aVertexColor;
-    //vLighting = aNormalPosition;
+
+    vec3 ambientLight = vec3(0.6, 0.6, 0.6);
+    vec3 directionalLightColor = vec3(1, 1, 1);
+    vec3 directionalVector = normalize(vec3(0.85, 0.8, 0.75));
+
+    vec4 transformedNormal = normalize(uNormalMatrix * vec4(aVertexNormal, 1.0));
+    vec4 transformedPos = uObjectMatrix * vec4(aVertexPosition, 1.0);
+
+    float directional = max(dot(transformedNormal.xyz, directionalVector), 0.0);
+    vLighting = ambientLight + (directionalLightColor * directional);
+
+    gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(transformedPos.xyz, 1.0);
   }
 `;
 
 const fragmentShaderSource = `
   varying lowp vec4 vColor;
-  //varying lowp vec3 vLighting;
+  varying lowp vec3 vLighting;
 
   void main(void) {
-    gl_FragColor = vColor;
-    //gl_FragColor = vec4(vColor.rgb * vLighting, vColor.a);
-  }`;
+    gl_FragColor = vec4(vColor.xyz * vLighting, vColor.a);
+  }
+`;
 
 const colors = [
   [1.0,  1.0,  1.0,  1.0], 
