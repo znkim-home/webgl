@@ -28,22 +28,27 @@ export default {
 
       this.createCube({
         position : {x : 0, y : 0, z : 0},
-        size : {width : 6, length : 3, height : 10}
+        size : {width : 6, length : 3, height : 10},
+        color : {r : 1.0, g : 0.0, b : 0.0, a : 1.0}
       });
 
       this.createCube({
         position : {x : -5, y : -3, z : 3},
-        size : {width : 3, length : 9, height : 3}
+        size : {width : 3, length : 9, height : 3},
+        color : {r : 0.0, g : 1.0, b : 0.0, a : 1.0}
       });
 
       this.createCube({
         position : {x : 5, y : 5, z : -5},
-        size : {width : 3, length : 3, height : 3}
+        size : {width : 3, length : 3, height : 3},
+        color : {r : 0.0, g : 0.0, b : 1.0, a : 1.0}
       });
 
       this.createCube({
         position : {x : 0, y : 10, z : -5},
-        size : {width : 3, length : 3, height : 3}
+        size : {width : 3, length : 3, height : 3},
+        color : {r : 0.0, g : 0.8, b : 0.8, a : 1.0},
+        rotation : {pitch : -45, roll : 0, heading : 0}
       });
 
       this.initKey();

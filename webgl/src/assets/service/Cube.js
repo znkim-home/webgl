@@ -18,6 +18,7 @@ export default class Cube extends Renderable {
     this.rot = vec3.fromValues(0, 0, 0); // rotation : pitch, roll, heading
     this.size = vec3.fromValues(4, 6, 8); // size : width, length, height
     this.buffer = undefined;
+    this.color = vec4.fromValues(0.5, 0.5, 0.50, 1); 
 
     if (options?.position) {
       this.pos = vec3.set(this.pos, options.position.x, options.position.y, options.position.z);
@@ -27,6 +28,9 @@ export default class Cube extends Renderable {
     }
     if (options?.rotation) {
       this.rot = vec3.set(this.rot, options.rotation.pitch, options.rotation.roll, options.rotation.heading);
+    }
+    if (options?.color) {
+      this.color = vec4.set(this.color, options?.color.r,options?.color.g, options?.color.b, options?.color.a);
     }
   }
   // overriding
@@ -76,7 +80,6 @@ export default class Cube extends Renderable {
       let l = this.size[1]/2;
       let h = this.size[2];
 
-      let alpha = 1.0;
       // let c0 = vec4.fromValues(1.0, 0.0, 0.0, alpha);
       // let c1 = vec4.fromValues(0.0, 1.0, 0.0, alpha);
       // let c2 = vec4.fromValues(0.0, 0.0, 1.0, alpha);
@@ -85,7 +88,7 @@ export default class Cube extends Renderable {
       // let c5 = vec4.fromValues(0.0, 1.0, 1.0, alpha);
       // let c6 = vec4.fromValues(1.0, 1.0, 1.0, alpha);
       // let c7 = vec4.fromValues(0.0, 0.0, 0.0, alpha);
-      let colorYellow = vec4.fromValues(1.0, 1.0, 0.0, alpha);
+      let color = this.color;
       // let colorRed = vec4.fromValues(1.0, 0.0, 0.0, alpha);
       // let colorBlue = vec4.fromValues(0.0, 0.0, 1.0, alpha);
       // let colorGreen = vec4.fromValues(0.0, 1.0, 0.0, alpha);
@@ -93,47 +96,47 @@ export default class Cube extends Renderable {
       // let colorMagenta = vec4.fromValues(1.0, 0.0, 1.0, alpha);
 
       this.buffer.colorVBO = new Float32Array([
-        colorYellow[0], colorYellow[1], colorYellow[2], colorYellow[3],
-        colorYellow[0], colorYellow[1], colorYellow[2], colorYellow[3],
-        colorYellow[0], colorYellow[1], colorYellow[2], colorYellow[3],
-        colorYellow[0], colorYellow[1], colorYellow[2], colorYellow[3],
-        colorYellow[0], colorYellow[1], colorYellow[2], colorYellow[3],
-        colorYellow[0], colorYellow[1], colorYellow[2], colorYellow[3],
+        color[0], color[1], color[2], color[3],
+        color[0], color[1], color[2], color[3],
+        color[0], color[1], color[2], color[3],
+        color[0], color[1], color[2], color[3],
+        color[0], color[1], color[2], color[3],
+        color[0], color[1], color[2], color[3],
 
-        colorYellow[0], colorYellow[1], colorYellow[2], colorYellow[3],
-        colorYellow[0], colorYellow[1], colorYellow[2], colorYellow[3],
-        colorYellow[0], colorYellow[1], colorYellow[2], colorYellow[3],
-        colorYellow[0], colorYellow[1], colorYellow[2], colorYellow[3],
-        colorYellow[0], colorYellow[1], colorYellow[2], colorYellow[3],
-        colorYellow[0], colorYellow[1], colorYellow[2], colorYellow[3],
+        color[0], color[1], color[2], color[3],
+        color[0], color[1], color[2], color[3],
+        color[0], color[1], color[2], color[3],
+        color[0], color[1], color[2], color[3],
+        color[0], color[1], color[2], color[3],
+        color[0], color[1], color[2], color[3],
 
-        colorYellow[0], colorYellow[1], colorYellow[2], colorYellow[3],
-        colorYellow[0], colorYellow[1], colorYellow[2], colorYellow[3],
-        colorYellow[0], colorYellow[1], colorYellow[2], colorYellow[3],
-        colorYellow[0], colorYellow[1], colorYellow[2], colorYellow[3],
-        colorYellow[0], colorYellow[1], colorYellow[2], colorYellow[3],
-        colorYellow[0], colorYellow[1], colorYellow[2], colorYellow[3],
+        color[0], color[1], color[2], color[3],
+        color[0], color[1], color[2], color[3],
+        color[0], color[1], color[2], color[3],
+        color[0], color[1], color[2], color[3],
+        color[0], color[1], color[2], color[3],
+        color[0], color[1], color[2], color[3],
 
-        colorYellow[0], colorYellow[1], colorYellow[2], colorYellow[3],
-        colorYellow[0], colorYellow[1], colorYellow[2], colorYellow[3],
-        colorYellow[0], colorYellow[1], colorYellow[2], colorYellow[3],
-        colorYellow[0], colorYellow[1], colorYellow[2], colorYellow[3],
-        colorYellow[0], colorYellow[1], colorYellow[2], colorYellow[3],
-        colorYellow[0], colorYellow[1], colorYellow[2], colorYellow[3],
+        color[0], color[1], color[2], color[3],
+        color[0], color[1], color[2], color[3],
+        color[0], color[1], color[2], color[3],
+        color[0], color[1], color[2], color[3],
+        color[0], color[1], color[2], color[3],
+        color[0], color[1], color[2], color[3],
 
-        colorYellow[0], colorYellow[1], colorYellow[2], colorYellow[3],
-        colorYellow[0], colorYellow[1], colorYellow[2], colorYellow[3],
-        colorYellow[0], colorYellow[1], colorYellow[2], colorYellow[3],
-        colorYellow[0], colorYellow[1], colorYellow[2], colorYellow[3],
-        colorYellow[0], colorYellow[1], colorYellow[2], colorYellow[3],
-        colorYellow[0], colorYellow[1], colorYellow[2], colorYellow[3],
+        color[0], color[1], color[2], color[3],
+        color[0], color[1], color[2], color[3],
+        color[0], color[1], color[2], color[3],
+        color[0], color[1], color[2], color[3],
+        color[0], color[1], color[2], color[3],
+        color[0], color[1], color[2], color[3],
 
-        colorYellow[0], colorYellow[1], colorYellow[2], colorYellow[3],
-        colorYellow[0], colorYellow[1], colorYellow[2], colorYellow[3],
-        colorYellow[0], colorYellow[1], colorYellow[2], colorYellow[3],
-        colorYellow[0], colorYellow[1], colorYellow[2], colorYellow[3],
-        colorYellow[0], colorYellow[1], colorYellow[2], colorYellow[3],
-        colorYellow[0], colorYellow[1], colorYellow[2], colorYellow[3],
+        color[0], color[1], color[2], color[3],
+        color[0], color[1], color[2], color[3],
+        color[0], color[1], color[2], color[3],
+        color[0], color[1], color[2], color[3],
+        color[0], color[1], color[2], color[3],
+        color[0], color[1], color[2], color[3],
       ]);
       this.buffer.colorGlBuffer = this.buffer.createBuffer(this.buffer.colorVBO); 
       
@@ -258,14 +261,6 @@ export default class Cube extends Renderable {
         p2[0], p2[1], p2[2],
         p7[0], p7[1], p7[2],
         p6[0], p6[1], p6[2],
-
-        // p1[0], p1[1], p1[2],
-        // p2[0], p2[1], p2[2],
-        // p3[0], p3[1], p3[2],
-        // p4[0], p4[1], p4[2],
-        // p5[0], p5[1], p5[2],
-        // p6[0], p6[1], p6[2],
-        // p7[0], p7[1], p7[2],
       ]);
       this.buffer.postionsGlBuffer = this.buffer.createBuffer(this.buffer.positionsVBO); 
 
@@ -274,27 +269,6 @@ export default class Cube extends Renderable {
       this.buffer.indicesVBO = indices.map((obj, index) => {
         return index;
       });
-
-      // this.buffer.indicesVBO = new Uint16Array([
-      //   // bottom Face
-      //   0, 1, 2,
-      //   0, 2, 3,
-      //   // Top Face
-      //   4, 5, 6,
-      //   4, 6 ,7,
-      //   // Left Face
-      //   3, 0 ,4,
-      //   3, 4 ,7,
-      //   // Right Face
-      //   1, 2, 6,
-      //   1, 6, 5,
-      //   // Forward Face
-      //   0, 1, 5,
-      //   0, 5 ,4,
-      //   // Backward Face
-      //   2, 3, 7,
-      //   2, 7, 6
-      // ]);
       this.buffer.indicesGlBuffer = this.buffer.createIndexBuffer(this.buffer.indicesVBO);
       this.buffer.indicesLength = this.buffer.indicesVBO.length;
     }
