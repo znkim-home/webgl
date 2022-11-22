@@ -1,38 +1,49 @@
-export default class Camera {
-  constructor() {
-    const vec3 = self.glMatrix.vec3;
-    this.pos = vec3.fromValues(0, 0, 0); //xyz
-    this.heading = 0;
-    this.pitch = 0;
-    this.roll = 0;
+const {mat2, mat3, mat4, vec2, vec3, vec4} = self.glMatrix; // eslint-disable-line no-unused-vars
 
-    this.dir = vec3.fromValues(0, 0, -1);
-    this.up = vec3.fromValues(0, 1, 0);
-    this.right = vec3.fromValues(1, 0, 0);
+export default class Camera {
+  pos;
+  rot;
+  dir;
+  up;
+  right;
+  
+  constructor(options) {
+    this.init(options);
     this.getTransformMatrix(true);
   }
 
+  init(options) {
+    this.pos = vec3.fromValues(0, 0, 0); // [x, y ,z]
+    this.rot = vec3.fromValues(0, 0, 0); // [heading, pitch, roll]
+    this.dir = vec3.fromValues(0, 0, -1); // direction of camera
+    this.up = vec3.fromValues(0, 1, 0); // up of direction
+    this.right = vec3.fromValues(1, 0, 0); // right of direction
+    if (options?.position) {
+      this.pos = vec3.set(this.pos, options.position.x, options.position.y, options.position.z);
+    }
+    if (options?.rotation) {
+      this.rot = vec3.set(this.pos, options.rotation.heading, options.rotation.pitch, options.rotation.roll);
+    }
+  }
   rotate(heading, pitch, roll) {
-    this.heading += heading;
-    this.pitch += pitch;
-    this.roll += roll;
-
-    const mat4 = self.glMatrix.mat4;
+    this.rot[0] += heading;
+    this.rot[1] += pitch;
+    this.rot[2] += roll;
 
     let resultMatrix = mat4.create();
     mat4.identity(resultMatrix);
     
     let headingMatrix = mat4.create();
     mat4.identity(headingMatrix);
-    mat4.rotate(headingMatrix, headingMatrix, this.toRadian(this.heading), this.up);
+    mat4.rotate(headingMatrix, headingMatrix, Math.radian(this.rot[0]), this.up);
 
     let pitchMatrix = mat4.create();
     mat4.identity(pitchMatrix);
-    mat4.rotate(pitchMatrix, pitchMatrix, this.toRadian(this.pitch), this.right);
+    mat4.rotate(pitchMatrix, pitchMatrix, Math.radian(this.rot[1]), this.right);
 
     let rollMatrix = mat4.create();
     mat4.identity(rollMatrix);
-    mat4.rotate(rollMatrix, rollMatrix, this.toRadian(this.roll), this.dir);
+    mat4.rotate(rollMatrix, rollMatrix, Math.radian(this.rot[2]), this.dir);
 
     mat4.multiply(resultMatrix, pitchMatrix, resultMatrix);
     mat4.multiply(resultMatrix, headingMatrix, resultMatrix);
@@ -41,7 +52,6 @@ export default class Camera {
     mat4.multiply(tm, tm, resultMatrix);
   }
   moveForward(factor) {
-    const mat4 = self.glMatrix.mat4;
     let moveMatrix = mat4.create();
     mat4.identity(moveMatrix);
     mat4.translate(moveMatrix, moveMatrix, [0, 0, factor]);
@@ -49,7 +59,6 @@ export default class Camera {
     this.setPositionSync();
   }
   moveRight(factor) {
-    const mat4 = self.glMatrix.mat4;
     let moveMatrix = mat4.create();
     mat4.identity(moveMatrix);
     mat4.translate(moveMatrix, moveMatrix, [factor, 0, 0]);
@@ -57,7 +66,6 @@ export default class Camera {
     this.setPositionSync();
   }
   moveUp(factor) {
-    const mat4 = self.glMatrix.mat4;
     let moveMatrix = mat4.create();
     mat4.identity(moveMatrix);
     mat4.translate(moveMatrix, moveMatrix, [0, factor, 0]);
@@ -82,14 +90,12 @@ export default class Camera {
     this.getTransformMatrix(true);
   }
   getModelViewMatrix() {
-    const mat4 = self.glMatrix.mat4;
     let tm = this.getTransformMatrix();
     let mvm = mat4.create();
     mat4.invert(mvm, tm);
     return mvm;
   }
   getTransformMatrix(dirty = false) {
-    const mat4 = self.glMatrix.mat4;
     if (!this.tm || dirty) {
       this.tm = mat4.fromValues(
         this.right[0], this.right[1], this.right[2], 0, 
@@ -98,11 +104,5 @@ export default class Camera {
         this.pos[0], this.pos[1], this.pos[2], 1);
     }
     return this.tm;
-  }
-  toRadian(degree) {
-    return degree * Math.PI / 180;
-  }
-  toDegree(radian) {
-    return radian * 180 / Math.PI;
   }
 }

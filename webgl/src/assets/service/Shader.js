@@ -1,3 +1,5 @@
+const {mat2, mat3, mat4, vec2, vec3, vec4} = self.glMatrix; // eslint-disable-line no-unused-vars
+
 export default class Shader {
   gl = undefined;
   shaderInfo = undefined;
@@ -24,6 +26,7 @@ export default class Shader {
     gl.useProgram(shaderProgram);
     const attributeLocations = {
       vertexPosition: gl.getAttribLocation(shaderProgram, 'aVertexPosition'),
+      normalPosition: gl.getAttribLocation(shaderProgram, 'aNormalPosition'),
       vertexColor: gl.getAttribLocation(shaderProgram, 'aVertexColor'),
     };
     const uniformLocations = {

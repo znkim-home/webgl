@@ -1,22 +1,30 @@
 import Shader from './Shader.js';
 import Buffer from './Buffer.js';
 import Camera from './Camera.js';
+const {mat2, mat3, mat4, vec2, vec3, vec4} = self.glMatrix; // eslint-disable-line no-unused-vars
+Math.degree = (radian) => radian * 180 / Math.PI;
+Math.radian = (degree) => degree * Math.PI / 180;
 
 export default class WebGL {
-  gl = undefined;
-  canvas = undefined;
-  shader = undefined;
-  buffer = undefined;
-  camera = undefined;
-  renderableObjs = [];
-  now = undefined;
+  gl;
+  shader;
+  buffer;
+  camera;
+  canvas;
+  renderableObjs;
+  now;
 
   constructor(canvas) {
+    this.gl = undefined;
+    this.shader = undefined;
+    this.buffer = undefined;
+    this.camera = undefined;
     this.canvas = canvas;
+    this.renderableObjs = [];
+    this.now = undefined;
+    this.then = undefined;
+    this.deltaTime = undefined;
     this.init();
-  }
-  get gl() {
-    return this.gl;
   }
 
   init() {
@@ -36,6 +44,7 @@ export default class WebGL {
     gl.clearColor(0, 0, 0, 1);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   }
+
   resizeCanvas() {
     const canvas = this.canvas;
     const displayWidth  = canvas.clientWidth;
@@ -47,6 +56,7 @@ export default class WebGL {
     }
     return needResize;
   }
+
   startRender(data) {
     const gl = this.gl;
     gl.enable(gl.DEPTH_TEST);
@@ -60,32 +70,32 @@ export default class WebGL {
     this.camera.rotate(45, -15, 0);
     requestAnimationFrame(this.render.bind(this));
   }
+
   render(now) {
-    this.now = now;
-    //console.log(now);
-    //now *= 0.001;
-    //this.deltaTime = (now - this.then);
-    //this.then = now;
+    this.time(now);
     this.scene();
     requestAnimationFrame(this.render.bind(this));
   }
   
+  time(now) {
+    this.now = now;
+    now *= 0.001;
+    this.deltaTime = (now - this.then);
+    this.then = now;
+  }
+
   scene() {
     const gl = this.gl;
     const canvas = this.canvas;
-    const mat4 = self.glMatrix.mat4;
     const shader = this.shader;
-    //const buffer = this.buffer;
-
     const shaderInfo = shader.shaderInfo;
-    //const buffers = buffer.buffers;
 
     this.resizeCanvas();
     gl.viewport(0, 0, canvas.width, canvas.height);
     gl.clearColor(0, 0.2, 0.2, 1);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-    const fov = this.toRadian(45); // FieldOfView
+    const fov = Math.radian(75); // FieldOfView
     const aspect = canvas.width / canvas.height; // Aspect ratio
     const near = 0.1; // Near Frustum
     const far = 100.0; // Far Frustum
@@ -93,32 +103,16 @@ export default class WebGL {
     let projectionMatrix = mat4.create();
     mat4.perspective(projectionMatrix, fov, aspect, near, far);
     let modelViewMatrix = this.camera.getModelViewMatrix();
-    
-    // gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffers.indices); //
-    // this.bindBuffer(3, buffers.positions, shaderInfo.attributeLocations.vertexPosition);//
-    // this.bindBuffer(4, buffers.colors, shaderInfo.attributeLocations.vertexColor);//
-    
+
     gl.uniformMatrix4fv(shaderInfo.uniformLocations.projectionMatrix, false, projectionMatrix);
     gl.uniformMatrix4fv(shaderInfo.uniformLocations.modelViewMatrix, false, modelViewMatrix);
 
     this.renderableObjs.forEach((renderableObj) => {
       renderableObj.render(gl, shaderInfo);
     });
-
-    // const offset = 0;
-    // const vertexCount = 36;
-    // const type = gl.UNSIGNED_SHORT;
-    // gl.drawElements(gl.TRIANGLES, vertexCount, type, offset);//
   }
 
-  bindBuffer(numComponents, buffer, position) {
-      const gl = this.gl;
-      gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-      gl.vertexAttribPointer(position, numComponents, gl.FLOAT, false, 0, 0);
-      gl.enableVertexAttribArray(position);
-  }
-
-  toRadian(degree) {
-    return degree * Math.PI / 180;
+  get gl() {
+    return this.gl;
   }
 }

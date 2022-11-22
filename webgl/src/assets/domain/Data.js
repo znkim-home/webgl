@@ -1,28 +1,31 @@
 const vertexShaderSource = `
   attribute vec3 aVertexPosition;
   attribute vec4 aVertexColor;
+  //attribute vec3 aNormalPosition;
   
   uniform mat4 uModelViewMatrix;
   uniform mat4 uProjectionMatrix;
   uniform mat4 uObjectMatrix;
 
   varying lowp vec4 vColor;
+  //varying lowp vec3 vLighting;
   void main(void) {
     vec4 transformedPos = uObjectMatrix * vec4(aVertexPosition, 1.0);
     gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(transformedPos.xyz, 1.0);
     //vColor = vec4(0.5, 0.25, 1.0, 1.0);
     vColor = aVertexColor;
+    //vLighting = aNormalPosition;
   }
 `;
 
 const fragmentShaderSource = `
   varying lowp vec4 vColor;
+  //varying lowp vec3 vLighting;
 
   void main(void) {
     gl_FragColor = vColor;
-  }
-`;
-
+    //gl_FragColor = vec4(vColor.rgb * vLighting, vColor.a);
+  }`;
 
 const colors = [
   [1.0,  1.0,  1.0,  1.0], 
