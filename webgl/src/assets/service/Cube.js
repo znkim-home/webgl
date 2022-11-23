@@ -80,21 +80,8 @@ export default class Cube extends Renderable {
       let l = this.size[1]/2;
       let h = this.size[2];
 
-      // let c0 = vec4.fromValues(1.0, 0.0, 0.0, alpha);
-      // let c1 = vec4.fromValues(0.0, 1.0, 0.0, alpha);
-      // let c2 = vec4.fromValues(0.0, 0.0, 1.0, alpha);
-      // let c3 = vec4.fromValues(1.0, 1.0, 0.0, alpha);
-      // let c4 = vec4.fromValues(1.0, 0.0, 1.0, alpha);
-      // let c5 = vec4.fromValues(0.0, 1.0, 1.0, alpha);
-      // let c6 = vec4.fromValues(1.0, 1.0, 1.0, alpha);
-      // let c7 = vec4.fromValues(0.0, 0.0, 0.0, alpha);
       let color = this.color;
-      // let colorRed = vec4.fromValues(1.0, 0.0, 0.0, alpha);
-      // let colorBlue = vec4.fromValues(0.0, 0.0, 1.0, alpha);
-      // let colorGreen = vec4.fromValues(0.0, 1.0, 0.0, alpha);
-      // let colorCyan = vec4.fromValues(0.0, 1.0, 1.0, alpha);
-      // let colorMagenta = vec4.fromValues(1.0, 0.0, 1.0, alpha);
-
+      
       this.buffer.colorVBO = new Float32Array([
         color[0], color[1], color[2], color[3],
         color[0], color[1], color[2], color[3],

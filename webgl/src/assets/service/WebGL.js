@@ -13,6 +13,7 @@ export default class WebGL {
   canvas;
   renderableObjs;
   now;
+  fovDegree;
 
   constructor(canvas) {
     this.gl = undefined;
@@ -24,6 +25,7 @@ export default class WebGL {
     this.now = undefined;
     this.then = undefined;
     this.deltaTime = undefined;
+    this.fovDegree = 75;
     this.init();
   }
 
@@ -97,7 +99,7 @@ export default class WebGL {
     gl.frontFace(gl.CCW);
     gl.enable(gl.CULL_FACE);
 
-    const fov = Math.radian(75); // FieldOfView
+    const fov = Math.radian(this.fovDegree); // FieldOfView
     const aspect = canvas.width / canvas.height; // Aspect ratio
     const near = 0.1; // Near Frustum
     const far = 100.0; // Far Frustum
