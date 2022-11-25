@@ -102,7 +102,7 @@ export default class WebGL {
     const fov = Math.radian(this.fovDegree); // FieldOfView
     const aspect = canvas.width / canvas.height; // Aspect ratio
     const near = 0.1; // Near Frustum
-    const far = 100.0; // Far Frustum
+    const far = 500.0; // Far Frustum
 
     let projectionMatrix = mat4.create();
     mat4.perspective(projectionMatrix, fov, aspect, near, far);

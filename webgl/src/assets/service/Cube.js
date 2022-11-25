@@ -3,23 +3,14 @@ import Renderable from './abstract/Renderable';
 const {mat2, mat3, mat4, vec2, vec3, vec4} = self.glMatrix; // eslint-disable-line no-unused-vars
 
 export default class Cube extends Renderable {
-  pos;
-  rot;
   size;
-  buffer;
-
   constructor(options) {
     super();
     this.init(options);
   }
   
   init(options) {
-    this.pos = vec3.fromValues(0, 0, 0); // position : x, y z
-    this.rot = vec3.fromValues(0, 0, 0); // rotation : pitch, roll, heading
     this.size = vec3.fromValues(4, 6, 8); // size : width, length, height
-    this.buffer = undefined;
-    this.color = vec4.fromValues(0.5, 0.5, 0.50, 1); 
-
     if (options?.position) {
       this.pos = vec3.set(this.pos, options.position.x, options.position.y, options.position.z);
     }
@@ -51,28 +42,7 @@ export default class Cube extends Renderable {
 
     gl.drawElements(gl.TRIANGLES, buffer.indicesLength, gl.UNSIGNED_SHORT, 0);//
   }
-
-  getTransformMatrix() {
-    let tm = mat4.create();
-    mat4.identity(tm);
-    mat4.rotate(tm, tm, Math.radian(this.rot[0]), vec3.fromValues(1, 0, 0));
-    mat4.rotate(tm, tm, Math.radian(this.rot[1]), vec3.fromValues(0, 1, 0));
-    mat4.rotate(tm, tm, Math.radian(this.rot[2]), vec3.fromValues(0, 0, 1));
-    tm[12] = this.pos[0];
-    tm[13] = this.pos[1];
-    tm[14] = this.pos[2];
-    return tm;
-  }
-
-  calcNormal(pa, pb, pc) { // cc
-    let d0 = vec3.fromValues(pb[0] - pa[0], pb[1] - pa[1], pb[2] - pa[2]);
-    let d1 = vec3.fromValues(pc[0] - pb[0], pc[1] - pb[1], pc[2] - pb[2]);
-    let normal = vec3.create();
-    vec3.cross(normal, d0, d1);
-    vec3.normalize(normal, normal);
-    return normal;
-  }
-
+  // overriding
   getBuffer(gl) {
     if (this.buffer === undefined) {
       this.buffer = new Buffer(gl);

@@ -14,6 +14,7 @@
 <script>
 import WebGL from '@/assets/service/WebGL.js';
 import Cube from '@/assets/service/Cube.js';
+import Polygon from '@/assets/service/Polygon.js';
 import {Data} from '@/assets/domain/Data.js';
 
 export default {
@@ -22,10 +23,12 @@ export default {
     return {
       webGl : undefined,
       mouseStatus : false,
+      keyStatus : {},
+      mousePos : {},
     }
   },
   mounted() {
-    this.initConsole();
+    //this.initConsole();
     this.init();
   },
   methods: {
@@ -37,11 +40,27 @@ export default {
       webGl.startRender(Data);
       this.webGl = webGl;
 
+      let polygonPoints = [[2.0, 0.0], [4.0, 0.0], [6.0, 3.0], [4.0, 6.0], [0.0, 3.0]];
+      let polygon = new Polygon(polygonPoints, {
+        position : {x : 0, y : 0, z : 0},
+        color : {r : 1.0, g : 1.0, b : 0.0, a : 1.0},
+        height : 3.0
+      });
+
+      this.webGl.renderableObjs.push(polygon);
+
+      //base
       this.createCube({
+        position : {x : 0, y : -20, z : -50},
+        size : {width : 100, length : 0, height : 100},
+        color : {r : 0.5, g : 0.5, b : 0.5, a : 1.0}
+      });
+
+      /*this.createCube({
         position : {x : 0, y : 0, z : 0},
         size : {width : 6, length : 3, height : 10},
         color : {r : 1.0, g : 0.0, b : 0.0, a : 1.0}
-      });
+      });*/
 
       this.createCube({
         position : {x : -5, y : -3, z : 3},
@@ -49,7 +68,7 @@ export default {
         color : {r : 0.0, g : 1.0, b : 0.0, a : 1.0}
       });
 
-      this.createCube({
+      /*this.createCube({
         position : {x : 5, y : 5, z : -5},
         size : {width : 3, length : 3, height : 3},
         color : {r : 0.0, g : 0.0, b : 1.0, a : 1.0}
@@ -60,7 +79,7 @@ export default {
         size : {width : 3, length : 3, height : 3},
         color : {r : 0.0, g : 0.8, b : 0.8, a : 1.0},
         rotation : {pitch : -45, roll : 0, heading : 0}
-      });
+      });*/
       this.initKey();
       this.initMouse();
     },
@@ -94,7 +113,6 @@ export default {
     },
     initMouse() {
       let canvas = document.getElementById("glcanvas");
-
       canvas.onmousewheel = (e) => {
         if (e.deltaY != 0) {
           const webGl = this.webGl;
@@ -103,13 +121,21 @@ export default {
           let degree = webGl.fovDegree + yValue;
           if (degree > 0 && degree < 180) {
             webGl.fovDegree = degree;
-            console.log(`SETFOV : ${webGl.fovDegree}`);
+            //console.log(`SETFOV : ${webGl.fovDegree}`);
           }
         }
       }
-      canvas.onmousedown = (e) => {
-        console.info(e);
-        this.mouseStatus = true;
+      canvas.onmousedown = () => {
+        if (this.mouseStatus) {
+          this.mouseStatus = false;
+          document.exitPointerLock();
+        } else {
+          this.mouseStatus = true;
+          canvas.requestPointerLock();
+        }
+
+        //this.mouseStatus = true;
+        //canvas.requestPointerLock();
       }
       canvas.onmousemove = (e) => {
         if (this.mouseStatus) {
@@ -118,33 +144,104 @@ export default {
           const ROTATE_FACTOR = 0.1;
           let xValue = e.movementX * ROTATE_FACTOR;
           let yValue = e.movementY * ROTATE_FACTOR;
-
           if (xValue != 0) {
-            camera.rotate(xValue, 0, 0);
+            camera.rotate(-xValue, 0, 0);
           }
-          if (xValue != 0) {
-            camera.rotate(0, yValue, 0);
+          if (yValue != 0) {
+            camera.rotate(0, -yValue, 0);
           }
         }
       }
-      canvas.onmouseup = (e) => {
-        console.info(e);
-        this.mouseStatus = false;
+      canvas.onmouseup = () => {
+        //document.exitPointerLock();
+        //this.mouseStatus = false;
+        //this.mouseStatus = false;
       }
     },
     initKey() {
-      window.onkeyup = (e) => {
-        console.info(e);
-      };
-      window.onkeypress = (e) => {
-        console.info(e);
-      };
+      //let canvas = document.getElementById("glcanvas");
+      //console.log(canvas);
+
+      const moveMs = 16; // 66:15fps 33:30fps , 16:60fps
+      setInterval(() => {
+        const MOVE_FACTOR = 0.3;
+        //const ROTATE_FACTOR = 0.1;
+        const webGl = this.webGl;
+        const camera = webGl.camera;
+        
+        let keyStatus = this.keyStatus;
+        if (keyStatus.w === true) {
+          camera.moveForward(-MOVE_FACTOR);
+          keyStatus.s = false;
+        } else if (keyStatus.s === true) {
+          camera.moveForward(MOVE_FACTOR);
+          keyStatus.w = false;
+        }
+
+        if (keyStatus.a === true) {
+          camera.moveRight(-MOVE_FACTOR);
+          keyStatus.d = false;
+        } else if (keyStatus.d === true) {
+          camera.moveRight(MOVE_FACTOR);
+          keyStatus.a = false;
+        }
+        if (keyStatus.q === true) {
+          camera.moveUp(MOVE_FACTOR);
+          keyStatus.e = false;
+        } else if (keyStatus.e === true) {
+          camera.moveUp(-MOVE_FACTOR);
+          keyStatus.q = false;
+        }
+      }, moveMs);
       window.onkeydown = (e) => {
-        this.isPressd = true;
+        let keyStatus = this.keyStatus;
+        keyStatus[e.key] = true;
+
+        if (e.ctrlKey) {
+          e.preventDefault();
+          
+        }
+      };
+      window.onkeyup = (e) => {
+        //console.info("up :: " + e.key);
+        let keyStatus = this.keyStatus;
+        keyStatus[e.key] = false;
+
+        if (e.key == "Escape") {
+          this.mouseStatus = false;
+        }
+      };
+      window.onkeypress = () => {
+        /*this.isPressd = true;
+        const MOVE_FACTOR = 1;
         const webGl = this.webGl;
         const camera = webGl.camera;
 
-        const MOVE_FACTOR = 1;
+        let keyStatus = this.keyStatus;
+        if (keyStatus.w === true) {
+          camera.moveForward(-MOVE_FACTOR);
+          keyStatus.s = false;
+        } else if (keyStatus.s === true) {
+          camera.moveForward(MOVE_FACTOR);
+          keyStatus.w = false;
+        }
+
+        if (keyStatus.a === true) {
+          camera.moveRight(-MOVE_FACTOR);
+          keyStatus.d = false;
+        } else if (keyStatus.d === true) {
+          camera.moveRight(MOVE_FACTOR);
+          keyStatus.a = false;
+        }
+
+        if (keyStatus.q === true) {
+          camera.moveRight(-MOVE_FACTOR);
+          camera.moveUp(MOVE_FACTOR);
+        } else if (keyStatus.e === true) {
+          camera.moveUp(-MOVE_FACTOR);
+          keyStatus.q = false;
+        }*/
+        /*
         let key = e.key;
         if (key == 'w') {
           camera.moveForward(-MOVE_FACTOR);
@@ -164,7 +261,7 @@ export default {
         let xPos = Math.floor(camera.pos[0]*10000)/10000;
         let yPos = Math.floor(camera.pos[1]*10000)/10000;
         let zPos = Math.floor(camera.pos[2]*10000)/10000;
-        console.log(`POS : ${xPos},${yPos},${zPos}`);
+        console.log(`POS : ${xPos},${yPos},${zPos}`);*/
       };
     }
   }
@@ -174,11 +271,11 @@ export default {
   .dev-tool {
     width: 500px;
     min-height: 50px;
-    max-height: 300px;
+    max-height: 150px;
     position: absolute;
     display: block;
     z-index: 10;
-    background-color: black;
+    background-color: #0e0e0e;
     opacity: 0.5;
     border-radius: 10px;
     margin: 15px;
@@ -189,7 +286,7 @@ export default {
     padding: 5px;
     font-size: 12px;
     color: white;
-    height: 150px;
+    height: 80px;
     width: 465px;
     overflow-wrap: anywhere;
     overflow-y: auto;

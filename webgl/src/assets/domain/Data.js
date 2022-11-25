@@ -22,6 +22,7 @@ const vertexShaderSource = `
 
     float directional = max(dot(transformedNormal.xyz, directionalVector), 0.0);
     vLighting = ambientLight + (directionalLightColor * directional);
+    //vLighting = aVertexNormal;
 
     gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(transformedPos.xyz, 1.0);
   }
@@ -33,6 +34,7 @@ const fragmentShaderSource = `
 
   void main(void) {
     gl_FragColor = vec4(vColor.xyz * vLighting, vColor.a);
+    //gl_FragColor = vColor;
   }
 `;
 
