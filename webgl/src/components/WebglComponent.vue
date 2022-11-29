@@ -58,8 +58,8 @@ export default {
 
       //base
       this.createCube({
-        position : {x : 0, y : 0, z : -50},
-        size : {width : 100, length : 100, height : 0},
+        position : {x : 0, y : -150, z : -250},
+        size : {width : 500, length : 10, height : 500},
         color : {r : 0.5, g : 0.5, b : 0.5, a : 1.0}
       });
 
@@ -171,12 +171,13 @@ export default {
 
       const moveMs = 16; // 66:15fps 33:30fps , 16:60fps
       setInterval(() => {
-        const MOVE_FACTOR = 0.3;
+        let MOVE_FACTOR = 0.9;
         //const ROTATE_FACTOR = 0.1;
         const webGl = this.webGl;
         const camera = webGl.camera;
         
         let keyStatus = this.keyStatus;
+
         if (keyStatus.w === true) {
           camera.moveForward(-MOVE_FACTOR);
           keyStatus.s = false;
@@ -206,7 +207,6 @@ export default {
 
         if (e.ctrlKey) {
           e.preventDefault();
-          
         }
       };
       window.onkeyup = (e) => {
@@ -219,56 +219,7 @@ export default {
         }
       };
       window.onkeypress = () => {
-        /*this.isPressd = true;
-        const MOVE_FACTOR = 1;
-        const webGl = this.webGl;
-        const camera = webGl.camera;
 
-        let keyStatus = this.keyStatus;
-        if (keyStatus.w === true) {
-          camera.moveForward(-MOVE_FACTOR);
-          keyStatus.s = false;
-        } else if (keyStatus.s === true) {
-          camera.moveForward(MOVE_FACTOR);
-          keyStatus.w = false;
-        }
-
-        if (keyStatus.a === true) {
-          camera.moveRight(-MOVE_FACTOR);
-          keyStatus.d = false;
-        } else if (keyStatus.d === true) {
-          camera.moveRight(MOVE_FACTOR);
-          keyStatus.a = false;
-        }
-
-        if (keyStatus.q === true) {
-          camera.moveRight(-MOVE_FACTOR);
-          camera.moveUp(MOVE_FACTOR);
-        } else if (keyStatus.e === true) {
-          camera.moveUp(-MOVE_FACTOR);
-          keyStatus.q = false;
-        }*/
-        /*
-        let key = e.key;
-        if (key == 'w') {
-          camera.moveForward(-MOVE_FACTOR);
-        } else if (key == 's') { 
-          camera.moveForward(MOVE_FACTOR);
-        } else if (key == 'a') {
-          camera.moveRight(-MOVE_FACTOR);
-        } else if (key == 'd') {
-          camera.moveRight(MOVE_FACTOR);
-        } else if (key == 'q') {
-          camera.moveUp(MOVE_FACTOR);
-        } else if (key == 'e') {
-          camera.moveUp(-MOVE_FACTOR);
-        } else {
-          return;
-        }
-        let xPos = Math.floor(camera.pos[0]*10000)/10000;
-        let yPos = Math.floor(camera.pos[1]*10000)/10000;
-        let zPos = Math.floor(camera.pos[2]*10000)/10000;
-        console.log(`POS : ${xPos},${yPos},${zPos}`);*/
       };
     }
   }
