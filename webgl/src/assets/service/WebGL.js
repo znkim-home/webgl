@@ -68,8 +68,8 @@ export default class WebGL {
     this.shader.init(data.vertexShaderSource, data.fragmentShaderSource);
     this.buffer.init(data);
     this.camera = new Camera();
-    this.camera.setPosition(15, 5, 15);
-    this.camera.rotate(45, -15, 0);
+    this.camera.setPosition(0, 0, 15);
+    this.camera.rotate(0, 0, 0);
     requestAnimationFrame(this.render.bind(this));
   }
 

@@ -18,7 +18,7 @@ export default class Triangle {
   getVector(index) {
     return this.points.pos[index];
   }
-
+  
   initNormal(a, b, c) { // cc
     let prev = vec3.fromValues(b[0] - a[0], b[1] - a[1], b[2] - a[2]);
     let next = vec3.fromValues(c[0] - b[0], c[1] - b[1], c[2] - b[2]);

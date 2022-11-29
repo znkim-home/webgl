@@ -36,23 +36,30 @@ export default {
       //console.log("init");
       let canvas = document.getElementById("glcanvas");
       let webGl = new WebGL(canvas);
-      webGl.test = [0,0,-10];
+      webGl.test = [0,0,5];
       webGl.startRender(Data);
       this.webGl = webGl;
 
-      let polygonPoints = [[2.0, 0.0], [4.0, 0.0], [6.0, 3.0], [4.0, 6.0], [0.0, 3.0]];
+      let polygonPoints = [[2.0, 0.0], [4.0, 0.0], [6.0, 3.0], [4.0, 6.0], [0.0, 3.0], [2.0, 0.0]];
       let polygon = new Polygon(polygonPoints, {
         position : {x : 0, y : 0, z : 0},
         color : {r : 1.0, g : 1.0, b : 0.0, a : 1.0},
-        height : 3.0
+        height : 5.0
       });
-
       this.webGl.renderableObjs.push(polygon);
+
+      /*let polygon2 = new Polygon(polygonPoints, {
+        position : {x : 5, y : 0, z : -5},
+        color : {r : 1.0, g : 1.0, b : 0.0, a : 1.0},
+        height : 2.0
+      });*/
+
+      //this.webGl.renderableObjs.push(polygon2);
 
       //base
       this.createCube({
-        position : {x : 0, y : -20, z : -50},
-        size : {width : 100, length : 0, height : 100},
+        position : {x : 0, y : 0, z : -50},
+        size : {width : 100, length : 100, height : 0},
         color : {r : 0.5, g : 0.5, b : 0.5, a : 1.0}
       });
 
@@ -63,7 +70,7 @@ export default {
       });*/
 
       this.createCube({
-        position : {x : -5, y : -3, z : 3},
+        position : {x : -5, y : 0, z : 3},
         size : {width : 3, length : 9, height : 3},
         color : {r : 0.0, g : 1.0, b : 0.0, a : 1.0}
       });

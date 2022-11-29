@@ -106,18 +106,18 @@ export default class Cube extends Renderable {
       let p6 = vec3.fromValues(w, l, h);
       let p7 = vec3.fromValues(-w, l, h);
 
-      let n0 = this.calcNormal(p0, p2, p1);
-      let n1 = this.calcNormal(p0, p3, p2);
-      let n2 = this.calcNormal(p4, p5, p6);
-      let n3 = this.calcNormal(p4, p6, p7);
-      let n4 = this.calcNormal(p3, p0, p4);
-      let n5 = this.calcNormal(p3, p4, p7);
-      let n6 = this.calcNormal(p1, p2, p6);
-      let n7 = this.calcNormal(p1, p6, p5);
-      let n8 = this.calcNormal(p0, p1, p5);
-      let n9 = this.calcNormal(p0, p5, p4);
-      let n10 = this.calcNormal(p2, p3, p7);
-      let n11 = this.calcNormal(p2, p7, p6);
+      let n0 = this.normal(p0, p2, p1);
+      let n1 = this.normal(p0, p3, p2);
+      let n2 = this.normal(p4, p5, p6);
+      let n3 = this.normal(p4, p6, p7);
+      let n4 = this.normal(p3, p0, p4);
+      let n5 = this.normal(p3, p4, p7);
+      let n6 = this.normal(p1, p2, p6);
+      let n7 = this.normal(p1, p6, p5);
+      let n8 = this.normal(p0, p1, p5);
+      let n9 = this.normal(p0, p5, p4);
+      let n10 = this.normal(p2, p3, p7);
+      let n11 = this.normal(p2, p7, p6);
 
       this.buffer.normalVBO = new Float32Array([
         n0[0], n0[1], n0[2],
