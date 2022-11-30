@@ -40,53 +40,56 @@ export default {
       webGl.startRender(Data);
       this.webGl = webGl;
 
-      let polygonPoints = [[2.0, 0.0], [4.0, 0.0], [6.0, 3.0], [4.0, 6.0], [0.0, 3.0], [2.0, 0.0]];
-      let polygon = new Polygon(polygonPoints, {
+      //let coordinates = [[2.0, 0.0], [4.0, 0.0], [6.0, 3.0], [4.0, 6.0], [0.0, 3.0], [2.0, 0.0]];
+      //let coordinates = [[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0], [0.0, 0.0]];
+      //let coordinates = [[0.0, 0.0], [3.0, 0.0], [3.0, 3.0], [2.0, 3.0], [2.0, 2.0], [1.0, 2.0], [1.0, 3.0], [0.0, 3.0], [0.0, 0.0]];
+      //let coordinates = [[1, 2], [2, 1], [3, 0], [4, 1], [5, 1], [7, 2], [7, 4], [5, 4], [5, 2], [4, 3], [3, 3], [2, 2], [3, 4], [1, 4], [1, 2]];
+      //let coordinates = [[0, 0],[ -21.951406721184544,1.411658575409092];
+      let coordinates = [[0, 0],[ -21.951406721184544,1.411658575409092],
+      [ -18.931819965504577, -31.62057215112145],
+      [ -59.61723169677022, -15.306965240568388],
+      [ -56.59405650303388, -54.5800738594553],
+      [ -19.133239075196457, -48.53889695657563],
+      [ -23.76531379508372, -84.3892918180718],
+      [ 18.73189854446248, -80.96566535798047],
+      [ 2.61950893750002, -52.76805816630076],
+      [ 41.29093343922073, -54.58027088116796],
+      [ 35.6503068906377, -18.327550101821544],
+      [ 3.4255374908510503, -25.37620030296239],
+      [0, 0]];
+
+      this.createPolygon(coordinates, {
         position : {x : 0, y : 0, z : 0},
         color : {r : 1.0, g : 1.0, b : 0.0, a : 1.0},
-        height : 5.0
+        height : 15.0
       });
-      this.webGl.renderableObjs.push(polygon);
-
-      /*let polygon2 = new Polygon(polygonPoints, {
-        position : {x : 5, y : 0, z : -5},
-        color : {r : 1.0, g : 1.0, b : 0.0, a : 1.0},
-        height : 2.0
-      });*/
-
-      //this.webGl.renderableObjs.push(polygon2);
-
       //base
       this.createCube({
         position : {x : 0, y : -150, z : -250},
         size : {width : 500, length : 10, height : 500},
-        color : {r : 0.5, g : 0.5, b : 0.5, a : 1.0}
+        color : {r : 0.3, g : 0.3, b : 0.3, a : 1.0}
       });
-
-      /*this.createCube({
-        position : {x : 0, y : 0, z : 0},
+      this.createCube({
+        position : {x : 0, y : 0, z : -30},
         size : {width : 6, length : 3, height : 10},
         color : {r : 1.0, g : 0.0, b : 0.0, a : 1.0}
-      });*/
-
+      });
       this.createCube({
-        position : {x : -5, y : 0, z : 3},
+        position : {x : -10, y : 10, z : 3},
         size : {width : 3, length : 9, height : 3},
         color : {r : 0.0, g : 1.0, b : 0.0, a : 1.0}
       });
-
-      /*this.createCube({
+      this.createCube({
         position : {x : 5, y : 5, z : -5},
         size : {width : 3, length : 3, height : 3},
         color : {r : 0.0, g : 0.0, b : 1.0, a : 1.0}
       });
-
       this.createCube({
         position : {x : 0, y : 10, z : -5},
         size : {width : 3, length : 3, height : 3},
         color : {r : 0.0, g : 0.8, b : 0.8, a : 1.0},
         rotation : {pitch : -45, roll : 0, heading : 0}
-      });*/
+      })
       this.initKey();
       this.initMouse();
     },
@@ -97,6 +100,10 @@ export default {
     },
     createCube(options) {
       let cube = new Cube(options);
+      this.webGl.renderableObjs.push(cube);
+    },
+    createPolygon(coordinates, options) {
+      let cube = new Polygon(coordinates, options);
       this.webGl.renderableObjs.push(cube);
     },
     initConsole(consoleLimit = 50000) {

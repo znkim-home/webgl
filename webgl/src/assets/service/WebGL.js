@@ -2,8 +2,16 @@ import Shader from './Shader.js';
 import Buffer from './Buffer.js';
 import Camera from './Camera.js';
 const {mat2, mat3, mat4, vec2, vec3, vec4} = self.glMatrix; // eslint-disable-line no-unused-vars
+
 Math.degree = (radian) => radian * 180 / Math.PI;
 Math.radian = (degree) => degree * Math.PI / 180;
+Array.prototype.get = function(index) {return this[this.loopIndex(index)]};
+Array.prototype.getPrev = function(index) {return this[this.loopIndex(index - 1)]};
+Array.prototype.getNext = function(index) {return this[this.loopIndex(index + 1)]};
+Array.prototype.loopIndex = function(index) {
+  if (index < 0) return index % this.length + this.length;
+  else return index % this.length;
+};
 
 export default class WebGL {
   gl;
