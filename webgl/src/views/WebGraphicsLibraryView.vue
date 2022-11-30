@@ -3,16 +3,15 @@
 </template>
 
 <script>
-import WebglComponent from '@/components/WebglComponent.vue';
+import WebglComponent from "@/components/WebglComponent.vue";
 
 export default {
-  name: 'WebglComponentView',
+  name: "WebglComponentView",
   components: {
-    WebglComponent
+    WebglComponent,
   },
-}
+};
 </script>
 
 <style>
-
 </style>

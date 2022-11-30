@@ -85,11 +85,11 @@ export default class Polygon extends Renderable {
       throw new Error("plane length is not matched.");
     }
     let length = topPlane.length;
-    for (var i = 1; i < length; i++) {
-      let topA = topPlane[i - 1];
-      let topB = topPlane[i];
-      let bottomA = bottomPlane[i - 1];
-      let bottomB = bottomPlane[i];
+    for (var i = 0; i < length; i++) {
+      let topA = topPlane.getPrev(i);
+      let topB = topPlane.get(i);
+      let bottomA = bottomPlane.getPrev(i);
+      let bottomB = bottomPlane.get(i);
       if (isCCW) {
         triangles.push(new Triangle(topB, topA, bottomA));
         triangles.push(new Triangle(topB, bottomA, bottomB));

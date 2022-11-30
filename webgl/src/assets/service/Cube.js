@@ -40,7 +40,8 @@ export default class Cube extends Renderable {
     buffer.bindBuffer(buffer.colorGlBuffer, 4, shaderInfo.attributeLocations.vertexColor);
     buffer.bindBuffer(buffer.normalGlBuffer, 3, shaderInfo.attributeLocations.vertexNormal);
     
-    gl.drawElements(gl.TRIANGLES, buffer.indicesLength, gl.UNSIGNED_SHORT, 0);//
+    //gl.drawElements(gl.LINE_LOOP, buffer.indicesLength, gl.UNSIGNED_SHORT, 0);
+    gl.drawElements(gl.TRIANGLES, buffer.indicesLength, gl.UNSIGNED_SHORT, 0);
   }
   // overriding
   getBuffer(gl) {

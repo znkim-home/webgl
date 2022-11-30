@@ -26,7 +26,7 @@ export default class Tessellator {
             let nearestPositions = this.sortedNearest(positions, clockwiseIndex);
             nearestPositions.some((nearestPosition) => {
                 let splits = this.split(positions, clockwisePosition, nearestPosition);
-                
+
                 let isIntersection = this.validateIntersection(positions, clockwisePosition, nearestPosition);
                 //console.log(isIntersection);
                 if (isIntersection) {
@@ -62,7 +62,7 @@ export default class Tessellator {
     }
     static toTriangles(positions, isCCW = true) {
         let length = positions.length;
-        if (length < 3) throw new Error("Position count is not available.");
+        //if (length < 3) throw new Error("Position count is not available.");
         var result = [];
         for (let i = 1; i < length - 1; i++) {
             if (isCCW) result.push(new Triangle(positions[0], positions[i], positions[i + 1]));
