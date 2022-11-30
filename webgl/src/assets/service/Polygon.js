@@ -36,48 +36,6 @@ export default class Polygon extends Renderable {
     buffer.bindBuffer(buffer.normalGlBuffer, 3, shaderInfo.attributeLocations.vertexNormal);
     gl.drawElements(gl.TRIANGLES, buffer.indicesLength, gl.UNSIGNED_SHORT, 0);//
   }
-
-  createSideTriangle(topPlane, bottomPlane, isCCW = true) {
-    let triangles = [];
-    if (topPlane.length != bottomPlane.length) {
-      throw new Error("plane length is not matched.");
-    }
-    let length = topPlane.length;
-    for (var i = 1; i < length; i++) {
-      let topA = topPlane[i - 1];
-      let topB = topPlane[i];
-      let bottomA = bottomPlane[i - 1];
-      let bottomB = bottomPlane[i];
-      if (isCCW) {
-        triangles.push(new Triangle(topB, topA, bottomA));
-        triangles.push(new Triangle(topB, bottomA, bottomB));
-      } else {
-        triangles.push(new Triangle(topB, bottomA, topA));
-        triangles.push(new Triangle(topB, bottomB, bottomA));
-      }
-    }
-    return triangles;
-  }
-
-  convexToTriangles(positions, isCCW = true) {
-    let length = positions.length;
-    if (length < 3) throw new Error("Position count is not available.");
-
-    var result = [];
-    for (let i = 1; i < length - 1; i++) {
-      if (isCCW) result.push(new Triangle(positions[0], positions[i], positions[i + 1]));
-      else result.push(new Triangle(positions[0], positions[i + 1], positions[i]));
-    }
-    return result;
-  }
-
-  createRandomColor() {
-    let r = Math.round(Math.random() * 10) / 10;
-    let g = Math.round(Math.random() * 10) / 10;
-    let b = Math.round(Math.random() * 10) / 10;
-    return vec4.fromValues(r, g, b, 1.0);
-  }
-
   // overriding
   getBuffer(gl) {
     if (this.buffer === undefined) {
@@ -90,7 +48,7 @@ export default class Polygon extends Renderable {
       let topPositions = this.coordinates.map((coordinate) => vec3.fromValues(coordinate[0], coordinate[1], this.height));
       let bottomPositions = this.coordinates.map((coordinate) => vec3.fromValues(coordinate[0], coordinate[1], 0));
       let topTriangles = Tessellator.tessellate(topPositions);
-      let bottomTriangles = Tessellator.tessellate(bottomPositions);
+      let bottomTriangles = Tessellator.tessellate(bottomPositions, false);
       let sideTriangles = this.createSideTriangle(topPositions, bottomPositions, true);
 
       let triangles = [];
@@ -120,5 +78,32 @@ export default class Polygon extends Renderable {
       this.buffer.indicesLength = this.buffer.indicesVBO.length;
     }
     return this.buffer;
+  }
+  createSideTriangle(topPlane, bottomPlane, isCCW = true) {
+    let triangles = [];
+    if (topPlane.length != bottomPlane.length) {
+      throw new Error("plane length is not matched.");
+    }
+    let length = topPlane.length;
+    for (var i = 1; i < length; i++) {
+      let topA = topPlane[i - 1];
+      let topB = topPlane[i];
+      let bottomA = bottomPlane[i - 1];
+      let bottomB = bottomPlane[i];
+      if (isCCW) {
+        triangles.push(new Triangle(topB, topA, bottomA));
+        triangles.push(new Triangle(topB, bottomA, bottomB));
+      } else {
+        triangles.push(new Triangle(topB, bottomA, topA));
+        triangles.push(new Triangle(topB, bottomB, bottomA));
+      }
+    }
+    return triangles;
+  }
+  createRandomColor() {
+    let r = Math.round(Math.random() * 10) / 10;
+    let g = Math.round(Math.random() * 10) / 10;
+    let b = Math.round(Math.random() * 10) / 10;
+    return vec4.fromValues(r, g, b, 1.0);
   }
 }

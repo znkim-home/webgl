@@ -8,11 +8,11 @@ export default class Tessellator {
     /*static tessellate(positions) {
         return this.validateConvex(positions);
     }*/
-    static tessellate(positions) {
+    static tessellate(positions, isCCW = true) {
         let result = [];
         let plane = this.validateConvex(positions);
         plane.forEach((ConvexPolygon) => {
-            let triangles = this.toTriangles(ConvexPolygon, true);
+            let triangles = this.toTriangles(ConvexPolygon, isCCW);
             result = result.concat(triangles);
         })
         return result;
