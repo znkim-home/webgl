@@ -2,6 +2,9 @@
   <div></div>
 </template>
 <script>
+import Line from  "@/assets/service/geometry/Line.js";
+import Triangle from  "@/assets/service/geometry/Triangle.js";
+
 export default {
   name: "FirstPerson",
   props: {
@@ -14,6 +17,7 @@ export default {
       shiftStatus: false,
       keyStatus: {},
       mousePos: {},
+      test : undefined,
     };
   },
   mounted() {
@@ -23,27 +27,63 @@ export default {
     init() {
       this.initKey();
       this.initMouse();
+      this.test = new Triangle([-500, -500, -250], [500, -500, -250], [500, 500, -250]);
     },
     initMouse() {
       let canvas = document.getElementById("glcanvas");
       canvas.onmousewheel = (e) => {
         if (e.deltaY != 0) {
           const webGl = this.webGl;
+          const camera = webGl.camera;
           const ROTATE_FACTOR = 0.1;
           let yValue = e.deltaY * ROTATE_FACTOR;
-          let degree = webGl.fovDegree + yValue;
+          let degree = camera.fovyDegree + yValue;
           if (degree > 0 && degree < 180) {
-            webGl.fovDegree = degree;
+            camera.fovyDegree = degree;
           }
         }
       };
-      canvas.onmousedown = () => {
-        if (this.mouseStatus) {
-          this.mouseStatus = false;
-          document.exitPointerLock();
-        } else {
-          this.mouseStatus = true;
-          canvas.requestPointerLock();
+      canvas.onmousedown = (e) => {
+        if (e.button == 2) {
+          if (this.mouseStatus) {
+            this.mouseStatus = false;
+            document.exitPointerLock();
+          } else {
+            this.mouseStatus = true;
+            canvas.requestPointerLock();
+          }
+        } else if (e.button == 0) {
+          //const mat4 = self.glMatrix.mat4;
+          const vec4 = self.glMatrix.vec4;
+          const vec3 = self.glMatrix.vec3;
+          const webGl = this.webGl;
+          const camera = webGl.camera;
+
+          let ratioX = e.x / canvas.width;
+          let ratioY = (canvas.height - e.y) / canvas.height;
+          
+          let ray = camera.getViewRay({
+            x : ratioX,
+            y : ratioY,
+            width : canvas.width,
+            height : canvas.height,
+          }, 1);
+
+          let rotationMatrix = camera.getRotationMatrix();
+          let ray4 = vec4.transformMat4(vec4.create(), vec4.fromValues(ray[0], ray[1], ray[2], 1), rotationMatrix);
+          let ray3 = vec3.fromValues(ray4[0], ray4[1], ray4[2]);
+          vec3.normalize(ray3, ray3);
+          let line = new Line(camera.position, ray3);
+          
+          let plane = this.test.getPlane();
+          let result = plane.getIntersection(line);
+          console.log(result);
+
+          this.$parent.createCube({
+            position: { x: result[0], y: result[1], z: result[2] - 10 },
+            size: { width: 30, length: 30, height: 30 },
+            //color: color,
+          });
         }
       };
       canvas.onmousemove = (e) => {

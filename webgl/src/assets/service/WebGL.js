@@ -21,7 +21,7 @@ export default class WebGL {
   canvas;
   renderableObjs;
   now;
-  fovDegree;
+  fovyDegree;
 
   constructor(canvas) {
     this.gl = undefined;
@@ -33,7 +33,6 @@ export default class WebGL {
     this.now = undefined;
     this.then = undefined;
     this.deltaTime = undefined;
-    this.fovDegree = 75;
     this.init();
   }
 
@@ -75,7 +74,9 @@ export default class WebGL {
     this.buffer = new Buffer(gl);
     this.shader.init(data.vertexShaderSource, data.fragmentShaderSource);
     this.buffer.init(data);
-    this.camera = new Camera();
+    this.camera = new Camera({
+      fovyDegree : 75
+    });
     this.camera.setPosition(0, 0, 0);
     this.camera.rotate(0, 0, 0);
     requestAnimationFrame(this.render.bind(this));
@@ -107,13 +108,13 @@ export default class WebGL {
     gl.frontFace(gl.CCW);
     gl.enable(gl.CULL_FACE);
 
-    const fov = Math.radian(this.fovDegree); // FieldOfView
+    const fovy = Math.radian(this.camera.fovyDegree); // FieldOfView
     const aspect = canvas.width / canvas.height; // Aspect ratio
     const near = 0.1; // Near Frustum
     const far = 3000.0; // Far Frustum
 
     let projectionMatrix = mat4.create();
-    mat4.perspective(projectionMatrix, fov, aspect, near, far);
+    mat4.perspective(projectionMatrix, fovy, aspect, near, far);
     let modelViewMatrix = this.camera.getModelViewMatrix();
     let normalMatrix = this.camera.getNormalMatrix();
 

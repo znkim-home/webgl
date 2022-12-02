@@ -8,17 +8,20 @@ const { mat2, mat3, mat4, vec2, vec3, vec4 } = self.glMatrix; // eslint-disable-
 export default class Polygon extends Renderable {
   height;
   coordinates;
+  triangles;
+
   constructor(coordinates, options) {
     super();
     this.init(coordinates, options);
   }
 
   init(coordinates, options) {
+    this.triangles = [];
     this.height = 3.0;
     if (coordinates) this.coordinates = coordinates;
     if (options?.height) this.height = options.height;
-    if (options?.position) this.pos = vec3.set(this.pos, options.position.x, options.position.y, options.position.z);
-    if (options?.rotation) this.rot = vec3.set(this.rot, options.rotation.pitch, options.rotation.roll, options.rotation.heading);
+    if (options?.position) this.position = vec3.set(this.position, options.position.x, options.position.y, options.position.z);
+    if (options?.rotation) this.rotation = vec3.set(this.rotation, options.rotation.pitch, options.rotation.roll, options.rotation.heading);
     if (options?.color) this.color = vec4.set(this.color, options?.color.r, options?.color.g, options?.color.b, options?.color.a);
   }
   render(gl, shaderInfo) {
@@ -55,6 +58,7 @@ export default class Polygon extends Renderable {
       triangles = triangles.concat(topTriangles);
       triangles = triangles.concat(bottomTriangles);
       triangles = triangles.concat(sideTriangles);
+      this.triangles = triangles;
       triangles.forEach((triangle) => {
         let trianglePositions = triangle.positions;
         let normal = triangle.getNormal();
@@ -79,17 +83,17 @@ export default class Polygon extends Renderable {
     }
     return this.buffer;
   }
-  createSideTriangle(topPlane, bottomPlane, isCCW = true) {
+  createSideTriangle(topPositions, bottomPositions, isCCW = true) {
     let triangles = [];
-    if (topPlane.length != bottomPlane.length) {
+    if (topPositions.length != bottomPositions.length) {
       throw new Error("plane length is not matched.");
     }
-    let length = topPlane.length;
-    for (var i = 0; i < length; i++) {
-      let topA = topPlane.getPrev(i);
-      let topB = topPlane.get(i);
-      let bottomA = bottomPlane.getPrev(i);
-      let bottomB = bottomPlane.get(i);
+    let length = topPositions.length;
+    for (let i = 0; i < length; i++) {
+      let topA = topPositions.getPrev(i);
+      let topB = topPositions.get(i);
+      let bottomA = bottomPositions.getPrev(i);
+      let bottomB = bottomPositions.get(i);
       if (isCCW) {
         triangles.push(new Triangle(topB, topA, bottomA));
         triangles.push(new Triangle(topB, bottomA, bottomB));

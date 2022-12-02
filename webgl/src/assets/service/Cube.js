@@ -12,13 +12,13 @@ export default class Cube extends Renderable {
   init(options) {
     this.size = vec3.fromValues(4, 6, 8); // size : width, length, height
     if (options?.position) {
-      this.pos = vec3.set(this.pos, options.position.x, options.position.y, options.position.z);
+      this.position = vec3.set(this.position, options.position.x, options.position.y, options.position.z);
     }
     if (options?.size) {
       this.size = vec3.set(this.size, options.size.width, options.size.length, options.size.height);
     }
     if (options?.rotation) {
-      this.rot = vec3.set(this.rot, options.rotation.pitch, options.rotation.roll, options.rotation.heading);
+      this.rotation = vec3.set(this.rotation, options.rotation.pitch, options.rotation.roll, options.rotation.heading);
     }
     if (options?.color) {
       this.color = vec4.set(this.color, options?.color.r,options?.color.g, options?.color.b, options?.color.a);

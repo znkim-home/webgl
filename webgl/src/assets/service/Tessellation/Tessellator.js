@@ -33,7 +33,7 @@ export default class Tessellator {
                     return false;
                 }
 
-                let polygonA = this.validateAngle(splits[0]);
+                let polygonA = this.validateAngle(splits[0]); 
                 let polygonB = this.validateAngle(splits[1]);
                 if (polygonA ^ polygonB == 0) {
                     this.validateConvex(splits[0], convexs);
@@ -71,18 +71,16 @@ export default class Tessellator {
         return result;
     }
     static split(positions, positionA, positionB) {
-        let positionsA = this.createSplits(positions, positionA, positionB, true);
-        let positionsB = this.createSplits(positions, positionB, positionA, false);
+        let positionsA = this.createSplits(positions, positionA, positionB);
+        let positionsB = this.createSplits(positions, positionB, positionA);
         return [positionsA, positionsB];
     }
-    static createSplits(positions, startPosition, endPosition, isCcw) {
+    static createSplits(positions, startPosition, endPosition) {
         let list = [];
-        if (isCcw) {
-            list.push(startPosition);
-            list.push(endPosition);
-        }
+        list.push(startPosition);
+        list.push(endPosition);
         let index = positions.indexOf(endPosition);
-        for (var i = 0; i < positions.length - 1; i++) {
+        for (let i = 0; i < positions.length - 1; i++) {
             let crnt = positions.get(index);
             let next = positions.getNext(index);
             if (next == startPosition || next == endPosition) {
@@ -92,18 +90,14 @@ export default class Tessellator {
             }
             index++;
         }
-        if (!isCcw) {
-            list.push(startPosition);
-            list.push(endPosition);
-        }
         return list;
     }
     static validateAngle(positions) {
         let angleSum = 0;
         let reverseAngleSum = 0;
         positions.forEach((position, index) => {
-            var normal = this.getPositionNormal(positions, index);
-            var angle = Math.degree(position.angle);
+            let normal = this.getPositionNormal(positions, index);
+            let angle = Math.degree(this.getAngle(positions, index));
             if (normal > 0) angleSum += angle;
             else reverseAngleSum += angle;
         });
@@ -115,6 +109,14 @@ export default class Tessellator {
         let next = positions.getNext(index);
         return this.normal(prev, crnt, next)[2];
     }
+    static getAngle(positions, index) {
+        let prev = positions.getPrev(index);
+        let crnt = positions.get(index);
+        let next = positions.getNext(index);
+        let d0 = vec3.subtract(vec3.create(), crnt, prev);
+        let d1 = vec3.subtract(vec3.create(), next, crnt);
+        return vec3.angle(d0, d1);
+    }
     static sortedNearest(positions, index) {
         let prev = positions.getPrev(index);
         let crnt = positions.get(index);
@@ -123,8 +125,8 @@ export default class Tessellator {
             return !(position == prev || position == crnt || position == next);
         });
         let nearestPositions = filtedPositions.sort((a, b) => {
-            let distanceA = vec3.distance(crnt, a);
-            let distanceB = vec3.distance(crnt, b);
+            let distanceA = vec3.squaredDistance(crnt, a);
+            let distanceB = vec3.squaredDistance(crnt, b);
             if (distanceA < distanceB) return -1;
             else if (distanceA > distanceB) return 1;
             else return 0;
@@ -140,7 +142,7 @@ export default class Tessellator {
         return a <= 0 && b <= 0;
     }
     static compare(a, b) {
-        return a[0] == b[0] && a[1] == b[1] && a[2] == b[2];
+        return a[0] === b[0] && a[1] === b[1] && a[2] === b[2];
     }
     static cross(a, b, c) {
         let d0 = vec3.subtract(vec3.create(), b, a);

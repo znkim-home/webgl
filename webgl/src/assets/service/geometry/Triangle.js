@@ -1,8 +1,10 @@
 const {vec3} = self.glMatrix; // eslint-disable-line no-unused-vars
+import Plane from './Plane.js';
 
 export default class Triangle {
   positions; // [vec3, vec3, vec3]
   normal; // vec3
+  plane;
   constructor(positionA, positionB, positionC) {
     this.positions = [positionA, positionB, positionC];
     this.getNormal();
@@ -19,5 +21,11 @@ export default class Triangle {
       this.normal = normal;
     }
     return this.normal;
+  }
+  getPlane() {
+    if (!this.plane) {
+      this.plane = new Plane(this.positions[0], this.normal);
+    }
+    return this.plane;
   }
 }
