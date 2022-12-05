@@ -18,6 +18,8 @@ export default {
       keyStatus: {},
       mousePos: {},
       test : undefined,
+      pointPositions : [],
+      line : undefined,
     };
   },
   mounted() {
@@ -31,6 +33,21 @@ export default {
     },
     initMouse() {
       let canvas = document.getElementById("glcanvas");
+      canvas.ondblclick = (e) => {
+        if (e.button == 0) {
+          let coordinates = this.pointPositions.map((pointPosition) => {
+            return [pointPosition[0], pointPosition[1]];
+          }); 
+
+          this.$parent.createPolygon(coordinates, {
+            position: { x: 0, y: 0, z: -250 },
+            color: { r: 0.0, g: 0.5, b: 1.0, a: 0.5 },
+            height: 100,
+          });
+
+          this.pointPositions = [];
+        }
+      }
       canvas.onmousewheel = (e) => {
         if (e.deltaY != 0) {
           const webGl = this.webGl;
@@ -77,13 +94,25 @@ export default {
           
           let plane = this.test.getPlane();
           let result = plane.getIntersection(line);
-          console.log(result);
+          //console.log(result);
 
-          this.$parent.createCube({
-            position: { x: result[0], y: result[1], z: result[2] - 10 },
+          this.$parent.createPoint({
+            position: { x: result[0], y: result[1], z: result[2] },
             size: { width: 30, length: 30, height: 30 },
-            //color: color,
+            color: {r: 1.0, g: 0.3, b: 0.3, a: 1.0 },
           });
+
+          this.pointPositions.push(result);
+          let coordinates = this.pointPositions;
+          if (this.pointPositions.length >= 2 ) {
+            if (!this.line) {
+              this.line = this.$parent.createLine(coordinates, {
+                color: {r: 1.0, g: 0.3, b: 0.3, a: 1.0 },
+              });
+            } else {
+              this.line.coordinates = coordinates;
+            }
+          }
         }
       };
       canvas.onmousemove = (e) => {

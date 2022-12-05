@@ -32,6 +32,7 @@ export default class Shader {
       modelViewMatrix: gl.getUniformLocation(shaderProgram, 'uModelViewMatrix'),
       objectMatrix : gl.getUniformLocation(shaderProgram, 'uObjectMatrix'),
       normalMatrix : gl.getUniformLocation(shaderProgram, 'uNormalMatrix'),
+      pointSize : gl.getUniformLocation(shaderProgram, 'uPointSize'),
     };
     this.shaderInfo = {
       shaderProgram,

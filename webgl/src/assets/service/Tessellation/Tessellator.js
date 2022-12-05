@@ -92,6 +92,16 @@ export default class Tessellator {
         }
         return list;
     }
+    static validateCCW(positions) {
+        let sum = 0;
+        positions.forEach((position, index) => {
+            let normal = this.getPositionNormal(positions, index);
+            let angle = Math.degree(this.getAngle(positions, index));
+            if (normal > 0) sum += angle;
+            else sum -= angle;
+        });
+        return sum;
+    }
     static validateAngle(positions) {
         let angleSum = 0;
         let reverseAngleSum = 0;

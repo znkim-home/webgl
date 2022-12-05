@@ -50,6 +50,12 @@ export default class Polygon extends Renderable {
 
       let topPositions = this.coordinates.map((coordinate) => vec3.fromValues(coordinate[0], coordinate[1], this.height));
       let bottomPositions = this.coordinates.map((coordinate) => vec3.fromValues(coordinate[0], coordinate[1], 0));
+      
+      if (Tessellator.validateCCW(topPositions) < 0) {
+        topPositions.reverse();
+        bottomPositions.reverse();
+      }
+
       let topTriangles = Tessellator.tessellate(topPositions);
       let bottomTriangles = Tessellator.tessellate(bottomPositions, false);
       let sideTriangles = this.createSideTriangle(topPositions, bottomPositions, true);

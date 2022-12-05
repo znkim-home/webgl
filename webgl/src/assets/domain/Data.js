@@ -7,13 +7,14 @@ const vertexShaderSource = `
   uniform mat4 uProjectionMatrix;
   uniform mat4 uObjectMatrix;
   uniform mat4 uNormalMatrix;
+  uniform float uPointSize;
   
   varying lowp vec4 vColor;
   varying lowp vec3 vLighting;
   void main(void) {
     vColor = aVertexColor;
 
-    vec3 ambientLight = vec3(0.6, 0.6, 0.6);
+    vec3 ambientLight = vec3(0.8, 0.8, 0.8);
     vec3 directionalLightColor = vec3(1, 1, 1);
     vec3 directionalVector = normalize(vec3(0.85, 0.8, 0.75));
 
@@ -23,7 +24,8 @@ const vertexShaderSource = `
     float directional = max(dot(transformedNormal.xyz, directionalVector), 0.0);
     vLighting = ambientLight + (directionalLightColor * directional);
     //vLighting = aVertexNormal;
-
+    
+    gl_PointSize = uPointSize;
     gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(transformedPos.xyz, 1.0);
   }
 `;

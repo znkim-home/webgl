@@ -107,11 +107,13 @@ export default class WebGL {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     gl.frontFace(gl.CCW);
     gl.enable(gl.CULL_FACE);
+    gl.lineWidth(3);
 
     const fovy = Math.radian(this.camera.fovyDegree); // FieldOfView
     const aspect = canvas.width / canvas.height; // Aspect ratio
     const near = 0.1; // Near Frustum
     const far = 3000.0; // Far Frustum
+    const pointSize = 8.0
 
     let projectionMatrix = mat4.create();
     mat4.perspective(projectionMatrix, fovy, aspect, near, far);
@@ -121,6 +123,7 @@ export default class WebGL {
     gl.uniformMatrix4fv(shaderInfo.uniformLocations.projectionMatrix, false, projectionMatrix);
     gl.uniformMatrix4fv(shaderInfo.uniformLocations.modelViewMatrix, false, modelViewMatrix);
     gl.uniformMatrix4fv(shaderInfo.uniformLocations.normalMatrix, false, normalMatrix);
+    gl.uniform1f(shaderInfo.uniformLocations.pointSize, pointSize);
 
     this.renderableObjs.forEach((renderableObj) => {
       renderableObj.render(gl, shaderInfo);

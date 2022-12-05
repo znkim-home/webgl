@@ -36,6 +36,8 @@ import FirstPerson from "./ControllerComponent.vue";
 import WebGL from "@/assets/service/WebGL.js";
 import Cube from "@/assets/service/Cube.js";
 import Polygon from "@/assets/service/Polygon.js";
+import Point from "@/assets/service/Point.js";
+import Line from "@/assets/service/Line.js";
 import { Data } from "@/assets/domain/Data.js";
 
 export default {
@@ -74,7 +76,7 @@ export default {
               : { r: 0.3, g: 0.3, b: 0.3, a: 1.0 };
           this.createCube({
             position: { x: posX, y: posY, z: posZ },
-            size: { width: cellWidth, length: cellHeight, height: 10 },
+            size: { width: cellWidth, length: cellHeight, height: 2 },
             color: color,
           });
 
@@ -96,7 +98,7 @@ export default {
       camera.rotate(0, 0, 0);
       this.base(dist, dist);
 
-      /*let coordinates = [
+      let coordinates = [
         [-1.765186228930574, 11.24182504658529],
         [-19.732671505408902, 21.051451218700095],
         [-37.36971728240659, 15.760167102111154],
@@ -127,7 +129,7 @@ export default {
         position: { x: 0, y: 0, z: 0 },
         color: { r: 1.0, g: 0.0, b: 1.0, a: 1.0 },
         height: 5,
-      });*/
+      });
 
       //let coordinates = [[2.0, 0.0], [4.0, 0.0], [6.0, 3.0], [4.0, 6.0], [0.0, 3.0], [2.0, 0.0]];
       //let coordinates = [[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0], [0.0, 0.0]];
@@ -161,7 +163,7 @@ export default {
       [ 35.6503068906377, -18.327550101821544],
       [ 3.4255374908510503, -25.37620030296239],
       ];*/
-      this.getExtrusion();
+      //this.getExtrusion();
     },
     
     correctCoord(coordinate, unit = 10000) {
@@ -225,9 +227,18 @@ export default {
       let cube = new Cube(options);
       this.webGl.renderableObjs.push(cube);
     },
+    createPoint(options) {
+      let point = new Point(options);
+      this.webGl.renderableObjs.push(point);
+    },
+    createLine(coordinates, options) {
+      let line = new Line(coordinates, options);
+      this.webGl.renderableObjs.push(line);
+      return line;
+    },
     createPolygon(coordinates, options) {
-      let cube = new Polygon(coordinates, options);
-      this.webGl.renderableObjs.push(cube);
+      let polygon = new Polygon(coordinates, options);
+      this.webGl.renderableObjs.push(polygon);
     },
     initConsole(consoleLimit = 50000) {
       let consoleDiv = document.querySelector(".console");
