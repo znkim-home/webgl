@@ -35,6 +35,7 @@ export default {
       let canvas = document.getElementById("glcanvas");
       canvas.ondblclick = (e) => {
         if (e.button == 0) {
+          this.pointPositions.pop();
           let coordinates = this.pointPositions.map((pointPosition) => {
             return [pointPosition[0], pointPosition[1]];
           }); 

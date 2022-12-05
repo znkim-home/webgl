@@ -92,9 +92,9 @@ export default {
       this.webGl = webGl;
       webGl.startRender(Data);
 
-      const dist = 1000;
+      const dist = 2000;
       const camera = webGl.camera;
-      camera.setPosition(0, 0, dist);
+      camera.setPosition(0, 0, dist / 2);
       camera.rotate(0, 0, 0);
       this.base(dist, dist);
 
