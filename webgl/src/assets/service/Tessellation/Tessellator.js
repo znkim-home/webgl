@@ -97,7 +97,7 @@ export default class Tessellator {
         positions.forEach((position, index) => {
             let normal = this.getPositionNormal(positions, index);
             let angle = Math.degree(this.getAngle(positions, index));
-            if (normal > 0) sum += angle;
+            if (normal >= 0) sum += angle;
             else sum -= angle;
         });
         return sum;

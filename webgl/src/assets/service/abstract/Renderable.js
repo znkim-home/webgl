@@ -69,4 +69,23 @@ export default class Renderable {
     let crossed = this.cross(a, b, c);
     return vec3.normalize(crossed, crossed);
   }
+
+  getMinMax(positions) {
+    let minx = Number.MAX_SAFE_INTEGER;
+    let miny = Number.MAX_SAFE_INTEGER;
+    let maxx = Number.MIN_SAFE_INTEGER;
+    let maxy = Number.MIN_SAFE_INTEGER;
+    positions.forEach((position) => {
+      minx = position[0] < minx ? position[0] : minx;
+      miny = position[1] < miny ? position[1] : miny;
+      maxx = position[0] > maxx ? position[0] : maxx;
+      maxy = position[1] > maxy ? position[1] : maxy;
+    });
+    return {
+      minx : minx, 
+      miny : miny, 
+      maxx : maxx, 
+      maxy : maxy
+    }
+  }
 }

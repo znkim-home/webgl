@@ -26,6 +26,7 @@ export default class Shader {
       vertexPosition: gl.getAttribLocation(shaderProgram, 'aVertexPosition'),
       vertexNormal: gl.getAttribLocation(shaderProgram, 'aVertexNormal'),
       vertexColor: gl.getAttribLocation(shaderProgram, 'aVertexColor'),
+      textureCoordinate: gl.getAttribLocation(shaderProgram, 'aTextureCoordinate'),
     };
     const uniformLocations = {
       projectionMatrix: gl.getUniformLocation(shaderProgram, 'uProjectionMatrix'),
@@ -33,6 +34,10 @@ export default class Shader {
       objectMatrix : gl.getUniformLocation(shaderProgram, 'uObjectMatrix'),
       normalMatrix : gl.getUniformLocation(shaderProgram, 'uNormalMatrix'),
       pointSize : gl.getUniformLocation(shaderProgram, 'uPointSize'),
+      textureCoordinate : gl.getUniformLocation(shaderProgram, 'uTextureCoordinate'),
+
+      texture : gl.getUniformLocation(shaderProgram, 'uTexture'),
+      textureBoolean : gl.getUniformLocation(shaderProgram, 'uTextureBoolean'),
     };
     this.shaderInfo = {
       shaderProgram,

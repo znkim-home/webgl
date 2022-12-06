@@ -112,7 +112,7 @@ export default class WebGL {
     const fovy = Math.radian(this.camera.fovyDegree); // FieldOfView
     const aspect = canvas.width / canvas.height; // Aspect ratio
     const near = 0.1; // Near Frustum
-    const far = 3000.0; // Far Frustum
+    const far = 10000.0; // Far Frustum
     const pointSize = 8.0
 
     let projectionMatrix = mat4.create();

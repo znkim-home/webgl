@@ -20,6 +20,9 @@ export default {
       test : undefined,
       pointPositions : [],
       line : undefined,
+      globalOption : {
+        cameraZAxis : false
+      }
     };
   },
   mounted() {
@@ -29,7 +32,13 @@ export default {
     init() {
       this.initKey();
       this.initMouse();
-      this.test = new Triangle([-500, -500, -250], [500, -500, -250], [500, 500, -250]);
+      this.test = new Triangle([-500, -500, 0], [500, -500, 0], [500, 500, 0]);
+
+      let image = new Image();
+      image.onload = () => {
+        this.image = image;
+      }
+      image.src = "/image/duck_256.jpg";
     },
     initMouse() {
       let canvas = document.getElementById("glcanvas");
@@ -41,11 +50,13 @@ export default {
           }); 
 
           this.$parent.createPolygon(coordinates, {
-            position: { x: 0, y: 0, z: -250 },
+            position: { x: 0, y: 0, z: 0 },
             color: { r: 0.0, g: 0.5, b: 1.0, a: 0.5 },
             height: 100,
+            image : this.image
           });
 
+          this.line = undefined;
           this.pointPositions = [];
         }
       }
@@ -71,7 +82,6 @@ export default {
             canvas.requestPointerLock();
           }
         } else if (e.button == 0) {
-          //const mat4 = self.glMatrix.mat4;
           const vec4 = self.glMatrix.vec4;
           const vec3 = self.glMatrix.vec3;
           const webGl = this.webGl;
@@ -95,8 +105,7 @@ export default {
           
           let plane = this.test.getPlane();
           let result = plane.getIntersection(line);
-          //console.log(result);
-
+          
           this.$parent.createPoint({
             position: { x: result[0], y: result[1], z: result[2] },
             size: { width: 30, length: 30, height: 30 },
@@ -123,9 +132,15 @@ export default {
           const ROTATE_FACTOR = 0.1;
           let xValue = e.movementX * ROTATE_FACTOR;
           let yValue = e.movementY * ROTATE_FACTOR;
+
           if (xValue != 0) {
-            camera.rotate(-xValue, 0, 0);
+            if (this.globalOption.cameraZAxis) {
+              camera.rotate(-xValue, 0, 0);
+            } else {
+              camera.rotate(0, 0, xValue);
+            }
           }
+
           if (yValue != 0) {
             camera.rotate(0, -yValue, 0);
           }
@@ -134,7 +149,7 @@ export default {
       canvas.onmouseup = () => {};
     },
     initKey() {
-      const moveMs = 16; // 66:15fps 33:30fps , 16:60fps
+      const moveMs = 8; // 66:15fps 33:30fps , 16:60fps
       setInterval(() => {
         let MOVE_FACTOR = this.MOVE_FACTOR;
         const webGl = this.webGl;
