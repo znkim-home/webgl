@@ -37,7 +37,8 @@ export default class Shader {
       textureCoordinate : gl.getUniformLocation(shaderProgram, 'uTextureCoordinate'),
 
       texture : gl.getUniformLocation(shaderProgram, 'uTexture'),
-      textureBoolean : gl.getUniformLocation(shaderProgram, 'uTextureBoolean'),
+      textureType : gl.getUniformLocation(shaderProgram, 'uTextureType'),
+      fixedPosition : gl.getUniformLocation(shaderProgram, 'uFixedPosition'),
     };
     this.shaderInfo = {
       shaderProgram,

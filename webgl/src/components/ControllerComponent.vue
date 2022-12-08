@@ -21,7 +21,7 @@ export default {
       pointPositions : [],
       line : undefined,
       globalOption : {
-        cameraZAxis : false
+        cameraZAxis : true
       }
     };
   },

@@ -26,7 +26,7 @@ export default class Polygon extends Renderable {
     if (options?.color) this.color = vec4.set(this.color, options?.color.r, options?.color.g, options?.color.b, options?.color.a);
     if (options?.image) this.image = options.image;
   }
-  render(gl, shaderInfo) {
+  render(gl, shaderInfo, renderOptions) {
     let tm = this.getTransformMatrix();
     gl.uniformMatrix4fv(shaderInfo.uniformLocations.objectMatrix, false, tm);
 
@@ -37,8 +37,9 @@ export default class Polygon extends Renderable {
     gl.enableVertexAttribArray(shaderInfo.attributeLocations.vertexNormal);
     gl.enableVertexAttribArray(shaderInfo.attributeLocations.textureCoordinate);
     
-    if (this.image) {
-      gl.uniform1i(shaderInfo.uniformLocations.textureBoolean, 1);
+    if (buffer.texture) {
+      gl.uniform1i(shaderInfo.uniformLocations.textureType, 1);
+      if (renderOptions?.textureType !== undefined) gl.uniform1i(shaderInfo.uniformLocations.textureType, renderOptions?.textureType);
       gl.bindTexture(gl.TEXTURE_2D, buffer.texture);
     }
 
@@ -48,7 +49,7 @@ export default class Polygon extends Renderable {
     buffer.bindBuffer(buffer.textureGlBuffer, 2, shaderInfo.attributeLocations.textureCoordinate);
 
     gl.drawElements(gl.TRIANGLES, buffer.indicesLength, gl.UNSIGNED_SHORT, 0);
-    gl.uniform1i(shaderInfo.uniformLocations.textureBoolean, 0);
+    gl.uniform1i(shaderInfo.uniformLocations.textureType, 0);
   }
   // overriding
   getBuffer(gl) {
@@ -64,12 +65,11 @@ export default class Polygon extends Renderable {
       let bottomPositions = this.coordinates.map((coordinate) => vec3.fromValues(coordinate[0], coordinate[1], this.position[2]));
       let bbox = this.getMinMax(topPositions);
       
-      console.log(Tessellator.validateCCW(topPositions))
       if (Tessellator.validateCCW(topPositions) < 0) {
         topPositions.reverse();
         bottomPositions.reverse();
       }
-
+      
       let topTriangles = Tessellator.tessellate(topPositions);
       let bottomTriangles = Tessellator.tessellate(bottomPositions, false);
       let sideTriangles = this.createSideTriangle(topPositions, bottomPositions, true);

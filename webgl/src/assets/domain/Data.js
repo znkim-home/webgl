@@ -1,4 +1,6 @@
 const vertexShaderSource = `
+  precision mediump float;
+
   attribute vec3 aVertexPosition;
   attribute vec4 aVertexColor;
   attribute vec3 aVertexNormal;
@@ -9,9 +11,11 @@ const vertexShaderSource = `
   uniform mat4 uObjectMatrix;
   uniform mat4 uNormalMatrix;
   uniform float uPointSize;
-  
-  varying lowp vec4 vColor;
-  varying lowp vec3 vLighting;
+  uniform int uFixedPosition;
+  uniform int uTextureType;
+
+  varying vec4 vColor;
+  varying vec3 vLighting;
   varying vec2 vTextureCoordinate;
   void main(void) {
     vColor = aVertexColor;
@@ -28,26 +32,32 @@ const vertexShaderSource = `
     //vLighting = aVertexNormal;
     
     gl_PointSize = uPointSize;
-    gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(transformedPos.xyz, 1.0);
-
+    if (uFixedPosition == 1) {
+      gl_Position = vec4(-1.0 + 2.0 * aVertexPosition.xy, 0.0, 1.0);
+    } else {
+      gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(transformedPos.xyz, 1.0);
+    }
+    
     vTextureCoordinate = aTextureCoordinate;
   }
 `;
 
 const fragmentShaderSource = `
   precision mediump float;
-  
+
   varying vec4 vColor;
   varying vec3 vLighting;
   varying vec2 vTextureCoordinate;
 
   uniform sampler2D uTexture;
-  uniform int uTextureBoolean;
+  uniform int uTextureType; // 1:reversedY 2:basicY default:color
 
   void main(void) {
-    if (uTextureBoolean == 1) {
-      //vec4 textureColor = texture2D(uTexture, vTextureCoordinate);
+    if (uTextureType == 1) {
       vec4 textureColor = texture2D(uTexture, vec2(vTextureCoordinate.x, 1.0 - vTextureCoordinate.y));
+      gl_FragColor = vec4(textureColor.rgb * vLighting, textureColor.a);
+    } else if (uTextureType == 2) {
+      vec4 textureColor = texture2D(uTexture, vTextureCoordinate);
       gl_FragColor = vec4(textureColor.rgb * vLighting, textureColor.a);
     } else {
       gl_FragColor = vec4(vColor.xyz * vLighting, vColor.a);

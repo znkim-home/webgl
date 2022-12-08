@@ -1,6 +1,9 @@
 import Shader from './Shader.js';
 import Buffer from './Buffer.js';
 import Camera from './Camera.js';
+import FrameBufferObject from './funcional/FrameBufferObject.js';
+import Rectangle from './Rectangle.js';
+//import Polygon from './Polygon.js';
 const {mat2, mat3, mat4, vec2, vec3, vec4} = self.glMatrix; // eslint-disable-line no-unused-vars
 
 Math.degree = (radian) => radian * 180 / Math.PI;
@@ -20,6 +23,7 @@ export default class WebGL {
   camera;
   canvas;
   renderableObjs;
+  renderableObjsT;
   now;
   fovyDegree;
 
@@ -30,6 +34,7 @@ export default class WebGL {
     this.camera = undefined;
     this.canvas = canvas;
     this.renderableObjs = [];
+    this.renderableObjsT = [];
     this.now = undefined;
     this.then = undefined;
     this.deltaTime = undefined;
@@ -79,6 +84,19 @@ export default class WebGL {
     });
     this.camera.setPosition(0, 0, 0);
     this.camera.rotate(0, 0, 0);
+
+    this.resizeCanvas();
+    //const width = gl.canvas.width, height = gl.canvas.height;
+    //const coordinates = [[-width, -height], [width, -height], [width, height], [-width, height]];
+
+    //const coordinates = [[0.5, 0.5], [1, 0.5], [1, 1], [0.5, 1]];
+    const coordinates = [[0, 0], [1, 0], [1, 1], [0, 1]];
+    this.rectangle = new Rectangle(coordinates, {
+      position: { x: 0, y: 0, z: 0 },
+      color: { r: 0.0, g: 0.0, b: 1.0, a: 1.0 },
+      reverse : true,
+    });
+
     requestAnimationFrame(this.render.bind(this));
   }
 
@@ -96,10 +114,13 @@ export default class WebGL {
   }
   
   scene() {
+    /** @type {WebGLRenderingContext} */
     const gl = this.gl;
+    /** @type {HTMLCanvasElement} */
     const canvas = this.canvas;
     const shader = this.shader;
     const shaderInfo = shader.shaderInfo;
+    const fbo = this.getFbo();
 
     this.resizeCanvas();
     gl.viewport(0, 0, canvas.width, canvas.height);
@@ -108,7 +129,7 @@ export default class WebGL {
     gl.frontFace(gl.CCW);
     gl.enable(gl.CULL_FACE);
     gl.lineWidth(3);
-
+    
     const fovy = Math.radian(this.camera.fovyDegree); // FieldOfView
     const aspect = canvas.width / canvas.height; // Aspect ratio
     const near = 0.1; // Near Frustum
@@ -124,10 +145,36 @@ export default class WebGL {
     gl.uniformMatrix4fv(shaderInfo.uniformLocations.modelViewMatrix, false, modelViewMatrix);
     gl.uniformMatrix4fv(shaderInfo.uniformLocations.normalMatrix, false, normalMatrix);
     gl.uniform1f(shaderInfo.uniformLocations.pointSize, pointSize);
+    gl.uniform1i(shaderInfo.uniformLocations.fixedPosition, 0);
 
+    fbo.bind();
+    gl.clearColor(1, 1, 1, 1);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     this.renderableObjs.forEach((renderableObj) => {
       renderableObj.render(gl, shaderInfo);
     });
+    fbo.unbind();
+
+    /*this.renderableObjs.forEach((renderableObj) => {
+      renderableObj.render(gl, shaderInfo);
+    });*/
+
+    gl.uniform1i(shaderInfo.uniformLocations.fixedPosition, 1);
+    gl.disable(gl.DEPTH_TEST);
+    this.rectangle.texture = fbo.texture;
+    this.rectangle.render(gl, shaderInfo);
+
+    //this.rectangle.texture = fbo.texture;
+    //this.rectangle.render(gl, shaderInfo);
+    gl.enable(gl.DEPTH_TEST);
+  }
+
+  getFbo() {
+    if(!this.fbo) {
+      let canvas = this.gl.canvas;
+      this.fbo = new FrameBufferObject(this.gl, canvas.width, canvas.height);
+    }
+    return this.fbo;
   }
 
   get gl() {

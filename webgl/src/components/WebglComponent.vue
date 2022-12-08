@@ -57,20 +57,6 @@ export default {
     this.init();
   },
   methods: {
-    base(width = 500, height = 500) {
-      let image = new Image();
-      image.onload = () => {
-        console.log(image);
-        let coordinates = [[-width, -height], [width, -height], [width, height], [-width, height]];
-        let rectangle = new Rectangle(coordinates, {
-          position: { x: 0, y: 0, z: 0 },
-          color: { r: 1.0, g: 1.0, b: 0.0, a: 1.0 },
-          image : image
-        });
-        this.webGl.renderableObjs.push(rectangle);
-      }
-      image.src = "/image/chess.png";
-    },
     init() {
       let canvas = document.getElementById("glcanvas");
       let webGl = new WebGL(canvas);
@@ -82,15 +68,33 @@ export default {
       camera.setPosition(0, 0, dist * 2);
       camera.rotate(0, 0, 0);
       this.base(1024, 1024);
-      this.getExtrusion();
+      //this.getExtrusion();
     },
-
     correctCoord(coordinate, unit = 10000) {
       let x = coordinate[0] - Math.floor(coordinate[0]);
       let y = coordinate[1] - Math.floor(coordinate[1]);
       return [x * unit, y * unit];
     },
+    base(width = 500, height = 500) {
+      let image = new Image();
+      image.onload = () => {
+        console.log(image);
+        let coordinates = [[-width, -height], [width, -height], [width, height], [-width, height]];
+        let options = {
+          position: { x: 0, y: 0, z: 0 },
+          color: { r: 1.0, g: 1.0, b: 0.0, a: 1.0 },
+          image : image
+        }
+        let rectangle = new Rectangle(coordinates, options);
+        this.webGl.renderableObjs.push(rectangle);
+        options.color = {r : 0.0, g : 1.0, b : 0.0, a : 1.0};
+        options.image = undefined;
 
+        //let rectangle2 = new Rectangle(coordinates, options);
+        this.webGl.renderableObjsT.push(rectangle);
+      }
+      image.src = "/image/chess.png";
+    },
     getExtrusion() {
       let url =
         "http://175.197.92.213:10603/geoserver/deia/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=deia%3Aws2_extrusion&outputFormat=application%2Fjson";
@@ -158,6 +162,10 @@ export default {
     createPolygon(coordinates, options) {
       let polygon = new Polygon(coordinates, options);
       this.webGl.renderableObjs.push(polygon);
+      options.color = {r : 0.0, g : 1.0, b : 0.0, a : 1.0};
+      options.image = undefined;
+      let polygon2 = new Polygon(coordinates, options);
+      this.webGl.renderableObjsT.push(polygon2);
     },
     initConsole(consoleLimit = 50000) {
       let consoleDiv = document.querySelector(".console");
