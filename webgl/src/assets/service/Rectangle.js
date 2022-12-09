@@ -51,7 +51,8 @@ export default class Rectangle extends Renderable {
     gl.uniform1i(shaderInfo.uniformLocations.textureType, 0);
   }
   getBuffer(gl) {
-    if (this.buffer === undefined || this.length != this.coordinates.length) {
+    this.dirty = (this.buffer === undefined || this.length != this.coordinates.length) ? true : false;
+    if (this.dirty === true) {
       this.buffer = new Buffer(gl);
       let color = this.color;
       let colors = [];
@@ -101,6 +102,8 @@ export default class Rectangle extends Renderable {
       this.buffer.indicesGlBuffer = this.buffer.createIndexBuffer(this.buffer.indicesVBO);
       this.buffer.textureGlBuffer = this.buffer.createBuffer(this.buffer.textureVBO);
       this.buffer.indicesLength = this.buffer.indicesVBO.length;
+
+      this.dirty = false;
     }
     return this.buffer;
   }

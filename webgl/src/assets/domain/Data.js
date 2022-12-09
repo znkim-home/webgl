@@ -11,12 +11,14 @@ const vertexShaderSource = `
   uniform mat4 uObjectMatrix;
   uniform mat4 uNormalMatrix;
   uniform float uPointSize;
-  uniform int uFixedPosition;
-  uniform int uTextureType;
+
+  uniform int uPositionType;
+  //uniform int uTextureType;
 
   varying vec4 vColor;
   varying vec3 vLighting;
   varying vec2 vTextureCoordinate;
+  varying float depth;
   void main(void) {
     vColor = aVertexColor;
 
@@ -29,11 +31,14 @@ const vertexShaderSource = `
 
     float directional = max(dot(transformedNormal.xyz, directionalVector), 0.0);
     vLighting = ambientLight + (directionalLightColor * directional);
-    //vLighting = aVertexNormal;
     
     gl_PointSize = uPointSize;
-    if (uFixedPosition == 1) {
+    if (uPositionType == 1) {
       gl_Position = vec4(-1.0 + 2.0 * aVertexPosition.xy, 0.0, 1.0);
+    } else if (uPositionType == 2) {
+      vec4 orthoPosition = uModelViewMatrix * vec4(transformedPos.xyz, 1.0);
+      gl_Position = uProjectionMatrix * orthoPosition;
+      depth = -(orthoPosition.z / 10000.0);  
     } else {
       gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(transformedPos.xyz, 1.0);
     }
@@ -48,9 +53,18 @@ const fragmentShaderSource = `
   varying vec4 vColor;
   varying vec3 vLighting;
   varying vec2 vTextureCoordinate;
+  varying float depth;
 
   uniform sampler2D uTexture;
-  uniform int uTextureType; // 1:reversedY 2:basicY default:color
+  uniform int uTextureType;
+  //uniform int uPositionType;
+
+  vec4 packDepth( float v ) {
+    vec4 enc = vec4(1.0, 255.0, 65025.0, 16581375.0) * v;
+    enc = fract(enc);
+    enc -= enc.yzww * vec4(1.0/255.0, 1.0/255.0, 1.0/255.0, 0.0);
+    return enc;
+  }
 
   void main(void) {
     if (uTextureType == 1) {
@@ -59,6 +73,9 @@ const fragmentShaderSource = `
     } else if (uTextureType == 2) {
       vec4 textureColor = texture2D(uTexture, vTextureCoordinate);
       gl_FragColor = vec4(textureColor.rgb * vLighting, textureColor.a);
+    } else if (uTextureType == 3) {
+      vec4 textureColor = texture2D(uTexture, vTextureCoordinate);
+      gl_FragColor = packDepth(depth);
     } else {
       gl_FragColor = vec4(vColor.xyz * vLighting, vColor.a);
     }

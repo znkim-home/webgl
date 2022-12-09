@@ -35,9 +35,11 @@ export default {
       this.test = new Triangle([-500, -500, 0], [500, -500, 0], [500, 500, 0]);
 
       let image = new Image();
+      image.crossOrigin = "";
       image.onload = () => {
         this.image = image;
       }
+      //image.src = "https://random.imagecdn.app/256/256"
       image.src = "/image/duck_256.jpg";
     },
     initMouse() {
@@ -49,12 +51,24 @@ export default {
             return [pointPosition[0], pointPosition[1]];
           }); 
 
-          this.$parent.createPolygon(coordinates, {
+          let image = new Image();
+          image.crossOrigin = "";
+          image.onload = () => {
+            this.$parent.createPolygon(coordinates, {
+              position: { x: 0, y: 0, z: 0 },
+              color: { r: 0.0, g: 0.5, b: 1.0, a: 0.5 },
+              height: 100,
+              image : image
+            });
+          }
+          image.src = "https://random.imagecdn.app/512/512"
+
+          /*this.$parent.createPolygon(coordinates, {
             position: { x: 0, y: 0, z: 0 },
             color: { r: 0.0, g: 0.5, b: 1.0, a: 0.5 },
             height: 100,
             image : this.image
-          });
+          });*/
 
           this.line = undefined;
           this.pointPositions = [];
@@ -73,7 +87,17 @@ export default {
         }
       };
       canvas.onmousedown = (e) => {
-        if (e.button == 2) {
+        if (e.button == 1) {
+          const webGl = this.webGl;
+          //let id = webGl.selectionFbo.getColor(e.x, (canvas.height - e.y));
+
+          let depth = webGl.depthFbo.getColor(e.x, (canvas.height - e.y));
+          console.log(depth);
+          //console.log(id);
+          //let result = this.webGl.renderableObjs[id];
+          //console.log(result);
+          //webGl.depthFbo.unbind();
+        } else if (e.button == 2) {
           if (this.mouseStatus) {
             this.mouseStatus = false;
             document.exitPointerLock();
@@ -149,7 +173,7 @@ export default {
       canvas.onmouseup = () => {};
     },
     initKey() {
-      const moveMs = 8; // 66:15fps 33:30fps , 16:60fps
+      const moveMs = 16; // 66:15fps 33:30fps , 16:60fps
       setInterval(() => {
         let MOVE_FACTOR = this.MOVE_FACTOR;
         const webGl = this.webGl;

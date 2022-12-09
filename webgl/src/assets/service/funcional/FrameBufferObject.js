@@ -44,11 +44,11 @@ export default class FrameBufferObject {
     gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, this.width[0], this.height[0]);
     gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, this.depthBuffer);
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.texture, 0);
-
+    
     if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) {
       throw new Error("Incomplete frame buffer object.");
     }
-    
+
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
   }
 
@@ -58,5 +58,32 @@ export default class FrameBufferObject {
 
   unbind() {
     this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null);
+  }
+
+  getColor(x, y) {
+     /** @type {WebGLRenderingContext} */
+    const gl = this.gl;
+    this.bind();
+    const pixels = new Uint8Array(4);
+    gl.bindTexture(gl.TEXTURE_2D, this.texture);
+    gl.readPixels(x, y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+    this.unbind();
+    const pixelsF32 = new Float32Array([pixels[0] / 255.0, pixels[1] / 255.0, pixels[2] / 255.0, pixels[3] / 255.0]);
+
+    //console.log(pixelsF32);
+    console.log(this.unpackDepth(pixelsF32) * 10000);
+
+    return this.convertColorToId(pixels);
+  }
+
+  convertIdToColor(id) {
+    const calc = (value, div) => Math.floor(value / div) % 256 / 255;
+    return [calc(id, 16777216), calc(id, 65536), calc(id, 256), calc(id, 1)];
+  }
+  convertColorToId(color) {
+    return (color[0] * 16777216) + (color[1] * 65536) + (color[2] * 256) +(color[3]);
+  }
+  unpackDepth(rgba_depth) {
+    return rgba_depth[0] + rgba_depth[1] * 1.0 / 255.0 + rgba_depth[2] * 1.0 / 65025.0 + rgba_depth[3] * 1.0 / 16581375.0;
   }
 }

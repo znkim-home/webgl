@@ -78,7 +78,6 @@ export default {
     base(width = 500, height = 500) {
       let image = new Image();
       image.onload = () => {
-        console.log(image);
         let coordinates = [[-width, -height], [width, -height], [width, height], [-width, height]];
         let options = {
           position: { x: 0, y: 0, z: 0 },

@@ -26,6 +26,9 @@ export default class WebGL {
   renderableObjsT;
   now;
   fovyDegree;
+  
+  colorFbo;
+  depthFbo;
 
   constructor(canvas) {
     this.gl = undefined;
@@ -86,12 +89,21 @@ export default class WebGL {
     this.camera.rotate(0, 0, 0);
 
     this.resizeCanvas();
-    //const width = gl.canvas.width, height = gl.canvas.height;
-    //const coordinates = [[-width, -height], [width, -height], [width, height], [-width, height]];
 
-    //const coordinates = [[0.5, 0.5], [1, 0.5], [1, 1], [0.5, 1]];
-    const coordinates = [[0, 0], [1, 0], [1, 1], [0, 1]];
-    this.rectangle = new Rectangle(coordinates, {
+    const selectionCoorinates = [[0.75, 0.75], [1, 0.75], [1, 1], [0.75, 1]];
+    this.selectionRectangle = new Rectangle(selectionCoorinates, {
+      position: { x: 0, y: 0, z: 0 },
+      color: { r: 0.0, g: 0.0, b: 1.0, a: 1.0 },
+      reverse : true,
+    });
+    const depthCoorinates = [[0.75, 0.5], [1, 0.5], [1, 0.75], [0.75, 0.75]];
+    this.depthRectangle = new Rectangle(depthCoorinates, {
+      position: { x: 0, y: 0, z: 0 },
+      color: { r: 0.0, g: 0.0, b: 1.0, a: 1.0 },
+      reverse : true,
+    });
+    const albedoCoordinates = [[0, 0], [1, 0], [1, 1], [0, 1]];
+    this.albedoRectangle = new Rectangle(albedoCoordinates, {
       position: { x: 0, y: 0, z: 0 },
       color: { r: 0.0, g: 0.0, b: 1.0, a: 1.0 },
       reverse : true,
@@ -120,11 +132,13 @@ export default class WebGL {
     const canvas = this.canvas;
     const shader = this.shader;
     const shaderInfo = shader.shaderInfo;
-    const fbo = this.getFbo();
+    const albedoFbo = this.getAlbedoFbo();
+    const selectionFbo = this.getSelectionFbo();
+    const depthFbo = this.getDepthFbo();
 
     this.resizeCanvas();
     gl.viewport(0, 0, canvas.width, canvas.height);
-    gl.clearColor(0, 0.2, 0.2, 1);
+    gl.clearColor(0.2, 0.2, 0.0, 1);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     gl.frontFace(gl.CCW);
     gl.enable(gl.CULL_FACE);
@@ -145,38 +159,72 @@ export default class WebGL {
     gl.uniformMatrix4fv(shaderInfo.uniformLocations.modelViewMatrix, false, modelViewMatrix);
     gl.uniformMatrix4fv(shaderInfo.uniformLocations.normalMatrix, false, normalMatrix);
     gl.uniform1f(shaderInfo.uniformLocations.pointSize, pointSize);
-    gl.uniform1i(shaderInfo.uniformLocations.fixedPosition, 0);
+    gl.uniform1i(shaderInfo.uniformLocations.positionType, 0);
 
-    fbo.bind();
+    albedoFbo.bind();
+    gl.clearColor(0.3, 0.3, 0.6, 1);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    this.renderableObjs.forEach((renderableObj, index) => {
+      let id = renderableObj.getId();
+      if (id === undefined) {
+        id = index;
+        renderableObj.id = id;
+        let color = renderableObj.convertIdToColor(id);
+        renderableObj.color = vec4.fromValues(color[0], color[1], color[2], color[3]);
+        renderableObj.dirty = true;
+      }
+      renderableObj.render(gl, shaderInfo);
+    });
+    albedoFbo.unbind();
+
+    selectionFbo.bind();
     gl.clearColor(1, 1, 1, 1);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     this.renderableObjs.forEach((renderableObj) => {
-      renderableObj.render(gl, shaderInfo);
+      renderableObj.render(gl, shaderInfo, {textureType : 0});
     });
-    fbo.unbind();
+    selectionFbo.unbind();
 
-    /*this.renderableObjs.forEach((renderableObj) => {
-      renderableObj.render(gl, shaderInfo);
-    });*/
+    depthFbo.bind();
+    gl.clearColor(1.0, 1.0, 1.0, 1);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    gl.uniform1i(shaderInfo.uniformLocations.positionType, 2);
+    this.renderableObjs.forEach((renderableObj) => {
+      renderableObj.render(gl, shaderInfo, {textureType : 3});
+    });
+    depthFbo.unbind();
 
-    gl.uniform1i(shaderInfo.uniformLocations.fixedPosition, 1);
+    gl.uniform1i(shaderInfo.uniformLocations.positionType, 1);
     gl.disable(gl.DEPTH_TEST);
-    this.rectangle.texture = fbo.texture;
-    this.rectangle.render(gl, shaderInfo);
-
-    //this.rectangle.texture = fbo.texture;
-    //this.rectangle.render(gl, shaderInfo);
+    this.albedoRectangle.texture = albedoFbo.texture;
+    this.albedoRectangle.render(gl, shaderInfo);
+    this.selectionRectangle.texture = selectionFbo.texture;
+    this.selectionRectangle.render(gl, shaderInfo);
+    this.depthRectangle.texture = depthFbo.texture;
+    this.depthRectangle.render(gl, shaderInfo);
     gl.enable(gl.DEPTH_TEST);
   }
-
-  getFbo() {
-    if(!this.fbo) {
+  getAlbedoFbo() {
+    if(!this.colorFbo) {
       let canvas = this.gl.canvas;
-      this.fbo = new FrameBufferObject(this.gl, canvas.width, canvas.height);
+      this.colorFbo = new FrameBufferObject(this.gl, canvas.width, canvas.height);
     }
-    return this.fbo;
+    return this.colorFbo;
   }
-
+  getSelectionFbo() {
+    if(!this.selectionFbo) {
+      let canvas = this.gl.canvas;
+      this.selectionFbo = new FrameBufferObject(this.gl, canvas.width, canvas.height);
+    }
+    return this.selectionFbo;
+  }
+  getDepthFbo() {
+    if(!this.depthFbo) {
+      let canvas = this.gl.canvas;
+      this.depthFbo = new FrameBufferObject(this.gl, canvas.width, canvas.height);
+    }
+    return this.depthFbo;
+  }
   get gl() {
     return this.gl;
   }

@@ -30,7 +30,7 @@ export default class Point extends Renderable {
     gl.enable(gl.DEPTH_TEST);
   }
   getBuffer(gl) {
-    if (this.buffer === undefined) {
+    if (this.buffer === undefined || this.dirty === true) {
       this.buffer = new Buffer(gl);
 
       let colors = [];
@@ -47,6 +47,8 @@ export default class Point extends Renderable {
       this.buffer.colorGlBuffer = this.buffer.createBuffer(this.buffer.colorVBO);
       this.buffer.indicesGlBuffer = this.buffer.createIndexBuffer(this.buffer.indicesVBO);
       this.buffer.indicesLength = this.buffer.indicesVBO.length;
+      
+      this.dirty = false;
     }
     return this.buffer;
   }

@@ -53,7 +53,7 @@ export default class Polygon extends Renderable {
   }
   // overriding
   getBuffer(gl) {
-    if (this.buffer === undefined) {
+    if (this.buffer === undefined || this.dirty === true) {
       this.buffer = new Buffer(gl);
       let color = this.color;
       let colors = [];
@@ -82,7 +82,6 @@ export default class Polygon extends Renderable {
       triangles.forEach((triangle) => {
         let trianglePositions = triangle.positions;
         let normal = triangle.getNormal();
-        //color = this.createRandomColor();
         trianglePositions.forEach((position) => { // vec3
           position.forEach((value) => positions.push(value));
           normal.forEach((value) => normals.push(value));
@@ -111,6 +110,8 @@ export default class Polygon extends Renderable {
       this.buffer.indicesGlBuffer = this.buffer.createIndexBuffer(this.buffer.indicesVBO);
       this.buffer.textureGlBuffer = this.buffer.createBuffer(this.buffer.textureVBO);
       this.buffer.indicesLength = this.buffer.indicesVBO.length;
+
+      this.dirty = false;
     }
     return this.buffer;
   }

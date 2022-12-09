@@ -34,7 +34,7 @@ export default class Line extends Renderable {
     gl.enable(gl.DEPTH_TEST);
   }
   getBuffer(gl) {
-    if (this.buffer === undefined || this.length != this.coordinates.length) {
+    if (this.buffer === undefined || this.length != this.coordinates.length || this.dirty === true) {
       this.buffer = new Buffer(gl);
 
       let colors = [];
@@ -55,6 +55,8 @@ export default class Line extends Renderable {
       this.buffer.colorGlBuffer = this.buffer.createBuffer(this.buffer.colorVBO);
       this.buffer.indicesGlBuffer = this.buffer.createIndexBuffer(this.buffer.indicesVBO);
       this.buffer.indicesLength = this.buffer.indicesVBO.length;
+
+      this.dirty = false;
     }
     return this.buffer;
   }
