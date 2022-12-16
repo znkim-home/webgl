@@ -2,7 +2,6 @@
   <div></div>
 </template>
 <script>
-import Line from  "@/assets/service/geometry/Line.js";
 import Triangle from  "@/assets/service/geometry/Triangle.js";
 
 export default {
@@ -21,7 +20,7 @@ export default {
       pointPositions : [],
       line : undefined,
       globalOption : {
-        cameraZAxis : true
+        cameraZAxis : false
       }
     };
   },
@@ -40,69 +39,77 @@ export default {
         this.image = image;
       }
       //image.src = "https://random.imagecdn.app/256/256"
-      image.src = "/image/duck_256.jpg";
+      image.src = "/image/dirt_512.jpg";
+      //image.src = "/image/duck_256.jpg";
+
+      const MAXX = 8;
+      const MAXY = 8;
+      const MAXZ = 8;
+
+      this.blocks = {}
+      let xpos = [];
+      for (let x = 0; x < MAXX; x++) {
+        let ypos = [];
+        for (let y = 0; y < MAXY; y++) {
+          let zpos = [];
+          for (let z = 0; z < MAXZ; z++) {
+            zpos[z] = 0;
+          }
+          ypos.push(zpos);
+        }
+        xpos.push(ypos);
+      }
+      this.blocks.pos = xpos;
+      //console.log(this.blocks);
     },
     initMouse() {
       let canvas = document.getElementById("glcanvas");
-      canvas.ondblclick = (e) => {
-        if (e.button == 0) {
-          this.pointPositions.pop();
-          let coordinates = this.pointPositions.map((pointPosition) => {
-            return [pointPosition[0], pointPosition[1]];
-          }); 
-
-          /*this.$parent.createPolygon(coordinates, {
-            position: { x: 0, y: 0, z: 0 },
-            color: { r: 0.0, g: 0.5, b: 1.0, a: 0.5 },
-            height: 100,
-          });*/
-
-          let image = new Image();
-          image.crossOrigin = "";
-          image.onload = () => {
-            this.$parent.createPolygon(coordinates, {
-              position: { x: 0, y: 0, z: 0 },
-              color: { r: 0.0, g: 0.5, b: 1.0, a: 0.5 },
-              height: 100,
-              image : image
-            });
-          }
-          image.src = "https://random.imagecdn.app/512/512"
-
-          /*this.$parent.createPolygon(coordinates, {
-            position: { x: 0, y: 0, z: 0 },
-            color: { r: 0.0, g: 0.5, b: 1.0, a: 0.5 },
-            height: 100,
-            image : this.image
-          });*/
-
-          this.line = undefined;
-          this.pointPositions = [];
-        }
-      }
-      canvas.onmousewheel = (e) => {
-        if (e.deltaY != 0) {
-          const webGl = this.webGl;
-          const camera = webGl.camera;
-          const ROTATE_FACTOR = 0.1;
-          let yValue = e.deltaY * ROTATE_FACTOR;
-          let degree = camera.fovyDegree + yValue;
-          if (degree > 0 && degree < 180) {
-            camera.fovyDegree = degree;
-          }
-        }
-      };
       canvas.onmousedown = (e) => {
+        const vec4 = self.glMatrix.vec4;
+        const vec3 = self.glMatrix.vec3;
+        const webGl = this.webGl;
+        const camera = webGl.camera;
         const mouseX = e.x;
         const mouseY = canvas.height - e.y;
 
-        if (e.button == 1) {
-          const webGl = this.webGl;
+        let selectionId = webGl.selectionFbo.getColor(mouseX, mouseY);
+        let depth = webGl.depthFbo.getDepth(mouseX, mouseY);
+        let normal = webGl.normalFbo.getNormal(mouseX, mouseY);
 
-          let selectionId = webGl.selectionFbo.getColor(mouseX, mouseY);
-          let depth = webGl.depthFbo.getDepth(mouseX, mouseY);
-          console.log(selectionId, depth);
-          
+        let ratioX = mouseX / canvas.width;
+        let ratioY = mouseY / canvas.height;
+
+        if (depth > 1500) {
+          return;
+        }
+        if (e.button == 1) {
+          depth = webGl.depthFbo.getDepth(mouseX, mouseY) + 10;
+          let ray = camera.getViewRay({
+            x : ratioX,
+            y : ratioY,
+            width : canvas.width,
+            height : canvas.height,
+          }, 1);
+          let rotationMatrix = camera.getRotationMatrix();
+          let ray4 = vec4.transformMat4(vec4.create(), vec4.fromValues(ray[0], ray[1], ray[2], 1), rotationMatrix);
+          let ray3 = vec3.fromValues(ray4[0], ray4[1], ray4[2]);
+          vec3.scale(ray3, ray3, depth);
+          let cameraPos = vec3.clone(camera.position);
+          vec3.add(ray3, cameraPos, ray3);
+
+          let blockX = Math.floor(ray3[0] / 128);
+          let blockY = Math.floor(ray3[1] / 128);
+          let blockZ = Math.floor(Math.abs(ray3[2] + 1) / 128);
+          let test = this.blocks.pos[blockX + 4][blockY + 4][blockZ];
+          if (test === undefined) {
+            console.log("범위 밖");
+            return;
+          } else if (test != 0) {
+            this.$parent.removeObj(test);
+            this.blocks.pos[blockX + 4][blockY + 4][blockZ] = 0;
+            return;
+          }
+          console.log(selectionId, depth, normal);
         } else if (e.button == 2) {
           if (this.mouseStatus) {
             this.mouseStatus = false;
@@ -112,47 +119,43 @@ export default {
             canvas.requestPointerLock();
           }
         } else if (e.button == 0) {
-          const vec4 = self.glMatrix.vec4;
-          const vec3 = self.glMatrix.vec3;
-          const webGl = this.webGl;
-          const camera = webGl.camera;
-
-          let ratioX = mouseX / canvas.width;
-          let ratioY = mouseY / canvas.height;
-          
+          depth = webGl.depthFbo.getDepth(mouseX, mouseY) - 10;
           let ray = camera.getViewRay({
             x : ratioX,
             y : ratioY,
             width : canvas.width,
             height : canvas.height,
           }, 1);
-
           let rotationMatrix = camera.getRotationMatrix();
           let ray4 = vec4.transformMat4(vec4.create(), vec4.fromValues(ray[0], ray[1], ray[2], 1), rotationMatrix);
           let ray3 = vec3.fromValues(ray4[0], ray4[1], ray4[2]);
-          vec3.normalize(ray3, ray3);
-          let line = new Line(camera.position, ray3);
-          
-          let plane = this.test.getPlane();
-          let result = plane.getIntersection(line);
-          
-          this.$parent.createPoint({
-            position: { x: result[0], y: result[1], z: result[2] },
-            size: { width: 30, length: 30, height: 30 },
-            color: {r: 1.0, g: 0.3, b: 0.3, a: 1.0 },
-          });
+          vec3.scale(ray3, ray3, depth);
+          let cameraPos = vec3.clone(camera.position);
+          vec3.add(ray3, cameraPos, ray3);
 
-          this.pointPositions.push(result);
-          let coordinates = this.pointPositions;
-          if (this.pointPositions.length >= 2 ) {
-            if (!this.line) {
-              this.line = this.$parent.createLine(coordinates, {
-                color: {r: 1.0, g: 0.3, b: 0.3, a: 1.0 },
-              });
-            } else {
-              this.line.coordinates = coordinates;
-            }
+          let blockX = Math.floor(ray3[0] / 128);
+          let blockY = Math.floor(ray3[1] / 128);
+          let blockZ = Math.floor(Math.abs(ray3[2] + 1) / 128);
+          let valx = blockX * 128;
+          let valy = blockY * 128;
+          let valz = blockZ * 128 / 2;
+          let valpos = vec3.fromValues(valx, valy, valz);
+          
+          let test = this.blocks.pos[blockX + 4][blockY + 4][blockZ];
+          if (test === undefined) {
+            console.log("범위 밖");
+            return;
+          } else if (test != 0) {
+            return;
           }
+          let coordinates = [[-64, -64], [64, -64], [64, 64], [-64, 64]];
+          let polygon = this.$parent.createPolygon(coordinates, {
+            position: { x: valpos[0] + 64, y: valpos[1] + 64, z: valpos[2]},
+            color: { r: 0.0, g: 0.5, b: 1.0, a: 1.0 },
+            height: 128,
+            image : this.image
+          });
+          this.blocks.pos[blockX + 4][blockY + 4][blockZ] = polygon;
         }
       };
       canvas.onmousemove = (e) => {

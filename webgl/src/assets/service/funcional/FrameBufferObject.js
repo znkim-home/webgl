@@ -51,7 +51,16 @@ export default class FrameBufferObject {
     const gl = this.gl;
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
   }
-  
+  getNormal(x, y) {
+    const gl = this.gl;
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.frameBuffer);
+    const pixels = new Uint8Array(4);
+    gl.bindTexture(gl.TEXTURE_2D, this.texture);
+    gl.readPixels(x, y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    const pixelsF32 = new Float32Array([pixels[0] / 255.0, pixels[1] / 255.0, pixels[2] / 255.0, pixels[3] / 255.0]);
+    return pixelsF32;
+  }
   getColor(x, y) {
     /** @type {WebGLRenderingContext} */
     const gl = this.gl;
@@ -62,7 +71,6 @@ export default class FrameBufferObject {
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     return this.convertColorToId(pixels);
   }
-
   getDepth(x, y) {
     const gl = this.gl;
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.frameBuffer);
@@ -74,7 +82,6 @@ export default class FrameBufferObject {
     const result = this.unpackDepth(pixelsF32) * 10000;
     return result;
   }
-
   convertIdToColor(id) {
     const calc = (value, div) => Math.floor(value / div) % 256 / 255;
     return [calc(id, 16777216), calc(id, 65536), calc(id, 256), calc(id, 1)];

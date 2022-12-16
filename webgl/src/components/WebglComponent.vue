@@ -48,7 +48,7 @@ export default {
   },
   data() {
     return {
-      drawTools: false,
+      drawTools: true,
       webGl: undefined,
     };
   },
@@ -76,9 +76,11 @@ export default {
       return [x * unit, y * unit];
     },
     base(width = 500, height = 500) {
-      let image = new Image();
+      let halfWidth = width / 2;
+      let halfHeight = height / 2;
+      let image = new Image(); 
       image.onload = () => {
-        let coordinates = [[-width, -height], [width, -height], [width, height], [-width, height]];
+        let coordinates = [[-halfWidth, -halfHeight], [halfWidth, -halfHeight], [halfWidth, halfHeight], [-halfWidth, halfHeight]];
         let options = {
           position: { x: 0, y: 0, z: 0 },
           color: { r: 1.0, g: 1.0, b: 0.0, a: 1.0 },
@@ -145,6 +147,19 @@ export default {
       const camera = webGl.camera;
       camera.setPosition(0, 0, -0);
     },
+    removeObj(obj) {
+      this.webGl.renderableObjs = this.webGl.renderableObjs.filter((renderableObj) => {
+        return renderableObj.id !== obj.id;
+      });
+
+      /*let findObj = this.webGl.renderableObjs.find((renderableObj) => {
+        return renderableObj.id === obj.id;
+      });
+      console.log(findObj);
+      if (findObj) {
+
+      }*/
+    },
     createCube(options) {
       let cube = new Cube(options);
       this.webGl.renderableObjs.push(cube);
@@ -163,8 +178,7 @@ export default {
       this.webGl.renderableObjs.push(polygon);
       options.color = {r : 0.0, g : 1.0, b : 0.0, a : 1.0};
       options.image = undefined;
-      let polygon2 = new Polygon(coordinates, options);
-      this.webGl.renderableObjsT.push(polygon2);
+      return polygon;
     },
     initConsole(consoleLimit = 50000) {
       let consoleDiv = document.querySelector(".console");

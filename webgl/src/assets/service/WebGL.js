@@ -90,6 +90,12 @@ export default class WebGL {
 
     this.resizeCanvas();
 
+    const normalCoorinates = [[0.75, 0.25], [1, 0.25], [1, 0.5], [0.75, 0.5]];
+    this.normalRectangle = new Rectangle(normalCoorinates, {
+      position: { x: 0, y: 0, z: 0 },
+      color: { r: 0.0, g: 0.0, b: 1.0, a: 1.0 },
+      reverse : true,
+    });
     const selectionCoorinates = [[0.75, 0.75], [1, 0.75], [1, 1], [0.75, 1]];
     this.selectionRectangle = new Rectangle(selectionCoorinates, {
       position: { x: 0, y: 0, z: 0 },
@@ -135,6 +141,7 @@ export default class WebGL {
     const albedoFbo = this.getAlbedoFbo();
     const selectionFbo = this.getSelectionFbo();
     const depthFbo = this.getDepthFbo();
+    const normalFbo = this.getNormalFbo();
 
     this.resizeCanvas();
     gl.viewport(0, 0, canvas.width, canvas.height);
@@ -148,7 +155,7 @@ export default class WebGL {
     const aspect = canvas.width / canvas.height; // Aspect ratio
     const near = 0.1; // Near Frustum
     const far = 10000.0; // Far Frustum
-    const pointSize = 8.0
+    const pointSize = 16.0
 
     let projectionMatrix = mat4.create();
     mat4.perspective(projectionMatrix, fovy, aspect, near, far);
@@ -194,6 +201,15 @@ export default class WebGL {
     });
     depthFbo.unbind();
 
+    normalFbo.bind();
+    gl.clearColor(1.0, 1.0, 1.0, 1);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    gl.uniform1i(shaderInfo.uniformLocations.positionType, 3);
+    this.renderableObjs.forEach((renderableObj) => {
+      renderableObj.render(gl, shaderInfo, {textureType : 5});
+    });
+    normalFbo.unbind();
+
     gl.uniform1i(shaderInfo.uniformLocations.positionType, 1);
     gl.disable(gl.DEPTH_TEST);
     this.albedoRectangle.texture = albedoFbo.texture;
@@ -202,6 +218,8 @@ export default class WebGL {
     this.selectionRectangle.render(gl, shaderInfo);
     this.depthRectangle.texture = depthFbo.texture;
     this.depthRectangle.render(gl, shaderInfo);
+    this.normalRectangle.texture = normalFbo.texture;
+    this.normalRectangle.render(gl, shaderInfo);
     gl.enable(gl.DEPTH_TEST);
   }
   getAlbedoFbo() {
@@ -225,6 +243,15 @@ export default class WebGL {
     }
     return this.depthFbo;
   }
+
+  getNormalFbo() {
+    if(!this.normalFbo) {
+      let canvas = this.gl.canvas;
+      this.normalFbo = new FrameBufferObject(this.gl, canvas.width, canvas.height);
+    }
+    return this.normalFbo;
+  }
+
   get gl() {
     return this.gl;
   }

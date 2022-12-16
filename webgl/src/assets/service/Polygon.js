@@ -37,12 +37,6 @@ export default class Polygon extends Renderable {
     gl.enableVertexAttribArray(shaderInfo.attributeLocations.vertexNormal);
     gl.enableVertexAttribArray(shaderInfo.attributeLocations.textureCoordinate);
     
-    /*if (buffer.texture) {
-      gl.uniform1i(shaderInfo.uniformLocations.textureType, 1);
-      if (renderOptions?.textureType !== undefined) gl.uniform1i(shaderInfo.uniformLocations.textureType, renderOptions?.textureType);
-      gl.bindTexture(gl.TEXTURE_2D, buffer.texture);
-    }*/
-
     let textureType = buffer.texture ? 1 : 0;
     textureType = (renderOptions?.textureType !== undefined) ? renderOptions?.textureType : textureType;
     if (textureType > 0) {
@@ -79,7 +73,9 @@ export default class Polygon extends Renderable {
       let topPositions = this.coordinates.map((coordinate) => vec3.fromValues(coordinate[0], coordinate[1], this.position[2] + this.height));
       let bottomPositions = this.coordinates.map((coordinate) => vec3.fromValues(coordinate[0], coordinate[1], this.position[2]));
       let bbox = this.getMinMax(topPositions);
-      
+      bbox.minz = this.position[2];
+      bbox.maxz = this.position[2] + this.height;
+
       if (Tessellator.validateCCW(topPositions) < 0) {
         topPositions.reverse();
         bottomPositions.reverse();
@@ -104,8 +100,21 @@ export default class Polygon extends Renderable {
           selectionColor.forEach((value) => selectionColors.push(value));
           let xoffset = bbox.maxx - bbox.minx;
           let yoffset = bbox.maxy - bbox.miny;
-          textureCoordinates.push((position[0] - bbox.minx) / xoffset);
-          textureCoordinates.push((position[1] - bbox.miny) / yoffset);
+          let zoffset = bbox.maxz - bbox.minz;
+          //textureCoordinates.push((position[0] - bbox.minx) / xoffset);
+          //textureCoordinates.push((position[1] - bbox.miny) / yoffset);
+          //textureCoordinates.push((position[2] - bbox.minz) / zoffset);
+
+          if (normal[0] == 1 || normal[0] == -1) {
+            textureCoordinates.push((position[1] - bbox.miny) / yoffset);
+            textureCoordinates.push((position[2] - bbox.minz) / zoffset);
+          } else if (normal[1] == 1 || normal[1] == -1) {
+            textureCoordinates.push((position[0] - bbox.minx) / xoffset);
+            textureCoordinates.push((position[2] - bbox.minz) / zoffset);
+          } else if (normal[2] == 1 || normal[2] == -1) {
+            textureCoordinates.push((position[0] - bbox.minx) / xoffset);
+            textureCoordinates.push((position[1] - bbox.miny) / yoffset);
+          }
         });
       });
 
