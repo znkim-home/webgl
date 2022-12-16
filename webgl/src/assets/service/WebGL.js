@@ -162,7 +162,7 @@ export default class WebGL {
     gl.uniform1i(shaderInfo.uniformLocations.positionType, 0);
 
     albedoFbo.bind();
-    gl.clearColor(0.3, 0.3, 0.6, 1);
+    gl.clearColor(0.3, 0.3, 0.3, 1);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     this.renderableObjs.forEach((renderableObj, index) => {
       let id = renderableObj.getId();
@@ -170,7 +170,7 @@ export default class WebGL {
         id = index;
         renderableObj.id = id;
         let color = renderableObj.convertIdToColor(id);
-        renderableObj.color = vec4.fromValues(color[0], color[1], color[2], color[3]);
+        renderableObj.selectionColor = vec4.fromValues(color[0], color[1], color[2], color[3]);
         renderableObj.dirty = true;
       }
       renderableObj.render(gl, shaderInfo);
@@ -178,10 +178,10 @@ export default class WebGL {
     albedoFbo.unbind();
 
     selectionFbo.bind();
-    gl.clearColor(1, 1, 1, 1);
+    gl.clearColor(1.0, 1.0, 1.0, 1);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     this.renderableObjs.forEach((renderableObj) => {
-      renderableObj.render(gl, shaderInfo, {textureType : 0});
+      renderableObj.render(gl, shaderInfo, {textureType : 4});
     });
     selectionFbo.unbind();
 

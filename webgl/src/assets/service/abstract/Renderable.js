@@ -6,6 +6,7 @@ export default class Renderable {
   position; // position(vec3)
   rotation; // rotation(vec3)
   color; // color(vec4)
+  selectionColor; // selectionColor(vec4)
   dirty;
 
   constructor() {
@@ -16,7 +17,8 @@ export default class Renderable {
     this.dirty = false;
     this.position = vec3.fromValues(0, 0, 0);
     this.rotation = vec3.fromValues(0, 0, 0);
-    this.color = vec4.fromValues(0.5, 0.5, 0.5, 1); // 
+    this.color = vec4.fromValues(0.5, 0.5, 0.5, 1);
+    this.selectionColor = vec4.fromValues(0.0, 0.0, 0.0, 1);
     this.buffer = undefined;
   }
   render() {

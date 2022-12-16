@@ -17,7 +17,7 @@ export default class Line extends Renderable {
     if (options?.height) this.height = options.height;
     if (options?.color) this.color = vec4.set(this.color, options?.color.r, options?.color.g, options?.color.b, options?.color.a);
   }
-  render(gl, shaderInfo) {
+  render(gl, shaderInfo, renderOptions) {
     let tm = this.getTransformMatrix();
     gl.uniformMatrix4fv(shaderInfo.uniformLocations.objectMatrix, false, tm);
 
@@ -26,8 +26,17 @@ export default class Line extends Renderable {
     gl.enableVertexAttribArray(shaderInfo.attributeLocations.vertexPosition);
     gl.enableVertexAttribArray(shaderInfo.attributeLocations.vertexColor);
 
+    let textureType = buffer.texture ? 1 : 0;
+    textureType = (renderOptions?.textureType !== undefined) ? renderOptions?.textureType : textureType;
+    gl.uniform1i(shaderInfo.uniformLocations.textureType, textureType);
+
+    if (textureType == 4) { // selection
+      buffer.bindBuffer(buffer.selectionColorGlBuffer, 4, shaderInfo.attributeLocations.vertexColor);
+    } else {
+      buffer.bindBuffer(buffer.colorGlBuffer, 4, shaderInfo.attributeLocations.vertexColor);
+    }
     buffer.bindBuffer(buffer.postionsGlBuffer, 3, shaderInfo.attributeLocations.vertexPosition);
-    buffer.bindBuffer(buffer.colorGlBuffer, 4, shaderInfo.attributeLocations.vertexColor);
+    //wbuffer.bindBuffer(buffer.colorGlBuffer, 4, shaderInfo.attributeLocations.vertexColor);
 
     gl.disable(gl.DEPTH_TEST);
     gl.drawElements(gl.LINE_STRIP, buffer.indicesLength, gl.UNSIGNED_SHORT, 0);
@@ -38,11 +47,13 @@ export default class Line extends Renderable {
       this.buffer = new Buffer(gl);
 
       let colors = [];
+      let selectionColors = [];
       let positions = [];
 
       this.coordinates.forEach((coordinate) => {
         coordinate.forEach((value) => positions.push(value));
         this.color.forEach((value) => colors.push(value));
+        this.selectionColor.forEach((value) => selectionColors.push(value));
       });
 
       this.length = this.coordinates.length;
@@ -50,9 +61,11 @@ export default class Line extends Renderable {
       this.buffer.indicesVBO = indices.map((obj, index) => index );
       this.buffer.positionsVBO = new Float32Array(positions);
       this.buffer.colorVBO = new Float32Array(colors);
+      this.buffer.selectionColorVBO = new Float32Array(selectionColors);
 
       this.buffer.postionsGlBuffer = this.buffer.createBuffer(this.buffer.positionsVBO);
       this.buffer.colorGlBuffer = this.buffer.createBuffer(this.buffer.colorVBO);
+      this.buffer.selectionColorGlBuffer = this.buffer.createBuffer(this.buffer.selectionColorVBO);
       this.buffer.indicesGlBuffer = this.buffer.createIndexBuffer(this.buffer.indicesVBO);
       this.buffer.indicesLength = this.buffer.indicesVBO.length;
 

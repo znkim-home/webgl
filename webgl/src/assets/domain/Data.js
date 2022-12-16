@@ -12,7 +12,7 @@ const vertexShaderSource = `
   uniform mat4 uNormalMatrix;
   uniform float uPointSize;
 
-  uniform int uPositionType;
+  uniform int uPositionType; // 1: plane, 2: depth, basic
   //uniform int uTextureType;
 
   varying vec4 vColor;
@@ -21,26 +21,26 @@ const vertexShaderSource = `
   varying float depth;
   void main(void) {
     vColor = aVertexColor;
+    gl_PointSize = uPointSize;
 
-    vec3 ambientLight = vec3(0.8, 0.8, 0.8);
+    vec3 ambientLight = vec3(0.9, 0.9, 0.9);
     vec3 directionalLightColor = vec3(1, 1, 1);
-    vec3 directionalVector = normalize(vec3(0.85, 0.8, 0.75));
+    vec3 directionalVector = normalize(vec3(0.8, 0.8, 0.8));
 
     vec4 transformedNormal = normalize(uNormalMatrix * vec4(aVertexNormal, 1.0));
-    vec4 transformedPos = uObjectMatrix * vec4(aVertexPosition, 1.0);
+    vec4 transformedPosition = uObjectMatrix * vec4(aVertexPosition, 1.0);
+    vec4 orthoPosition = uModelViewMatrix * vec4(transformedPosition.xyz, 1.0);
 
     float directional = max(dot(transformedNormal.xyz, directionalVector), 0.0);
     vLighting = ambientLight + (directionalLightColor * directional);
-    
-    gl_PointSize = uPointSize;
+
     if (uPositionType == 1) {
       gl_Position = vec4(-1.0 + 2.0 * aVertexPosition.xy, 0.0, 1.0);
     } else if (uPositionType == 2) {
-      vec4 orthoPosition = uModelViewMatrix * vec4(transformedPos.xyz, 1.0);
       gl_Position = uProjectionMatrix * orthoPosition;
       depth = -(orthoPosition.z / 10000.0);  
     } else {
-      gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(transformedPos.xyz, 1.0);
+      gl_Position = uProjectionMatrix * orthoPosition;
     }
     
     vTextureCoordinate = aTextureCoordinate;
@@ -56,7 +56,7 @@ const fragmentShaderSource = `
   varying float depth;
 
   uniform sampler2D uTexture;
-  uniform int uTextureType;
+  uniform int uTextureType; // default : color, 1 : texture, 2 : reverseY, 3 : depth
   //uniform int uPositionType;
 
   vec4 packDepth( float v ) {

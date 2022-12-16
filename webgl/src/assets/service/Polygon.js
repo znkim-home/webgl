@@ -37,16 +37,29 @@ export default class Polygon extends Renderable {
     gl.enableVertexAttribArray(shaderInfo.attributeLocations.vertexNormal);
     gl.enableVertexAttribArray(shaderInfo.attributeLocations.textureCoordinate);
     
-    if (buffer.texture) {
+    /*if (buffer.texture) {
       gl.uniform1i(shaderInfo.uniformLocations.textureType, 1);
       if (renderOptions?.textureType !== undefined) gl.uniform1i(shaderInfo.uniformLocations.textureType, renderOptions?.textureType);
       gl.bindTexture(gl.TEXTURE_2D, buffer.texture);
+    }*/
+
+    let textureType = buffer.texture ? 1 : 0;
+    textureType = (renderOptions?.textureType !== undefined) ? renderOptions?.textureType : textureType;
+    if (textureType > 0) {
+      gl.bindTexture(gl.TEXTURE_2D, buffer.texture);
+    }
+    gl.uniform1i(shaderInfo.uniformLocations.textureType, textureType);
+
+    if (textureType >= 1 && textureType <= 3) { // texture, reverseY, depth
+      buffer.bindBuffer(buffer.textureGlBuffer, 2, shaderInfo.attributeLocations.textureCoordinate);
+    } else if (textureType == 4) { // selection
+      buffer.bindBuffer(buffer.selectionColorGlBuffer, 4, shaderInfo.attributeLocations.vertexColor);
+    } else { // defulat color
+      buffer.bindBuffer(buffer.colorGlBuffer, 4, shaderInfo.attributeLocations.vertexColor);
     }
 
-    buffer.bindBuffer(buffer.postionsGlBuffer, 3, shaderInfo.attributeLocations.vertexPosition);
-    buffer.bindBuffer(buffer.colorGlBuffer, 4, shaderInfo.attributeLocations.vertexColor);
     buffer.bindBuffer(buffer.normalGlBuffer, 3, shaderInfo.attributeLocations.vertexNormal);
-    buffer.bindBuffer(buffer.textureGlBuffer, 2, shaderInfo.attributeLocations.textureCoordinate);
+    buffer.bindBuffer(buffer.postionsGlBuffer, 3, shaderInfo.attributeLocations.vertexPosition);
 
     gl.drawElements(gl.TRIANGLES, buffer.indicesLength, gl.UNSIGNED_SHORT, 0);
     gl.uniform1i(shaderInfo.uniformLocations.textureType, 0);
@@ -56,7 +69,9 @@ export default class Polygon extends Renderable {
     if (this.buffer === undefined || this.dirty === true) {
       this.buffer = new Buffer(gl);
       let color = this.color;
+      let selectionColor = this.selectionColor;
       let colors = [];
+      let selectionColors = [];
       let positions = [];
       let normals = [];
       let textureCoordinates = [];
@@ -86,6 +101,7 @@ export default class Polygon extends Renderable {
           position.forEach((value) => positions.push(value));
           normal.forEach((value) => normals.push(value));
           color.forEach((value) => colors.push(value));
+          selectionColor.forEach((value) => selectionColors.push(value));
           let xoffset = bbox.maxx - bbox.minx;
           let yoffset = bbox.maxy - bbox.miny;
           textureCoordinates.push((position[0] - bbox.minx) / xoffset);
@@ -98,6 +114,7 @@ export default class Polygon extends Renderable {
       this.buffer.positionsVBO = new Float32Array(positions);
       this.buffer.normalVBO = new Float32Array(normals);
       this.buffer.colorVBO = new Float32Array(colors);
+      this.buffer.selectionColorVBO = new Float32Array(selectionColors);
       this.buffer.textureVBO = new Float32Array(textureCoordinates);
 
       if (this.image) {
@@ -106,6 +123,7 @@ export default class Polygon extends Renderable {
 
       this.buffer.postionsGlBuffer = this.buffer.createBuffer(this.buffer.positionsVBO);
       this.buffer.colorGlBuffer = this.buffer.createBuffer(this.buffer.colorVBO);
+      this.buffer.selectionColorGlBuffer = this.buffer.createBuffer(this.buffer.selectionColorVBO);
       this.buffer.normalGlBuffer = this.buffer.createBuffer(this.buffer.normalVBO);
       this.buffer.indicesGlBuffer = this.buffer.createIndexBuffer(this.buffer.indicesVBO);
       this.buffer.textureGlBuffer = this.buffer.createBuffer(this.buffer.textureVBO);

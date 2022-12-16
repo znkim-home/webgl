@@ -51,6 +51,12 @@ export default {
             return [pointPosition[0], pointPosition[1]];
           }); 
 
+          /*this.$parent.createPolygon(coordinates, {
+            position: { x: 0, y: 0, z: 0 },
+            color: { r: 0.0, g: 0.5, b: 1.0, a: 0.5 },
+            height: 100,
+          });*/
+
           let image = new Image();
           image.crossOrigin = "";
           image.onload = () => {
@@ -87,16 +93,16 @@ export default {
         }
       };
       canvas.onmousedown = (e) => {
+        const mouseX = e.x;
+        const mouseY = canvas.height - e.y;
+
         if (e.button == 1) {
           const webGl = this.webGl;
-          //let id = webGl.selectionFbo.getColor(e.x, (canvas.height - e.y));
 
-          let depth = webGl.depthFbo.getColor(e.x, (canvas.height - e.y));
-          console.log(depth);
-          //console.log(id);
-          //let result = this.webGl.renderableObjs[id];
-          //console.log(result);
-          //webGl.depthFbo.unbind();
+          let selectionId = webGl.selectionFbo.getColor(mouseX, mouseY);
+          let depth = webGl.depthFbo.getDepth(mouseX, mouseY);
+          console.log(selectionId, depth);
+          
         } else if (e.button == 2) {
           if (this.mouseStatus) {
             this.mouseStatus = false;
@@ -111,8 +117,8 @@ export default {
           const webGl = this.webGl;
           const camera = webGl.camera;
 
-          let ratioX = e.x / canvas.width;
-          let ratioY = (canvas.height - e.y) / canvas.height;
+          let ratioX = mouseX / canvas.width;
+          let ratioY = mouseY / canvas.height;
           
           let ray = camera.getViewRay({
             x : ratioX,
