@@ -79,10 +79,10 @@ export default {
         let ratioX = mouseX / canvas.width;
         let ratioY = mouseY / canvas.height;
 
-        if (depth > 1500) {
-          return;
-        }
         if (e.button == 1) {
+          if (depth > 1500) {
+            return;
+          }
           depth = webGl.depthFbo.getDepth(mouseX, mouseY) + 10;
           let ray = camera.getViewRay({
             x : ratioX,
@@ -119,6 +119,9 @@ export default {
             canvas.requestPointerLock();
           }
         } else if (e.button == 0) {
+          if (depth > 1500) {
+            return;
+          }
           depth = webGl.depthFbo.getDepth(mouseX, mouseY) - 10;
           let ray = camera.getViewRay({
             x : ratioX,
@@ -140,7 +143,7 @@ export default {
           let valy = blockY * 128;
           let valz = blockZ * 128 / 2;
           let valpos = vec3.fromValues(valx, valy, valz);
-          
+
           let test = this.blocks.pos[blockX + 4][blockY + 4][blockZ];
           if (test === undefined) {
             console.log("범위 밖");
