@@ -2,7 +2,7 @@
   <div
     v-if="drawTools"
     class="dev-tool"
-    style="left: 0px; top: 0px"
+    style="left: 0px; bottom: 0px"
     oncontextmenu="return false"
     ondragstart="return false"
     onselectstart="return false"
@@ -13,7 +13,7 @@
   <div
     v-if="drawTools"
     class="dev-tool"
-    style="right: 0px; top: 0px"
+    style="left: 0px; bottom: 160px"
     oncontextmenu="return false"
     ondragstart="return false"
     onselectstart="return false"
@@ -151,14 +151,6 @@ export default {
       this.webGl.renderableObjs = this.webGl.renderableObjs.filter((renderableObj) => {
         return renderableObj.id !== obj.id;
       });
-
-      /*let findObj = this.webGl.renderableObjs.find((renderableObj) => {
-        return renderableObj.id === obj.id;
-      });
-      console.log(findObj);
-      if (findObj) {
-
-      }*/
     },
     createCube(options) {
       let cube = new Cube(options);

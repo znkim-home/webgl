@@ -29,7 +29,6 @@ export default class WebGL {
   
   colorFbo;
   depthFbo;
-
   constructor(canvas) {
     this.gl = undefined;
     this.shader = undefined;
@@ -43,7 +42,6 @@ export default class WebGL {
     this.deltaTime = undefined;
     this.init();
   }
-
   init() {
     const canvas = this.canvas;
     try {
@@ -61,7 +59,6 @@ export default class WebGL {
     gl.clearColor(0, 0, 0, 1);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   }
-
   resizeCanvas() {
     const canvas = this.canvas;
     const displayWidth  = canvas.clientWidth;
@@ -73,7 +70,6 @@ export default class WebGL {
     }
     return needResize;
   }
-
   startRender(data) {
     const gl = this.gl;
     gl.enable(gl.DEPTH_TEST);
@@ -87,9 +83,7 @@ export default class WebGL {
     });
     this.camera.setPosition(0, 0, 0);
     this.camera.rotate(0, 0, 0);
-
     this.resizeCanvas();
-
     const normalCoorinates = [[0.75, 0.25], [1, 0.25], [1, 0.5], [0.75, 0.5]];
     this.normalRectangle = new Rectangle(normalCoorinates, {
       position: { x: 0, y: 0, z: 0 },
@@ -114,23 +108,19 @@ export default class WebGL {
       color: { r: 0.0, g: 0.0, b: 1.0, a: 1.0 },
       reverse : true,
     });
-
     requestAnimationFrame(this.render.bind(this));
   }
-
   render(now) {
     this.time(now);
     this.scene();
     requestAnimationFrame(this.render.bind(this));
   }
-  
   time(now) {
     this.now = now;
     now *= 0.001;
     this.deltaTime = (now - this.then);
     this.then = now;
   }
-  
   scene() {
     /** @type {WebGLRenderingContext} */
     const gl = this.gl;
@@ -167,14 +157,14 @@ export default class WebGL {
     gl.uniformMatrix4fv(shaderInfo.uniformLocations.normalMatrix, false, normalMatrix);
     gl.uniform1f(shaderInfo.uniformLocations.pointSize, pointSize);
     gl.uniform1i(shaderInfo.uniformLocations.positionType, 0);
-
+    
     albedoFbo.bind();
     gl.clearColor(0.3, 0.3, 0.3, 1);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-    this.renderableObjs.forEach((renderableObj, index) => {
+    this.renderableObjs.forEach((renderableObj) => {
       let id = renderableObj.getId();
       if (id === undefined) {
-        id = index;
+        id = this.createRenderableObjectId();
         renderableObj.id = id;
         let color = renderableObj.convertIdToColor(id);
         renderableObj.selectionColor = vec4.fromValues(color[0], color[1], color[2], color[3]);
@@ -243,13 +233,26 @@ export default class WebGL {
     }
     return this.depthFbo;
   }
-
   getNormalFbo() {
     if(!this.normalFbo) {
       let canvas = this.gl.canvas;
       this.normalFbo = new FrameBufferObject(this.gl, canvas.width, canvas.height);
     }
     return this.normalFbo;
+  }
+
+  createRenderableObjectId () {
+    let result = undefined
+    while(result === undefined) {
+      let randomId = Math.ceil(Math.random() * 100000000);
+      let obj = this.renderableObjs.find((renderableObj) => {
+        return renderableObj.id == randomId;
+      });
+      if (!obj) {
+        result = randomId;
+      }
+    }
+    return result;
   }
 
   get gl() {

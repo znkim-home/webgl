@@ -12,11 +12,10 @@ export default class Camera {
   right;
   constructor(options) {
     this.init(options);
-    this.getTransformMatrix(true);
+    this.getTransformMatrix();
   }
   get transformMatrix() {
     this.getTransformMatrix();
-    console.log("test");
     return this.transformMatrix;
   }
   init(options) {
@@ -34,6 +33,31 @@ export default class Camera {
     if (options?.rotation) {
       this.rotation = vec3.set(this.position, options.rotation.heading, options.rotation.pitch, options.rotation.roll);
     }
+  }
+  // pivotPoint, heading, pitch
+  rotationOrbit(xValue, yValue, pivotPosition) {
+    let pitchAxis = this.right;
+    let headingMatrix = mat4.fromZRotation(mat4.create(), xValue);
+    let pitchMatrix = mat4.fromRotation(mat4.create(), yValue, pitchAxis);
+
+    let totalRotationMatrix = mat4.multiply(mat4.create(), headingMatrix, pitchMatrix);
+
+    let translatedCameraPosition = vec3.subtract(vec3.create(), this.position, pivotPosition);
+    let translatedCameraPositionVec4 = vec4.fromValues(translatedCameraPosition[0], translatedCameraPosition[1], translatedCameraPosition[2], 1.0);
+    let transformedCameraPosition = vec4.transformMat4(vec4.create(), translatedCameraPositionVec4, totalRotationMatrix);
+    let transformedCameraPositionVec3 = vec3.fromValues(transformedCameraPosition[0], transformedCameraPosition[1], transformedCameraPosition[2]);
+    let transformedAndReturnedCameraPosition = vec3.add(vec4.create(), transformedCameraPositionVec3, pivotPosition);
+
+    this.position = transformedAndReturnedCameraPosition;
+    
+    let totalMatrix3 = mat3.fromMat4(mat3.create(), totalRotationMatrix);
+
+    let rotatedDirection = vec3.transformMat3(vec3.create(), this.direction, totalMatrix3)
+    this.direction = rotatedDirection;
+    let rotatedUp = vec3.transformMat3(vec3.create(), this.up, totalMatrix3)
+    this.up = rotatedUp;
+
+    this.dirty = true;
   }
   rotate(heading, pitch, roll) {
     this.rotation[0] += heading;
@@ -54,8 +78,22 @@ export default class Camera {
     mat4.multiply(resultMatrix, pitchMatrix, resultMatrix);
     mat4.multiply(resultMatrix, headingMatrix, resultMatrix);
     mat4.multiply(resultMatrix, rollMatrix, resultMatrix);
-    let transformMatrix = this.getTransformMatrix(true);
+    let transformMatrix = this.getTransformMatrix();
+    //resultMatrix = mat4.invert(resultMatrix, resultMatrix); 
     mat4.multiply(transformMatrix, transformMatrix, resultMatrix);
+  }
+  lookAt(target) {
+    let zAxis = vec3.normalize(vec3.create(), vec3.subtract(vec3.create(), this.position, target));
+    let xAxis = vec3.normalize(vec3.create(), vec3.cross(vec3.create(), this.up, zAxis));
+    let yAxis = vec3.normalize(vec3.create(), vec3.cross(vec3.create(), zAxis, xAxis));
+    console.log(zAxis, xAxis, yAxis);
+    let result = mat4.fromValues(
+      xAxis[0], xAxis[1], xAxis[2], 0, 
+      yAxis[0], yAxis[1], yAxis[2], 0, 
+      zAxis[0], zAxis[1], zAxis[2], 0, 
+      this.position[0], this.position[1], this.position[2], 1);
+    this.transformMatrix = result;
+    return result;
   }
   moveForward(factor) {
     let moveMatrix = mat4.create();
@@ -83,17 +121,28 @@ export default class Camera {
     this.position[1] = this.transformMatrix[13];
     this.position[2] = this.transformMatrix[14];
   }
+  setRotationSync() {
+    this.right[0] = this.transformMatrix[0];
+    this.right[1] = this.transformMatrix[1];
+    this.right[2] = this.transformMatrix[2];
+    this.up[0] = this.transformMatrix[4];
+    this.up[1] = this.transformMatrix[5];
+    this.up[2] = this.transformMatrix[6];
+    this.direction[0] = -this.transformMatrix[8];
+    this.direction[1] = -this.transformMatrix[9];
+    this.direction[2] = -this.transformMatrix[10];
+  }
   translate(x, y, z) {
     this.position[0] += x;
     this.position[1] += y;
     this.position[2] += z;
-    this.getTransformMatrix(true);
+    this.dirty = true;
   }
   setPosition(x, y, z) {
     this.position[0] = x;
     this.position[1] = y;
     this.position[2] = z;
-    this.getTransformMatrix(true);
+    this.dirty = true;
   }
   getModelViewMatrix() {
     let transformMatrix = this.getTransformMatrix();
@@ -101,8 +150,9 @@ export default class Camera {
     mat4.invert(mvm, transformMatrix);
     return mvm;
   }
-  getTransformMatrix(dirty = false) {
-    if (!this.transformMatrix || dirty) {
+  getTransformMatrix() {
+    if (!this.transformMatrix || this.dirty) {
+      this.calcRight();
       this.transformMatrix = mat4.fromValues(
         this.right[0], this.right[1], this.right[2], 0, 
         this.up[0], this.up[1], this.up[2], 0, 
@@ -110,6 +160,9 @@ export default class Camera {
         this.position[0], this.position[1], this.position[2], 1);
     }
     return this.transformMatrix;
+  }
+  calcRight() {
+    this.right = vec3.cross(this.right, this.direction, this.up);
   }
   getRotationMatrix() {
     this.rotationMatrix = mat4.clone(this.transformMatrix);

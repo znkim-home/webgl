@@ -67,7 +67,11 @@ const fragmentShaderSource = `
   uniform int uTextureType; // default : color, 1 : texture, 2 : reverseY, 3 : depth
   //uniform int uPositionType;
 
-  vec4 packDepth( float v ) {
+  vec3 encodeNormal(in vec3 normal) {
+    return normal.xyz * 0.5 + 0.5;
+  }
+
+  vec4 packDepth(float v) {
     vec4 enc = vec4(1.0, 255.0, 65025.0, 16581375.0) * v;
     enc = fract(enc);
     enc -= enc.yzww * vec4(1.0/255.0, 1.0/255.0, 1.0/255.0, 0.0);
@@ -87,7 +91,8 @@ const fragmentShaderSource = `
     } else if (uTextureType == 4) {
       gl_FragColor = vec4(vColor.xyz, vColor.a);
     } else if (uTextureType == 5) {
-      gl_FragColor = vec4(vTransformedNormal.xyz, 1.0);
+      gl_FragColor = vec4(encodeNormal(vTransformedNormal), 1.0);
+      //gl_FragColor = vec4(vTransformedNormal.xyz * 0.5 + 0.5, 1.0);
       //gl_FragColor = vec4(vLighting, vColor.a);
     } else {
       gl_FragColor = vec4(vColor.xyz * vLighting, vColor.a);
