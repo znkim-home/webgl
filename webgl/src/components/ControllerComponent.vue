@@ -129,6 +129,10 @@ export default {
             return;
           }
           console.log(selectionId, depth, normal);
+
+          if (e.button == 0) {
+            this.mouseLeftButton = true;
+          }
         }
       };
       canvas.onmousemove = (e) => {
@@ -136,14 +140,19 @@ export default {
         const camera = webGl.camera;
         //const mat4 = self.glMatrix.mat4;
 
-        if (this.mouseMiddleButton == true) {
+        if (this.mouseLeftButton == true) {
           const ROTATE_FACTOR = 0.004;
           let xValue = e.movementX * ROTATE_FACTOR;
           let yValue = e.movementY * ROTATE_FACTOR;
+          camera.moveCamera(xValue, yValue);
+        } else if (this.mouseMiddleButton == true) {
+          const ROTATE_FACTOR = 0.004;
+          let xValue = e.movementX * ROTATE_FACTOR;
+          let yValue = e.movementY * ROTATE_FACTOR;
+          camera.rotationOrbit(-xValue, -yValue, this.middlePoint);
 
           //camera.rotationX(-yValue, this.middlePoint);
           //camera.rotationY(-xValue, this.middlePoint);
-          camera.rotationOrbit(-xValue, -yValue, this.middlePoint);
           //rotationXY
           //let rotationMatrix = camera.getRotationMatrix();
          // mat4.fromXRotation(rotationMatrix, xValue);
@@ -164,7 +173,9 @@ export default {
 
       canvas.onmouseup = (e) => {
 
-        if (e.button == 1) {
+        if (e.button == 0) {
+          this.mouseLeftButton = false;
+        } else if (e.button == 1) {
           this.mouseMiddleButton = false;
         }
 

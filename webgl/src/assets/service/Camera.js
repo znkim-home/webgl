@@ -34,6 +34,9 @@ export default class Camera {
       this.rotation = vec3.set(this.position, options.rotation.heading, options.rotation.pitch, options.rotation.roll);
     }
   }
+  moveCamera(startPosition, endPosition) {
+    console.log(startPosition, endPosition);
+  }
   // pivotPoint, heading, pitch
   rotationOrbit(xValue, yValue, pivotPosition) {
     let pitchAxis = this.right;
