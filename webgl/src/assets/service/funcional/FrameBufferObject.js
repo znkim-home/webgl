@@ -1,3 +1,5 @@
+const {vec3} = self.glMatrix;
+
 export default class FrameBufferObject {
   gl;
   frameBuffer;
@@ -59,7 +61,8 @@ export default class FrameBufferObject {
     gl.readPixels(x, y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     const pixelsF32 = new Float32Array([pixels[0] / 255.0, pixels[1] / 255.0, pixels[2] / 255.0, pixels[3] / 255.0]);
-    return pixelsF32;
+    //console.log(this.decodeNormal(pixelsF32));
+    return this.decodeNormal(pixelsF32);
   }
   getColor(x, y) {
     /** @type {WebGLRenderingContext} */
@@ -91,5 +94,9 @@ export default class FrameBufferObject {
   }
   unpackDepth(rgba_depth) {
     return rgba_depth[0] + rgba_depth[1] * 1.0 / 255.0 + rgba_depth[2] * 1.0 / 65025.0 + rgba_depth[3] * 1.0 / 16581375.0;
+  }
+  decodeNormal(normal){
+    return vec3.fromValues(normal[0] * 2.0 - 1.0, normal[1] * 2.0 - 1.0, normal[2] * 2.0 - 1.0);
+    //return normal * 2.0 - 1.0;
   }
 }

@@ -34,8 +34,13 @@ export default class Camera {
       this.rotation = vec3.set(this.position, options.rotation.heading, options.rotation.pitch, options.rotation.roll);
     }
   }
-  moveCamera(startPosition, endPosition) {
-    console.log(startPosition, endPosition);
+  moveCamera(cameraPosition, startPosition, endPosition) {
+    //console.log(startPosition, endPosition);
+    let offsetPosition = vec3.subtract(vec3.create(), startPosition, endPosition);
+    console.log(offsetPosition);
+
+    vec3.add(this.position, cameraPosition, offsetPosition);
+    this.dirty = true;
   }
   // pivotPoint, heading, pitch
   rotationOrbit(xValue, yValue, pivotPosition) {
@@ -49,10 +54,9 @@ export default class Camera {
     let translatedCameraPositionVec4 = vec4.fromValues(translatedCameraPosition[0], translatedCameraPosition[1], translatedCameraPosition[2], 1.0);
     let transformedCameraPosition = vec4.transformMat4(vec4.create(), translatedCameraPositionVec4, totalRotationMatrix);
     let transformedCameraPositionVec3 = vec3.fromValues(transformedCameraPosition[0], transformedCameraPosition[1], transformedCameraPosition[2]);
-    let transformedAndReturnedCameraPosition = vec3.add(vec4.create(), transformedCameraPositionVec3, pivotPosition);
+    let returnedCameraPosition = vec3.add(vec4.create(), transformedCameraPositionVec3, pivotPosition);
 
-    this.position = transformedAndReturnedCameraPosition;
-    
+    this.position = returnedCameraPosition;
     let totalMatrix3 = mat3.fromMat4(mat3.create(), totalRotationMatrix);
 
     let rotatedDirection = vec3.transformMat3(vec3.create(), this.direction, totalMatrix3)
@@ -82,14 +86,12 @@ export default class Camera {
     mat4.multiply(resultMatrix, headingMatrix, resultMatrix);
     mat4.multiply(resultMatrix, rollMatrix, resultMatrix);
     let transformMatrix = this.getTransformMatrix();
-    //resultMatrix = mat4.invert(resultMatrix, resultMatrix); 
     mat4.multiply(transformMatrix, transformMatrix, resultMatrix);
   }
   lookAt(target) {
     let zAxis = vec3.normalize(vec3.create(), vec3.subtract(vec3.create(), this.position, target));
     let xAxis = vec3.normalize(vec3.create(), vec3.cross(vec3.create(), this.up, zAxis));
     let yAxis = vec3.normalize(vec3.create(), vec3.cross(vec3.create(), zAxis, xAxis));
-    console.log(zAxis, xAxis, yAxis);
     let result = mat4.fromValues(
       xAxis[0], xAxis[1], xAxis[2], 0, 
       yAxis[0], yAxis[1], yAxis[2], 0, 
@@ -185,11 +187,9 @@ export default class Camera {
     const fovy = Math.radian(this.fovyDegree);
     let aspectRatio = tc.width / tc.height;
     let tangentOfHalfFovy = Math.tan(fovy / 2);
-
     let hfar = 2.0 * tangentOfHalfFovy * relFar;
     let wfar = hfar * aspectRatio;    
     let ray = vec3.fromValues(wfar * (tc.x - 0.5), hfar * (tc.y - 0.5), -relFar);
-
     return ray;              
   }
 }
