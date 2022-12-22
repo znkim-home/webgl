@@ -19,7 +19,10 @@
     onselectstart="return false"
   >
     <h3>tools</h3>
-    <button class="mini-btn" v-on:click="setZeroPosition">TEST</button>
+    <button class="mini-btn" v-on:click="initPosition()">initPos</button>
+    <button class="mini-btn" v-on:click="getExtrusion()">getExtrusion</button>
+    <button class="mini-btn" v-on:click="getExtrusion()">firstPersonMode</button>
+    <button class="mini-btn" v-on:click="getExtrusion()">thirdPersonMode</button>
   </div>
   <div
     id="home"
@@ -63,12 +66,26 @@ export default {
       this.webGl = webGl;
       webGl.startRender(Data);
 
-      const dist = 1024;
-      const camera = webGl.camera;
-      camera.setPosition(0, 0, dist * 2);
-      camera.rotate(0, 0, 0);
-      this.base(1024, 1024);
+      this.initImage();
+      const dist = 2048;
+      this.initPosition(dist);
+      this.base(2048, 2048);
       //this.getExtrusion();
+    },
+    initPosition(dist = 2048){
+      const camera = this.webGl.camera;
+      camera.init();
+      camera.setPosition(0, 0, dist);
+      camera.rotate(0, 0, 0);
+    },
+    initImage() {
+      let image = new Image();
+      image.crossOrigin = "";
+      image.onload = () => {
+        this.image = image;
+      }
+      image.src = "/image/dirt_512.jpg";
+      //image.src = "/image/duck_256.jpg";
     },
     correctCoord(coordinate, unit = 10000) {
       let x = coordinate[0] - Math.floor(coordinate[0]);
@@ -105,12 +122,10 @@ export default {
         })
         .then((json) => {
           let extrusions = [];
-
           let minx = Number.MAX_VALUE;
           let miny = Number.MAX_VALUE;
           let maxx = Number.MIN_VALUE;
           let maxy = Number.MIN_VALUE;
-
           let features = json.features;
           features.forEach((feature) => {
             let geometry = feature.geometry;
@@ -130,7 +145,6 @@ export default {
               coordinates: resultCoordinates,
             });
           });
-
           let posx = (minx + maxx) / 2;
           let poxy = (miny + maxy) / 2;
           extrusions.forEach((extrusion) => {
@@ -151,6 +165,16 @@ export default {
       this.webGl.renderableObjs = this.webGl.renderableObjs.filter((renderableObj) => {
         return renderableObj.id !== obj.id;
       });
+    },
+    createDirt(origin) {
+      let coordinates = [[-64, -64], [64, -64], [64, 64], [-64, 64]];
+      let polygon = this.createPolygon(coordinates, {
+        position: { x: origin[0] + 64, y: origin[1] + 64, z: origin[2]},
+        color: { r: 0.0, g: 0.5, b: 1.0, a: 1.0 },
+        height: 128,
+        image : this.image
+      });
+      return polygon;
     },
     createCube(options) {
       let cube = new Cube(options);

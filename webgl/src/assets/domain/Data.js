@@ -13,7 +13,6 @@ const vertexShaderSource = `
   uniform float uPointSize;
 
   uniform int uPositionType; // 1: plane, 2: depth, basic
-  //uniform int uTextureType;
 
   varying vec4 vColor;
   varying vec3 vLighting;
@@ -27,8 +26,6 @@ const vertexShaderSource = `
     vec3 ambientLight = vec3(0.3, 0.3, 0.3);
     vec3 directionalLightColor = vec3(0.8, 0.8, 0.8);
     vec3 directionalVector = normalize(vec3(0.6, 0.6, 0.6));
-
-    //vec4 transformedNormal = normalize(uNormalMatrix * vec4(aVertexNormal, 1.0));
 
     vec4 transformedNormal = uNormalMatrix * vec4(aVertexNormal, 1.0);
     vec4 transformedPosition = uObjectMatrix * vec4(aVertexPosition, 1.0);
@@ -73,13 +70,35 @@ const fragmentShaderSource = `
   vec3 decodeNormal(in vec3 normal){
     return normal * 2.0 - 1.0;
   }
-
   vec4 packDepth(float v) {
     vec4 enc = vec4(1.0, 255.0, 65025.0, 16581375.0) * v;
     enc = fract(enc);
     enc -= enc.yzww * vec4(1.0/255.0, 1.0/255.0, 1.0/255.0, 0.0);
     return enc;
   }
+
+  /*vec4 getNormal(in vec2 texCoord) {
+      vec4 encodedNormal = texture2D(normalTex, texCoord);
+      return decodeNormal(encodedNormal);
+  }
+  bool validateEdgeByNormals(vec2 screenPos, vec3 normal, float pixelSize_x, float pixelSize_y) {
+    bool bIsEdge = false;
+    float minDot = 0.3;
+
+    vec3 normal_up = getNormal(vec2(screenPos.x, screenPos.y + pixelSize_y*1.0)).xyz;
+    if (dot(normal, normal_up) < minDot) { 
+      return true; 
+    }
+    vec3 normal_right = getNormal(vec2(screenPos.x + pixelSize_x*1.0, screenPos.y)).xyz;
+    if (dot(normal, normal_right) < minDot) { 
+      return true; 
+    }
+    vec3 normal_upRight = getNormal(vec2(screenPos.x + pixelSize_x, screenPos.y + pixelSize_y)).xyz;
+    if (dot(normal, normal_upRight) < minDot){
+      return true; 
+    }
+    return bIsEdge;
+  }*/
 
   void main(void) {
     if (uTextureType == 1) {
@@ -95,8 +114,6 @@ const fragmentShaderSource = `
       gl_FragColor = vec4(vColor.xyz, vColor.a);
     } else if (uTextureType == 5) {
       gl_FragColor = vec4(encodeNormal(vTransformedNormal), 1.0);
-      //gl_FragColor = vec4(vTransformedNormal.xyz * 0.5 + 0.5, 1.0);
-      //gl_FragColor = vec4(vLighting, vColor.a);
     } else {
       gl_FragColor = vec4(vColor.xyz * vLighting, vColor.a);
     }

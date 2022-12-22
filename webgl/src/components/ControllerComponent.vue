@@ -12,6 +12,7 @@ export default {
   },
   data() {
     return {
+      BLOCK_SIZE : 16,
       MOVE_FACTOR : 15,
 
       moveStatus : false,
@@ -25,14 +26,9 @@ export default {
       zoomCameraPosition : undefined,
       zoomCameraRay : undefined,
 
-      mouseStatus: false,
-      shiftStatus: false,
       ctrlStatus: false,
-      keyStatus: {},
+      
       mousePos: {},
-      test : undefined,
-      pointPositions : [],
-      line : undefined,
       globalOption : {
         cameraZAxis : false
       }
@@ -40,15 +36,16 @@ export default {
   },
   mounted() {
     this.init();
+    setTimeout(() => {
+      this.initGround();
+    },100);
   },
   methods: {
     init() {
       this.initKey();
       this.initMouse();
-      this.initImage();
-
       this.blocks = {}
-      const MAXVALUE = 8;
+      const MAXVALUE = this.BLOCK_SIZE;
       let xpos = [];
       for (let x = 0; x < MAXVALUE; x++) {
         let ypos = [];
@@ -63,14 +60,23 @@ export default {
       }
       this.blocks.pos = xpos;
     },
-    initImage() {
-      let image = new Image();
-      image.crossOrigin = "";
-      image.onload = () => {
-        this.image = image;
+    initGround() {
+      const OFFSET = this.BLOCK_SIZE / 2;
+      const MAXVALUE = this.BLOCK_SIZE;
+      for (let x = 0; x < MAXVALUE; x++) {
+        for (let y = 0; y < MAXVALUE; y++) {
+          for (let z = 0; z < MAXVALUE; z++) {
+            if (z == 0) {
+              let originX = (x - OFFSET) * 128;
+              let originY = (y - OFFSET) * 128;
+              let originZ = z * 128;
+              let polygon = this.$parent.createDirt([originX, originY, originZ / 2]);
+              this.blocks.pos[x][y][z] = polygon;
+            }
+          }
+        }
       }
-      image.src = "/image/dirt_512.jpg";
-      //image.src = "/image/duck_256.jpg";
+
     },
     initMouse() {
       let canvas = document.getElementById("glcanvas");
@@ -97,7 +103,7 @@ export default {
 
         //let selectionId = webGl.selectionFbo.getColor(mouseX, mouseY);
         let depth = webGl.depthFbo.getDepth(mouseX, mouseY);
-        let normal = webGl.normalFbo.getNormal(mouseX, mouseY);
+        //let normal = webGl.normalFbo.getNormal(mouseX, mouseY);
 
         let ratioX = mouseX / canvas.width;
         let ratioY = mouseY / canvas.height;
@@ -106,6 +112,7 @@ export default {
           return;
         }
 
+        const OFFSET = this.BLOCK_SIZE / 2;
         if (e.button == 2) {
           depth = webGl.depthFbo.getDepth(mouseX, mouseY) - 1;
           let pos = this.getScreenPosition(ratioX, ratioY, canvas.width, canvas.height, depth);
@@ -119,18 +126,13 @@ export default {
             let originZ = blockZ * 128;
             let origin = vec3.fromValues(originX, originY, originZ / 2);
 
-            let test = this.blocks.pos[blockX + 4][blockY + 4][blockZ];
+            let test = this.blocks.pos[blockX + OFFSET][blockY + OFFSET][blockZ];
             if (test === undefined || test != 0) {
               return;
             }
-            let coordinates = [[-64, -64], [64, -64], [64, 64], [-64, 64]];
-            let polygon = this.$parent.createPolygon(coordinates, {
-              position: { x: origin[0] + 64, y: origin[1] + 64, z: origin[2]},
-              color: { r: 0.0, g: 0.5, b: 1.0, a: 1.0 },
-              height: 128,
-              image : this.image
-            });
-            this.blocks.pos[blockX + 4][blockY + 4][blockZ] = polygon;
+
+            let polygon = this.$parent.createDirt(origin);
+            this.blocks.pos[blockX + OFFSET][blockY + OFFSET][blockZ] = polygon;
           } else {
             this.zoomStatus = true;
             this.zoomCameraPosition = camera.position;
@@ -140,39 +142,32 @@ export default {
           console.log();
           depth = webGl.depthFbo.getDepth(mouseX, mouseY);
           let pos = this.getScreenPosition(ratioX, ratioY, canvas.width, canvas.height, depth);
-
           this.pivotPosition = pos;
           this.rotateStatus = true;
-          this.$parent.createPoint({
-            position: { x: pos[0], y: pos[1], z: pos[2]},
-            size: { width: 30, length: 30, height: 30 },
-            color: {r: 0.8, g: 0.5, b: 0.8, a: 1.0 },
-          });
         } else if (e.button == 0) {
           depth = webGl.depthFbo.getDepth(mouseX, mouseY) + 5;
           let pos = this.getScreenPosition(ratioX, ratioY, canvas.width, canvas.height, depth);
-
           if (this.ctrlStatus) {
             let blockX = Math.floor(pos[0] / 128);
             let blockY = Math.floor(pos[1] / 128);
             let blockZ = Math.floor(Math.abs(pos[2] + 1) / 128);
-            let test = this.blocks.pos[blockX + 4][blockY + 4][blockZ];
+            let test = this.blocks.pos[blockX + OFFSET][blockY + OFFSET][blockZ];
             if (test === undefined) {
               return;
             } else if (test != 0) {
               this.$parent.removeObj(test);
-              this.blocks.pos[blockX + 4][blockY + 4][blockZ] = 0;
+              this.blocks.pos[blockX + OFFSET][blockY + OFFSET][blockZ] = 0;
               return;
             }
           }
           else {
             this.moveStatus = true;
-            this.movePlane = new Plane(pos, normal);
+            this.movePlane = new Plane(pos, vec3.fromValues(0, 0, 1));
+            //this.movePlane = new Plane(pos, normal);
             this.moveCameraPosition = camera.position;
           }
         }
       };
-
       canvas.onmousemove = (e) => {
         const webGl = this.webGl;
         const camera = webGl.camera;
@@ -217,63 +212,11 @@ export default {
       }
     },
     initKey() {
-      // 66:15fps 
-      // 33:30fps
-      // 16:60fps
-      const moveMs = 16; 
-      setInterval(() => {
-        let MOVE_FACTOR = this.MOVE_FACTOR;
-        const webGl = this.webGl;
-        const camera = webGl.camera;
-        let keyStatus = this.keyStatus;
-        if (keyStatus.w === true) {
-          camera.moveForward(-MOVE_FACTOR);
-          keyStatus.s = false;
-        } else if (keyStatus.s === true) {
-          camera.moveForward(MOVE_FACTOR);
-          keyStatus.w = false;
-        }
-
-        if (keyStatus.a === true) {
-          camera.moveRight(-MOVE_FACTOR);
-          keyStatus.d = false;
-        } else if (keyStatus.d === true) {
-          camera.moveRight(MOVE_FACTOR);
-          keyStatus.a = false;
-        }
-
-        if (keyStatus.q === true) {
-          camera.moveUp(MOVE_FACTOR);
-          keyStatus.e = false;
-        } else if (keyStatus.e === true) {
-          camera.moveUp(-MOVE_FACTOR);
-          keyStatus.q = false;
-        }
-      }, moveMs);
-
       window.onkeydown = (e) => {
         this.ctrlStatus = e.ctrlKey;
-        this.keyStatus[e.key] = true;
-        if (e.ctrlKey) {
-          e.preventDefault();
-        }
-        if (e.shiftKey) {
-          if (this.shiftStatus) {
-            this.MOVE_FACTOR = 30;
-          } else {
-            this.MOVE_FACTOR = 15;
-          }
-          this.shiftStatus = !this.shiftStatus;
-          e.preventDefault();
-        }
       };
-
       window.onkeyup = (e) => {
         this.ctrlStatus = e.ctrlKey;
-        this.keyStatus[e.key] = false;
-        if (e.key == "Escape") {
-          this.mouseStatus = false;
-        }
       };
     },
     getScreenPosition(x, y, width, height, depth) {

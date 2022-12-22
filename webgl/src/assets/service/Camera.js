@@ -33,6 +33,7 @@ export default class Camera {
     if (options?.rotation) {
       this.rotation = vec3.set(this.position, options.rotation.heading, options.rotation.pitch, options.rotation.roll);
     }
+    this.dirty = true;
   }
   moveCamera(cameraPosition, startPosition, endPosition) {
     //console.log(startPosition, endPosition);
