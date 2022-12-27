@@ -1,6 +1,6 @@
 <template>
   <div
-    v-if="drawTools"
+    v-if="consoleTools"
     class="dev-tool"
     style="left: 0px; bottom: 0px"
     oncontextmenu="return false"
@@ -13,16 +13,17 @@
   <div
     v-if="drawTools"
     class="dev-tool"
-    style="left: 0px; bottom: 160px"
+    style="right: 0px; bottom: 0px"
     oncontextmenu="return false"
     ondragstart="return false"
     onselectstart="return false"
   >
     <h3>tools</h3>
     <button class="mini-btn" v-on:click="initPosition()">initPos</button>
-    <button class="mini-btn" v-on:click="getExtrusion()">getExtrusion</button>
-    <button class="mini-btn" v-on:click="getExtrusion()">firstPersonMode</button>
-    <button class="mini-btn" v-on:click="getExtrusion()">thirdPersonMode</button>
+    <button class="mini-btn" v-on:click="getExtrusion()">extrusion</button>
+    <button class="mini-btn" v-on:click="thirdMode = false">firstPerson</button>
+    <button class="mini-btn" v-on:click="thirdMode = true">thirdPerson</button>
+    <button class="mini-btn" v-on:click="reload()">reload</button>
   </div>
   <div
     id="home"
@@ -32,10 +33,12 @@
   >
     <canvas id="glcanvas" width="1024" height="800">SAMPLE</canvas>
   </div>
-  <first-person :web-gl="webGl"></first-person>
+  <first-person-controller-component v-if="!thirdMode" :web-gl="webGl" :blocks="blocks"></first-person-controller-component>
+  <third-person-controller-component v-if="thirdMode" :web-gl="webGl" :blocks="blocks"></third-person-controller-component>
 </template>
 <script>
-import FirstPerson from "./ControllerComponent.vue";
+import FirstPersonControllerComponent from "./FirstPersonControllerComponent.vue";
+import ThirdPersonControllerComponent from "./ThirdPersonControllerComponent.vue";
 import WebGL from "@/assets/service/WebGL.js";
 import Cube from "@/assets/service/Cube.js";
 import Polygon from "@/assets/service/Polygon.js";
@@ -47,17 +50,22 @@ import { Data } from "@/assets/domain/Data.js";
 export default {
   name: "WebglComponent",
   components: {
-    FirstPerson,
+    FirstPersonControllerComponent,
+    ThirdPersonControllerComponent,
   },
   data() {
     return {
+      thirdMode: true,
       drawTools: true,
+      consoleTools: false,
       webGl: undefined,
+      blocks: undefined,
+      BLOCK_SIZE : 16,
     };
   },
   mounted() {
-    //this.initConsole();
     this.init();
+    //this.initConsole();
   },
   methods: {
     init() {
@@ -70,7 +78,42 @@ export default {
       const dist = 2048;
       this.initPosition(dist);
       this.base(2048, 2048);
-      //this.getExtrusion();
+      this.initBlocks();
+    },
+    initBlocks() {
+      this.blocks = {}
+      const MAXVALUE = this.BLOCK_SIZE;
+      let xpos = [];
+      for (let x = 0; x < MAXVALUE; x++) {
+        let ypos = [];
+        for (let y = 0; y < MAXVALUE; y++) {
+          let zpos = [];
+          for (let z = 0; z < MAXVALUE; z++) {
+            zpos[z] = 0;
+          }
+          ypos.push(zpos);
+        }
+        xpos.push(ypos);
+      }
+      this.blocks.pos = xpos;
+    },
+    initGround() {
+      const OFFSET = this.BLOCK_SIZE / 2;
+      const MAXVALUE = this.BLOCK_SIZE;
+      for (let x = 0; x < MAXVALUE; x++) {
+        for (let y = 0; y < MAXVALUE; y++) {
+          let randomValue = Math.ceil(Math.randomInt(0) / 4);
+          for (let z = 0; z < MAXVALUE; z++) {
+            if (z < randomValue) {
+              let originX = (x - OFFSET) * 128;
+              let originY = (y - OFFSET) * 128;
+              let originZ = z * 128;
+              let polygon = this.createDirt([originX, originY, originZ / 2]);
+              this.blocks.pos[x][y][z] = polygon;
+            }
+          }
+        }
+      }
     },
     initPosition(dist = 2048){
       const camera = this.webGl.camera;
@@ -83,8 +126,9 @@ export default {
       image.crossOrigin = "";
       image.onload = () => {
         this.image = image;
+        this.initGround();
       }
-      image.src = "/image/dirt_512.jpg";
+      image.src = "/image/dirt_16.png";
       //image.src = "/image/duck_256.jpg";
     },
     correctCoord(coordinate, unit = 10000) {
@@ -107,9 +151,6 @@ export default {
         this.webGl.renderableObjs.push(rectangle);
         options.color = {r : 0.0, g : 1.0, b : 0.0, a : 1.0};
         options.image = undefined;
-
-        //let rectangle2 = new Rectangle(coordinates, options);
-        this.webGl.renderableObjsT.push(rectangle);
       }
       image.src = "/image/chess.png";
     },
@@ -156,6 +197,10 @@ export default {
           });
         });
     },
+    reload() {
+      this.initBlocks();
+      this.initGround();
+    },
     setZeroPosition() {
       const webGl = this.webGl;
       const camera = webGl.camera;
@@ -197,8 +242,9 @@ export default {
       return polygon;
     },
     initConsole(consoleLimit = 50000) {
-      let consoleDiv = document.querySelector(".console");
+      this.consoleTools = true;
       const consoleToHtml = function () {
+        let consoleDiv = document.querySelector(".console");
         if (consoleDiv.textContent.length > consoleLimit) {
           consoleDiv.textContent = consoleDiv.textContent.substring(
             40000,

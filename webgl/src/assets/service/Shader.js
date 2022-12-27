@@ -3,15 +3,12 @@ const {mat2, mat3, mat4, vec2, vec3, vec4} = self.glMatrix; // eslint-disable-li
 export default class Shader {
   gl = undefined;
   shaderInfo = undefined;
-  
   constructor(gl) {
     this.gl = gl;
   }
-
   get shaderInfo() {
     return this.shaderInfo;
   }
-
   init(vertexShaderSource, fragmentShaderSource) {
     const gl = this.gl;
     const vertexShader = this.createShader(gl.VERTEX_SHADER, vertexShaderSource);
@@ -38,6 +35,7 @@ export default class Shader {
       texture : gl.getUniformLocation(shaderProgram, 'uTexture'),
       textureType : gl.getUniformLocation(shaderProgram, 'uTextureType'),
       positionType : gl.getUniformLocation(shaderProgram, 'uPositionType'),
+      positionType2 : gl.getUniformLocation(shaderProgram, 'uPositionType2'),
     };
     this.shaderInfo = {
       shaderProgram,
@@ -47,7 +45,6 @@ export default class Shader {
       uniformLocations,
     }
   }
-
   createShader(shaderType, shaderSource) {
     const gl = this.gl;
     const shader = gl.createShader(shaderType);

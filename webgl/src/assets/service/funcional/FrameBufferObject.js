@@ -11,20 +11,35 @@ export default class FrameBufferObject {
    * @param {*} gl
    * @param {*} options 
    */
-  constructor(gl, width, height) {
+  constructor(gl, canvas, shaderInfo, options) {
     /** @type {WebGLRenderingContext} */
     this.gl = gl;
+    this.canvas = canvas;
     this.frameBuffer = gl.createFramebuffer();
     this.depthBuffer = gl.createRenderbuffer();
     this.texture = gl.createTexture();
+    this.clearColor = vec3.fromValues(1.0, 1.0, 1.0);
+    this.shaderInfo = shaderInfo;
     this.width = new Int32Array(1);
     this.height = new Int32Array(1);
-    this.width[0] = width;
-    this.height[0] = height;
-    this.init();
+    this.width[0] = canvas.width;
+    this.height[0] = canvas.height;
+    this.textureType = 0;
+    this.positionType = 0;
+    this.init(options);
   }
 
-  init() {
+  init(options) {
+    if (options?.textureType) {
+      this.textureType = options.textureType;
+    }
+    if (options?.positionType) {
+      this.positionType = options.positionType;
+    }
+    if (options?.clearColor) {
+      this.clearColor = options.clearColor;
+    }
+
     const gl = this.gl;
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, this.texture);  
@@ -39,19 +54,29 @@ export default class FrameBufferObject {
     gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, this.width[0], this.height[0]);
     gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, this.depthBuffer);
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.texture, 0);
-    
     if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) {
       throw new Error("Incomplete frame buffer object.");
     }
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
   }
+  clear() {
+    const gl = this.gl;
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.frameBuffer);
+    gl.clearColor(this.clearColor[0], this.clearColor[1], this.clearColor[2], 1);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  }
   bind() {
     const gl = this.gl;
+    gl.uniform1i(this.shaderInfo.uniformLocations.textureType, this.textureType);
+    gl.uniform1i(this.shaderInfo.uniformLocations.positionType, this.positionType);
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.frameBuffer);
   }
   unbind() {
     const gl = this.gl;
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    //gl.uniform1i(this.shaderInfo.uniformLocations.textureType, 0);
+    //gl.uniform1i(this.shaderInfo.uniformLocations.positionType, 0);
   }
   getNormal(x, y) {
     const gl = this.gl;
@@ -61,7 +86,7 @@ export default class FrameBufferObject {
     gl.readPixels(x, y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     const pixelsF32 = new Float32Array([pixels[0] / 255.0, pixels[1] / 255.0, pixels[2] / 255.0, pixels[3] / 255.0]);
-    //console.log(this.decodeNormal(pixelsF32));
+
     return this.decodeNormal(pixelsF32);
   }
   getColor(x, y) {

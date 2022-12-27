@@ -36,7 +36,7 @@ export default class Cube extends Renderable {
     gl.enableVertexAttribArray(shaderInfo.attributeLocations.vertexColor);
     gl.enableVertexAttribArray(shaderInfo.attributeLocations.vertexNormal);
 
-    buffer.bindBuffer(buffer.postionsGlBuffer, 3, shaderInfo.attributeLocations.vertexPosition);
+    buffer.bindBuffer(buffer.positionsGlBuffer, 3, shaderInfo.attributeLocations.vertexPosition);
     buffer.bindBuffer(buffer.colorGlBuffer, 4, shaderInfo.attributeLocations.vertexColor);
     buffer.bindBuffer(buffer.normalGlBuffer, 3, shaderInfo.attributeLocations.vertexNormal);
     
@@ -220,7 +220,7 @@ export default class Cube extends Renderable {
         p7[0], p7[1], p7[2],
         p6[0], p6[1], p6[2],
       ]);
-      this.buffer.postionsGlBuffer = this.buffer.createBuffer(this.buffer.positionsVBO); 
+      this.buffer.positionsGlBuffer = this.buffer.createBuffer(this.buffer.positionsVBO); 
 
       let positionCount = this.buffer.positionsVBO.length/3;
       let indices = new Uint16Array(positionCount);

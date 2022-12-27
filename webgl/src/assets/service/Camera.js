@@ -26,20 +26,22 @@ export default class Camera {
     this.right = vec3.fromValues(1, 0, 0); // right of direction
     if (options?.fovyDegree) {
       this.fovyDegree = options.fovyDegree;
+      this.fovyRadian = Math.radian(options.fovyDegree);
     }
     if (options?.position) {
       this.position = vec3.set(this.position, options.position.x, options.position.y, options.position.z);
+    } else {
+      this.position = vec3.set(this.position, 0, 0, 0);
     }
     if (options?.rotation) {
-      this.rotation = vec3.set(this.position, options.rotation.heading, options.rotation.pitch, options.rotation.roll);
+      this.rotation = vec3.set(this.rotation, options.rotation.heading, options.rotation.pitch, options.rotation.roll);
+    } else {
+      this.rotation = vec3.set(this.rotation, 0, 0, 0);
     }
     this.dirty = true;
   }
   moveCamera(cameraPosition, startPosition, endPosition) {
-    //console.log(startPosition, endPosition);
     let offsetPosition = vec3.subtract(vec3.create(), startPosition, endPosition);
-    console.log(offsetPosition);
-
     vec3.add(this.position, cameraPosition, offsetPosition);
     this.dirty = true;
   }
@@ -72,22 +74,25 @@ export default class Camera {
     this.rotation[1] += pitch;
     this.rotation[2] += roll;
 
-    let resultMatrix = mat4.identity(mat4.create()); 
-    
-    let headingMatrix = mat4.identity(mat4.create()); 
-    mat4.rotate(headingMatrix, headingMatrix, Math.radian(this.rotation[0]), this.up);
+    let headingMatrix = mat4.identity(mat4.create());
+    mat4.rotate(headingMatrix, headingMatrix, Math.radian(this.rotation[0]), [0, 1, 0]);
+    let rollMatrix = mat4.identity(mat4.create());
+    mat4.rotate(rollMatrix, rollMatrix, Math.radian(this.rotation[2]), [0, 0, -1]);
+    let pitchMatrix = mat4.identity(mat4.create());
+    mat4.rotate(pitchMatrix, pitchMatrix, Math.radian(this.rotation[1]), [1, 0, 0]);
 
-    let pitchMatrix = mat4.identity(mat4.create()); 
-    mat4.rotate(pitchMatrix, pitchMatrix, Math.radian(this.rotation[1]), this.right);
+    let totalRotationMatrix = mat4.identity(mat4.create());
+    mat4.multiply(totalRotationMatrix, totalRotationMatrix, headingMatrix);
+    mat4.multiply(totalRotationMatrix, totalRotationMatrix, rollMatrix);
+    mat4.multiply(totalRotationMatrix, totalRotationMatrix, pitchMatrix);
+    let totalMatrix3 = mat3.fromMat4(mat3.create(), totalRotationMatrix);
 
-    let rollMatrix = mat4.identity(mat4.create()); 
-    mat4.rotate(rollMatrix, rollMatrix, Math.radian(this.rotation[2]), this.direction);
+    let rotatedDirection = vec3.transformMat3(vec3.create(), [0, 0, -1], totalMatrix3);
+    this.direction = rotatedDirection;
+    let rotatedUp = vec3.transformMat3(vec3.create(), [0, 1, 0], totalMatrix3);
+    this.up = rotatedUp;
 
-    mat4.multiply(resultMatrix, pitchMatrix, resultMatrix);
-    mat4.multiply(resultMatrix, headingMatrix, resultMatrix);
-    mat4.multiply(resultMatrix, rollMatrix, resultMatrix);
-    let transformMatrix = this.getTransformMatrix();
-    mat4.multiply(transformMatrix, transformMatrix, resultMatrix);
+    this.dirty = true;
   }
   lookAt(target) {
     let zAxis = vec3.normalize(vec3.create(), vec3.subtract(vec3.create(), this.position, target));

@@ -26,37 +26,38 @@ export default class Polygon extends Renderable {
     if (options?.color) this.color = vec4.set(this.color, options?.color.r, options?.color.g, options?.color.b, options?.color.a);
     if (options?.image) this.image = options.image;
   }
-  render(gl, shaderInfo, renderOptions) {
+  render(gl, shaderInfo, frameBufferObjs) {
     let tm = this.getTransformMatrix();
     gl.uniformMatrix4fv(shaderInfo.uniformLocations.objectMatrix, false, tm);
 
     let buffer = this.getBuffer(gl, shaderInfo);
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffer.indicesGlBuffer);
-    gl.enableVertexAttribArray(shaderInfo.attributeLocations.vertexPosition);
-    gl.enableVertexAttribArray(shaderInfo.attributeLocations.vertexColor);
-    gl.enableVertexAttribArray(shaderInfo.attributeLocations.vertexNormal);
-    gl.enableVertexAttribArray(shaderInfo.attributeLocations.textureCoordinate);
     
-    let textureType = buffer.texture ? 1 : 0;
-    textureType = (renderOptions?.textureType !== undefined) ? renderOptions?.textureType : textureType;
-    if (textureType > 0) {
-      gl.bindTexture(gl.TEXTURE_2D, buffer.texture);
-    }
-    gl.uniform1i(shaderInfo.uniformLocations.textureType, textureType);
-
-    if (textureType >= 1 && textureType <= 3) { // texture, reverseY, depth
-      buffer.bindBuffer(buffer.textureGlBuffer, 2, shaderInfo.attributeLocations.textureCoordinate);
-    } else if (textureType == 4) { // selection
-      buffer.bindBuffer(buffer.selectionColorGlBuffer, 4, shaderInfo.attributeLocations.vertexColor);
-    } else { // defulat color
-      buffer.bindBuffer(buffer.colorGlBuffer, 4, shaderInfo.attributeLocations.vertexColor);
-    }
-
+    gl.enableVertexAttribArray(shaderInfo.attributeLocations.vertexNormal);
     buffer.bindBuffer(buffer.normalGlBuffer, 3, shaderInfo.attributeLocations.vertexNormal);
-    buffer.bindBuffer(buffer.postionsGlBuffer, 3, shaderInfo.attributeLocations.vertexPosition);
+    gl.enableVertexAttribArray(shaderInfo.attributeLocations.vertexPosition);
+    buffer.bindBuffer(buffer.positionsGlBuffer, 3, shaderInfo.attributeLocations.vertexPosition);
 
-    gl.drawElements(gl.TRIANGLES, buffer.indicesLength, gl.UNSIGNED_SHORT, 0);
-    gl.uniform1i(shaderInfo.uniformLocations.textureType, 0);
+    frameBufferObjs.forEach((frameBufferObj) => {
+      const textureType = frameBufferObj.textureType;
+      frameBufferObj.bind();
+      if (textureType > 0) {
+        gl.bindTexture(gl.TEXTURE_2D, buffer.texture);
+      }
+      if (textureType >= 1 && textureType <= 3) { // texture, reverseY, depth
+        gl.enableVertexAttribArray(shaderInfo.attributeLocations.textureCoordinate);
+        buffer.bindBuffer(buffer.textureGlBuffer, 2, shaderInfo.attributeLocations.textureCoordinate);
+      } else if (textureType == 4) { // selection
+        gl.enableVertexAttribArray(shaderInfo.attributeLocations.vertexColor);
+        buffer.bindBuffer(buffer.selectionColorGlBuffer, 4, shaderInfo.attributeLocations.vertexColor);
+      } else { // defulat color
+        gl.enableVertexAttribArray(shaderInfo.attributeLocations.vertexColor);
+        buffer.bindBuffer(buffer.colorGlBuffer, 4, shaderInfo.attributeLocations.vertexColor);
+      }
+      gl.drawElements(gl.TRIANGLES, buffer.indicesLength, gl.UNSIGNED_SHORT, 0);
+      frameBufferObj.unbind();
+    });
+    //gl.uniform1i(shaderInfo.uniformLocations.textureType, 0);
   }
   // overriding
   getBuffer(gl) {
@@ -130,7 +131,7 @@ export default class Polygon extends Renderable {
         this.buffer.texture = this.buffer.createTexture(this.image);
       }
 
-      this.buffer.postionsGlBuffer = this.buffer.createBuffer(this.buffer.positionsVBO);
+      this.buffer.positionsGlBuffer = this.buffer.createBuffer(this.buffer.positionsVBO);
       this.buffer.colorGlBuffer = this.buffer.createBuffer(this.buffer.colorVBO);
       this.buffer.selectionColorGlBuffer = this.buffer.createBuffer(this.buffer.selectionColorVBO);
       this.buffer.normalGlBuffer = this.buffer.createBuffer(this.buffer.normalVBO);
