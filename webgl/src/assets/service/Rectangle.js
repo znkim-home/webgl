@@ -31,28 +31,34 @@ export default class Rectangle extends Renderable {
 
     let buffer = this.getBuffer(gl, false);
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffer.indicesGlBuffer);
-    gl.enableVertexAttribArray(shaderInfo.attributeLocations.vertexPosition);
-    gl.enableVertexAttribArray(shaderInfo.attributeLocations.vertexColor);
-    gl.enableVertexAttribArray(shaderInfo.attributeLocations.vertexNormal);
-    gl.enableVertexAttribArray(shaderInfo.attributeLocations.textureCoordinate);
     
-    let textureType = buffer.texture ? 1 : 0;
-    textureType = (this.reverse ? 2 : 1);
-    textureType = (renderOptions?.textureType !== undefined) ? renderOptions?.textureType : textureType;
+    let textureType = 0;
+    if (renderOptions?.textureType !== undefined) {
+      textureType = renderOptions.textureType;
+    } else if (buffer.texture) {
+      textureType = this.reverse ? 2 : 1;
+    }
+    
     if (textureType > 0) {
       gl.bindTexture(gl.TEXTURE_2D, buffer.texture);
     }
     gl.uniform1i(shaderInfo.uniformLocations.textureType, textureType);
 
     if (textureType >= 1 && textureType <= 3) { // texture, reverseY, depth
+      gl.enableVertexAttribArray(shaderInfo.attributeLocations.textureCoordinate);
       buffer.bindBuffer(buffer.textureGlBuffer, 2, shaderInfo.attributeLocations.textureCoordinate);
     } else if (textureType == 4) { // selection
+      gl.enableVertexAttribArray(shaderInfo.attributeLocations.vertexColor);
       buffer.bindBuffer(buffer.selectionColorGlBuffer, 4, shaderInfo.attributeLocations.vertexColor);
     } else { // defulat color
+      gl.enableVertexAttribArray(shaderInfo.attributeLocations.vertexColor);
       buffer.bindBuffer(buffer.colorGlBuffer, 4, shaderInfo.attributeLocations.vertexColor);
     }
 
+    gl.enableVertexAttribArray(shaderInfo.attributeLocations.vertexPosition);
     buffer.bindBuffer(buffer.postionsGlBuffer, 3, shaderInfo.attributeLocations.vertexPosition);
+
+    gl.enableVertexAttribArray(shaderInfo.attributeLocations.vertexNormal);
     buffer.bindBuffer(buffer.normalGlBuffer, 3, shaderInfo.attributeLocations.vertexNormal);
 
     gl.drawElements(gl.TRIANGLES, buffer.indicesLength, gl.UNSIGNED_SHORT, 0);

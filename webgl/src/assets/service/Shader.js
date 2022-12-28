@@ -9,34 +9,36 @@ export default class Shader {
   get shaderInfo() {
     return this.shaderInfo;
   }
-  init(vertexShaderSource, fragmentShaderSource) {
+  init(shaderObject) {
     const gl = this.gl;
-    const vertexShader = this.createShader(gl.VERTEX_SHADER, vertexShaderSource);
-    const fragmentShader = this.createShader(gl.FRAGMENT_SHADER, fragmentShaderSource);
-    const shaderProgram = this.setShaderProgram(vertexShader, fragmentShader);
+    const vertexShader = this.createShader(gl.VERTEX_SHADER, shaderObject.vertexShaderSource);
+    const fragmentShader = this.createShader(gl.FRAGMENT_SHADER, shaderObject.fragmentShaderSource);
+    const shaderProgram = this.createShaderProgram(vertexShader, fragmentShader);
     if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
       console.error("Unable to initialize the shader program.");
       return;
     }
     gl.useProgram(shaderProgram);
-    const attributeLocations = {
-      vertexPosition: gl.getAttribLocation(shaderProgram, 'aVertexPosition'),
-      vertexNormal: gl.getAttribLocation(shaderProgram, 'aVertexNormal'),
-      vertexColor: gl.getAttribLocation(shaderProgram, 'aVertexColor'),
-      textureCoordinate: gl.getAttribLocation(shaderProgram, 'aTextureCoordinate'),
-    };
-    const uniformLocations = {
-      projectionMatrix: gl.getUniformLocation(shaderProgram, 'uProjectionMatrix'),
-      modelViewMatrix: gl.getUniformLocation(shaderProgram, 'uModelViewMatrix'),
-      objectMatrix : gl.getUniformLocation(shaderProgram, 'uObjectMatrix'),
-      normalMatrix : gl.getUniformLocation(shaderProgram, 'uNormalMatrix'),
-      pointSize : gl.getUniformLocation(shaderProgram, 'uPointSize'),
-      textureCoordinate : gl.getUniformLocation(shaderProgram, 'uTextureCoordinate'),
-      texture : gl.getUniformLocation(shaderProgram, 'uTexture'),
-      textureType : gl.getUniformLocation(shaderProgram, 'uTextureType'),
-      positionType : gl.getUniformLocation(shaderProgram, 'uPositionType'),
-      positionType2 : gl.getUniformLocation(shaderProgram, 'uPositionType2'),
-    };
+
+    let attributeLocations = {};
+    shaderObject.attributes.forEach((attribute) => {
+      if (attribute[0] !== 'a') {
+        throw "Shader: attribute variable name is incorrect.";
+      }
+      let result = attribute.replace('a', '');
+      result = result.replace(/^[A-Z]/, char => char.toLowerCase());
+      attributeLocations[result] = gl.getAttribLocation(shaderProgram, attribute);
+    });
+    let uniformLocations = {};
+    shaderObject.uniforms.forEach((uniform) => {
+      if (uniform[0] !== 'u') {
+        throw "Shader: uniform variable name is incorrect.";
+      }
+      let result = uniform.replace('u', '');
+      result = result.replace(/^[A-Z]/, char => char.toLowerCase());
+      //return result
+      uniformLocations[result] = gl.getUniformLocation(shaderProgram, uniform);
+    });
     this.shaderInfo = {
       shaderProgram,
       fragmentShader,
@@ -57,7 +59,7 @@ export default class Shader {
     }
     return shader;
   }
-  setShaderProgram(vertexShader, fragmentShader) {
+  createShaderProgram(vertexShader, fragmentShader) {
     const gl = this.gl;
     const shaderProgram = gl.createProgram(); 
     gl.attachShader(shaderProgram, vertexShader);
@@ -65,4 +67,7 @@ export default class Shader {
     gl.linkProgram(shaderProgram);
     return shaderProgram;
   }
+  useProgram() {
+    this.gl.useProgram(this.shaderInfo.shaderProgram);
+  } 
 }

@@ -45,7 +45,6 @@ import Polygon from "@/assets/service/Polygon.js";
 import Rectangle from "@/assets/service/Rectangle.js"
 import Point from "@/assets/service/Point.js";
 import Line from "@/assets/service/Line.js";
-import { Data } from "@/assets/domain/Data.js";
 
 export default {
   name: "WebglComponent",
@@ -72,8 +71,7 @@ export default {
       let canvas = document.getElementById("glcanvas");
       let webGl = new WebGL(canvas);
       this.webGl = webGl;
-      webGl.startRender(Data);
-
+      webGl.startRender();
       this.initImage();
       const dist = 2048;
       this.initPosition(dist);

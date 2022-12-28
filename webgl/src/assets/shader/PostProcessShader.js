@@ -1,3 +1,5 @@
+const attributes = ["aVertexPosition", "aVertexColor", "aVertexNormal", "aTextureCoordinate"];
+const uniforms = ["uModelViewMatrix", "uProjectionMatrix", "uObjectMatrix", "uNormalMatrix", "uPointSize", "uPositionType", "uTexture", "uTextureType"];
 const vertexShaderSource = `
   precision mediump float;
 
@@ -11,7 +13,6 @@ const vertexShaderSource = `
   uniform mat4 uObjectMatrix;
   uniform mat4 uNormalMatrix;
   uniform float uPointSize;
-
   uniform int uPositionType; // 1: plane, 2: depth, basic
 
   varying vec4 vColor;
@@ -101,7 +102,6 @@ const fragmentShaderSource = `
   }*/
 
   void main(void) {
-    
     if (uTextureType == 1) {
       float edgeWidth = 0.01;
       if ((vTextureCoordinate.x <= 1.0 && vTextureCoordinate.x >= 1.0 - edgeWidth) || (vTextureCoordinate.x >= 0.0 && vTextureCoordinate.x <= edgeWidth)) {
@@ -128,7 +128,9 @@ const fragmentShaderSource = `
   }
 `;
 
-export const Data = {
+export const PostProcessShader = {
+  attributes: attributes,
+  uniforms: uniforms,
   vertexShaderSource: vertexShaderSource,
   fragmentShaderSource: fragmentShaderSource,
 };

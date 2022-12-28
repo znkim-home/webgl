@@ -1,14 +1,12 @@
 export default class Buffer {
   gl = undefined;
   buffers = {};
-
   constructor(gl) {
     this.gl = gl;
   }
   get buffers() {
     return this.buffers;
   }
-
   init() {
     const result = {};
     this.buffers = result;

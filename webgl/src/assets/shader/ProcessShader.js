@@ -1,3 +1,5 @@
+const attributes = ["aVertexPosition", "aVertexColor", "aVertexNormal", "aTextureCoordinate"];
+const uniforms = ["uModelViewMatrix", "uProjectionMatrix", "uObjectMatrix", "uNormalMatrix", "uPointSize", "uPositionType", "uTexture", "uTextureType"];
 const vertexShaderSource = `
   precision mediump float;
 
@@ -11,7 +13,6 @@ const vertexShaderSource = `
   uniform mat4 uObjectMatrix;
   uniform mat4 uNormalMatrix;
   uniform float uPointSize;
-
   uniform int uPositionType; // 1: plane, 2: depth, basic
 
   varying vec4 vColor;
@@ -128,7 +129,9 @@ const fragmentShaderSource = `
   }
 `;
 
-export const Data = {
+export const ProcessShader = {
+  attributes: attributes,
+  uniforms: uniforms,
   vertexShaderSource: vertexShaderSource,
   fragmentShaderSource: fragmentShaderSource,
 };

@@ -75,8 +75,6 @@ export default class FrameBufferObject {
   unbind() {
     const gl = this.gl;
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-    //gl.uniform1i(this.shaderInfo.uniformLocations.textureType, 0);
-    //gl.uniform1i(this.shaderInfo.uniformLocations.positionType, 0);
   }
   getNormal(x, y) {
     const gl = this.gl;

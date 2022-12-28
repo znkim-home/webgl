@@ -1,5 +1,7 @@
 const {mat2, mat3, mat4, vec2, vec3, vec4} = self.glMatrix; // eslint-disable-line no-unused-vars
 import Shader from './Shader.js';
+import { ProcessShader } from '../shader/ProcessShader.js';
+import { PostProcessShader } from '../shader/PostProcessShader.js';
 import Buffer from './Buffer.js';
 import Camera from './Camera.js';
 import FrameBufferObject from './funcional/FrameBufferObject.js';
@@ -32,10 +34,6 @@ export default class WebGL {
   normalFbo;
 
   constructor(canvas) {
-    //this.gl = undefined;
-    //this.shader = undefined;
-    //this.buffer = undefined;
-    //this.camera = undefined;
     this.canvas = canvas;
     this.frameBufferObjs = [];
     this.renderableObjs = [];
@@ -74,15 +72,23 @@ export default class WebGL {
     this.globalOptions.aspect = (canvas.width / canvas.height);
     return needResize;
   }
-  startRender(data) {
+  startRender() {
     const gl = this.gl;
     gl.enable(gl.DEPTH_TEST);
     gl.depthFunc(gl.LEQUAL);
-    this.shader = new Shader(gl);
     this.buffer = new Buffer(gl);
-    this.shader.init(data.vertexShaderSource, data.fragmentShaderSource);
-    this.buffer.init(data);
-    this.shaderInfo = this.shader.shaderInfo;
+    this.buffer.init();
+
+    this.processShader = new Shader(gl);
+    this.processShader.init(ProcessShader);
+    this.processShaderInfo = this.processShader.shaderInfo;
+
+    this.postProcessShader = new Shader(gl);
+    this.postProcessShader.init(PostProcessShader);
+    this.postProcessShaderInfo = this.postProcessShader.shaderInfo;
+
+    this.processShader.useProgram();
+
     this.camera = new Camera({fovyDegree : this.globalOptions.fovyDegree});
     this.resizeCanvas();
 
@@ -111,7 +117,7 @@ export default class WebGL {
     const gl = this.gl;
     /** @type {HTMLCanvasElement} */
     const canvas = this.canvas;
-    const shaderInfo = this.shaderInfo;
+    const shaderInfo = this.processShaderInfo;
     const frameBufferObjs = this.frameBufferObjs;
     const globalOptions = this.globalOptions;
 
@@ -144,7 +150,7 @@ export default class WebGL {
   }
   drawFrameBufferObjs() {
     const gl = this.gl;
-    const shaderInfo = this.shaderInfo;
+    const shaderInfo = this.processShaderInfo;
     const albedoFbo = this.getAlbedoFbo();
     const selectionFbo = this.getSelectionFbo();
     const depthFbo = this.getDepthFbo();
@@ -164,7 +170,7 @@ export default class WebGL {
   }
   getAlbedoFbo() {
     if (!this.albedoFbo) {
-      this.albedoFbo = new FrameBufferObject(this.gl, this.gl.canvas, this.shaderInfo, {
+      this.albedoFbo = new FrameBufferObject(this.gl, this.gl.canvas, this.processShaderInfo, {
         positionType : 0,
         textureType : 1,
         clearColor : vec3.fromValues(0.5, 0.5, 0.5)
@@ -174,7 +180,7 @@ export default class WebGL {
   }
   getSelectionFbo() {
     if (!this.selectionFbo) {
-      this.selectionFbo = new FrameBufferObject(this.gl, this.gl.canvas, this.shaderInfo, {
+      this.selectionFbo = new FrameBufferObject(this.gl, this.gl.canvas, this.processShaderInfo, {
         positionType : 0,
         textureType : 4,
       });
@@ -183,7 +189,7 @@ export default class WebGL {
   }
   getDepthFbo() {
     if (!this.depthFbo) {
-      this.depthFbo = new FrameBufferObject(this.gl, this.gl.canvas, this.shaderInfo, {
+      this.depthFbo = new FrameBufferObject(this.gl, this.gl.canvas, this.processShaderInfo, {
         positionType : 2,
         textureType : 3,
       });
@@ -192,7 +198,7 @@ export default class WebGL {
   }
   getNormalFbo() {
     if (!this.normalFbo) {
-      this.normalFbo = new FrameBufferObject(this.gl, this.gl.canvas, this.shaderInfo, {
+      this.normalFbo = new FrameBufferObject(this.gl, this.gl.canvas, this.processShaderInfo, {
         positionType : 3,
         textureType : 5,
       });

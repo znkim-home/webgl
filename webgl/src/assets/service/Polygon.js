@@ -102,10 +102,6 @@ export default class Polygon extends Renderable {
           let xoffset = bbox.maxx - bbox.minx;
           let yoffset = bbox.maxy - bbox.miny;
           let zoffset = bbox.maxz - bbox.minz;
-          //textureCoordinates.push((position[0] - bbox.minx) / xoffset);
-          //textureCoordinates.push((position[1] - bbox.miny) / yoffset);
-          //textureCoordinates.push((position[2] - bbox.minz) / zoffset);
-
           if (normal[0] == 1 || normal[0] == -1) {
             textureCoordinates.push((position[1] - bbox.miny) / yoffset);
             textureCoordinates.push((position[2] - bbox.minz) / zoffset);
@@ -126,11 +122,9 @@ export default class Polygon extends Renderable {
       this.buffer.colorVBO = new Float32Array(colors);
       this.buffer.selectionColorVBO = new Float32Array(selectionColors);
       this.buffer.textureVBO = new Float32Array(textureCoordinates);
-
       if (this.image) {
         this.buffer.texture = this.buffer.createTexture(this.image);
       }
-
       this.buffer.positionsGlBuffer = this.buffer.createBuffer(this.buffer.positionsVBO);
       this.buffer.colorGlBuffer = this.buffer.createBuffer(this.buffer.colorVBO);
       this.buffer.selectionColorGlBuffer = this.buffer.createBuffer(this.buffer.selectionColorVBO);
@@ -138,7 +132,6 @@ export default class Polygon extends Renderable {
       this.buffer.indicesGlBuffer = this.buffer.createIndexBuffer(this.buffer.indicesVBO);
       this.buffer.textureGlBuffer = this.buffer.createBuffer(this.buffer.textureVBO);
       this.buffer.indicesLength = this.buffer.indicesVBO.length;
-
       this.dirty = false;
     }
     return this.buffer;
