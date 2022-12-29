@@ -68,6 +68,7 @@ export default class Shader {
     return shaderProgram;
   }
   useProgram() {
+    //console.log("useprogram");
     this.gl.useProgram(this.shaderInfo.shaderProgram);
   } 
 }

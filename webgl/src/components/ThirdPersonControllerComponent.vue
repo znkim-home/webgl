@@ -60,13 +60,15 @@ export default {
         const mouseY = canvas.height - e.y;
         //let selectionId = webGl.selectionFbo.getColor(mouseX, mouseY);
         let depth = webGl.depthFbo.getDepth(mouseX, mouseY);
-        //let normal = webGl.normalFbo.getNormal(mouseX, mouseY);
+        let normal = webGl.normalFbo.getNormal(mouseX, mouseY);
+        console.log(normal);
+
         let ratioX = mouseX / canvas.width;
         let ratioY = mouseY / canvas.height;
         if (depth > 5000) {
           return;
         }
-        const OFFSET = this.globalOptions.BLOCK_SIZE / 2;
+        const OFFSET = this.blocks.BLOCK_SIZE / 2;
         if (e.button == 2) {
           depth = webGl.depthFbo.getDepth(mouseX, mouseY) - 1;
           let pos = this.getScreenPosition(ratioX, ratioY, canvas.width, canvas.height, depth);
@@ -104,6 +106,7 @@ export default {
             let blockY = Math.floor(pos[1] / 128);
             let blockZ = Math.floor(Math.abs(pos[2] + 1) / 128);
             let test = this.blocks.pos[blockX + OFFSET][blockY + OFFSET][blockZ];
+
             if (test === undefined) {
               return;
             } else if (test != 0) {

@@ -97,11 +97,11 @@ export default class Renderable {
   convertColorToId(color) {
     return (color[0] * 16777216) + (color[1] * 65536) + (color[2] * 256) +(color[3]);
   }
-  createRenderableObjectId(renderableObjs) {
+  createRenderableObjectId(renderableList) {
     let result = this.id;
     while (result === undefined) {
       let randomId = Math.ceil(Math.random() * 10000000000000);
-      let obj = renderableObjs.find((renderableObj) => {
+      let obj = renderableList.get().find((renderableObj) => {
         return renderableObj.id == randomId;
       });
       if (!obj) {

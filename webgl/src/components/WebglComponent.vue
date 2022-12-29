@@ -59,7 +59,6 @@ export default {
       consoleTools: false,
       webGl: undefined,
       blocks: undefined,
-      BLOCK_SIZE : 16,
     };
   },
   mounted() {
@@ -79,8 +78,10 @@ export default {
       this.initBlocks();
     },
     initBlocks() {
-      this.blocks = {}
-      const MAXVALUE = this.BLOCK_SIZE;
+      this.blocks = {
+        BLOCK_SIZE : 16
+      }
+      const MAXVALUE = this.blocks.BLOCK_SIZE;
       let xpos = [];
       for (let x = 0; x < MAXVALUE; x++) {
         let ypos = [];
@@ -96,8 +97,8 @@ export default {
       this.blocks.pos = xpos;
     },
     initGround() {
-      const OFFSET = this.BLOCK_SIZE / 2;
-      const MAXVALUE = this.BLOCK_SIZE;
+      const OFFSET = this.blocks.BLOCK_SIZE / 2;
+      const MAXVALUE = this.blocks.BLOCK_SIZE;
       for (let x = 0; x < MAXVALUE; x++) {
         for (let y = 0; y < MAXVALUE; y++) {
           let randomValue = Math.ceil(Math.randomInt(0) / 4);
@@ -146,7 +147,7 @@ export default {
           image : image
         }
         let rectangle = new Rectangle(coordinates, options);
-        this.webGl.renderableObjs.push(rectangle);
+        this.webGl.renderableObjectList.push(rectangle);
         options.color = {r : 0.0, g : 1.0, b : 0.0, a : 1.0};
         options.image = undefined;
       }
@@ -205,9 +206,10 @@ export default {
       camera.setPosition(0, 0, -0);
     },
     removeObj(obj) {
-      this.webGl.renderableObjs = this.webGl.renderableObjs.filter((renderableObj) => {
+      let renderableObjects = this.webGl.renderableObjectList.get();
+      this.webGl.renderableObjectList.set(renderableObjects.filter((renderableObj) => {
         return renderableObj.id !== obj.id;
-      });
+      }));
     },
     createDirt(origin) {
       let coordinates = [[-64, -64], [64, -64], [64, 64], [-64, 64]];
@@ -221,20 +223,20 @@ export default {
     },
     createCube(options) {
       let cube = new Cube(options);
-      this.webGl.renderableObjs.push(cube);
+      this.webGl.renderableObjectList.push(cube);
     },
     createPoint(options) {
       let point = new Point(options);
-      this.webGl.renderableObjs.push(point);
+      this.webGl.renderableObjectList.push(point);
     },
     createLine(coordinates, options) {
       let line = new Line(coordinates, options);
-      this.webGl.renderableObjs.push(line);
+      this.webGl.renderableObjectList.push(line);
       return line;
     },
     createPolygon(coordinates, options) {
       let polygon = new Polygon(coordinates, options);
-      this.webGl.renderableObjs.push(polygon);
+      this.webGl.renderableObjectList.push(polygon);
       options.color = {r : 0.0, g : 1.0, b : 0.0, a : 1.0};
       options.image = undefined;
       return polygon;

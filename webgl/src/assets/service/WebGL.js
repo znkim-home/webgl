@@ -1,11 +1,15 @@
 const {mat2, mat3, mat4, vec2, vec3, vec4} = self.glMatrix; // eslint-disable-line no-unused-vars
 import Shader from './Shader.js';
-import { ProcessShader } from '../shader/ProcessShader.js';
-import { PostProcessShader } from '../shader/PostProcessShader.js';
+import { DefaultShader } from '../shader/DefaultShader.js';
+import { ScreenShader } from '../shader/ScreenShader.js';
 import Buffer from './Buffer.js';
 import Camera from './Camera.js';
 import FrameBufferObject from './funcional/FrameBufferObject.js';
-import Rectangle from './Rectangle.js';
+
+import DefaultShaderProcess from './DefaultShaderProcess.js';
+import ScreenShaderProcess from './ScreenShaderProcess.js';
+import RenderableObjectList from './funcional/RenderableObjectList.js';
+
 
 Math.degree = (radian) => radian * 180 / Math.PI;
 Math.radian = (degree) => degree * Math.PI / 180;
@@ -24,19 +28,19 @@ export default class WebGL {
   buffer;
   camera;
   canvas;
+  shaderProcesses;
   frameBufferObjs;
-  renderableObjs;
+  renderableObjectList;
   globalOptions;
 
   albedoFbo;
   selectionFbo;
   depthFbo;
   normalFbo;
-
   constructor(canvas) {
-    this.canvas = canvas;
     this.frameBufferObjs = [];
-    this.renderableObjs = [];
+    this.renderableObjectList = new RenderableObjectList();
+    this.shaderProcesses = [];
     this.globalOptions = {
       fovyDegree : 90,
       aspect : undefined,
@@ -45,32 +49,33 @@ export default class WebGL {
       pointSize : 8.0,
       lineWidth : 3.0,
     }
-    this.init();
+    this.init(canvas);
   }
-  init() {
+  init(canvas) {
     try {
-      const canvas = this.canvas;
+      this.canvas = canvas;
       this.gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
+      if (!this.gl) {
+        throw new Error("Unable to initialize WebGL. Your browser may not support it.");
+      }
     } catch(e) {
       console.error(e);
-      return;
-    }
-    if (!this.gl) {
-      console.error("Unable to initialize WebGL. Your browser may not support it.");
-      return;
     }
   }
   resizeCanvas() {
     const canvas = this.canvas;
     const displayWidth  = canvas.clientWidth;
     const displayHeight = canvas.clientHeight;
-    const needResize = (canvas.width !== displayWidth) || (canvas.height !== displayHeight);
-    if (needResize) {
+    const isChanged = (canvas.width !== displayWidth) || (canvas.height !== displayHeight);
+    if (isChanged) {
       canvas.width  = displayWidth;
       canvas.height = displayHeight;
+      this.frameBufferObjs.forEach((frameBufferObj) => {
+        frameBufferObj.init();
+      });
     }
     this.globalOptions.aspect = (canvas.width / canvas.height);
-    return needResize;
+    return isChanged;
   }
   startRender() {
     const gl = this.gl;
@@ -78,130 +83,81 @@ export default class WebGL {
     gl.depthFunc(gl.LEQUAL);
     this.buffer = new Buffer(gl);
     this.buffer.init();
-
-    this.processShader = new Shader(gl);
-    this.processShader.init(ProcessShader);
-    this.processShaderInfo = this.processShader.shaderInfo;
-
-    this.postProcessShader = new Shader(gl);
-    this.postProcessShader.init(PostProcessShader);
-    this.postProcessShaderInfo = this.postProcessShader.shaderInfo;
-
-    this.processShader.useProgram();
-
-    this.camera = new Camera({fovyDegree : this.globalOptions.fovyDegree});
     this.resizeCanvas();
 
-    const albedoCoordinates = [[0, 0], [1, 0], [1, 1], [0, 1]];
-    this.albedoRectangle = new Rectangle(albedoCoordinates, {reverse : true});
-    const selectionCoorinates = [[0.75, 0.75], [1, 0.75], [1, 1], [0.75, 1]];
-    this.selectionRectangle = new Rectangle(selectionCoorinates, {reverse : true});
-    const normalCoorinates = [[0.75, 0.25], [1, 0.25], [1, 0.5], [0.75, 0.5]];
-    this.normalRectangle = new Rectangle(normalCoorinates, {reverse : true});
-    const depthCoorinates = [[0.75, 0.5], [1, 0.5], [1, 0.75], [0.75, 0.75]];
-    this.depthRectangle = new Rectangle(depthCoorinates, {reverse : true});    
+    this.defaultShader = new Shader(gl);
+    this.defaultShader.init(DefaultShader);
+    this.defaultShaderInfo = this.defaultShader.shaderInfo;
+    this.screenShader = new Shader(gl);
+    this.screenShader.init(ScreenShader);
+    this.screenShaderInfo = this.screenShader.shaderInfo;
     
+    this.camera = new Camera({fovyDegree : this.globalOptions.fovyDegree});
+
+    this.frameBufferObjs.push(this.getMainFbo());
     this.frameBufferObjs.push(this.getAlbedoFbo());
     this.frameBufferObjs.push(this.getSelectionFbo());
-    this.frameBufferObjs.push(this.getDepthFbo());
     this.frameBufferObjs.push(this.getNormalFbo());
+    this.frameBufferObjs.push(this.getDepthFbo());
 
-    requestAnimationFrame(this.render.bind(this));
+    this.shaderProcesses.push(new DefaultShaderProcess(gl, this.defaultShader, this.camera, this.frameBufferObjs, this.renderableObjectList));
+    this.shaderProcesses.push(new ScreenShaderProcess(gl, this.screenShader, this.camera, this.frameBufferObjs));
+    this.shaderProcesses.forEach((shaderProcess) => {
+      shaderProcess.preprocess();
+    });
+    this.render();
   }
   render() {
     this.scene();
     requestAnimationFrame(this.render.bind(this));
   }
   scene() {
-    /** @type {WebGLRenderingContext} */
-    const gl = this.gl;
-    /** @type {HTMLCanvasElement} */
-    const canvas = this.canvas;
-    const shaderInfo = this.processShaderInfo;
-    const frameBufferObjs = this.frameBufferObjs;
-    const globalOptions = this.globalOptions;
-
     this.resizeCanvas();
-    gl.viewport(0, 0, canvas.width, canvas.height);
-    gl.enable(gl.CULL_FACE);
-    gl.frontFace(gl.CCW);
-    gl.lineWidth(globalOptions.lineWidth);
-    
-    let projectionMatrix = mat4.create();
-    mat4.perspective(projectionMatrix, this.camera.fovyRadian, globalOptions.aspect, globalOptions.near, globalOptions.far);
-    let modelViewMatrix = this.camera.getModelViewMatrix();
-    let normalMatrix = this.camera.getNormalMatrix();
-
-    gl.uniformMatrix4fv(shaderInfo.uniformLocations.projectionMatrix, false, projectionMatrix);
-    gl.uniformMatrix4fv(shaderInfo.uniformLocations.modelViewMatrix, false, modelViewMatrix);
-    gl.uniformMatrix4fv(shaderInfo.uniformLocations.normalMatrix, false, normalMatrix);
-    gl.uniform1f(shaderInfo.uniformLocations.pointSize, globalOptions.pointSize);
-    gl.uniform1i(shaderInfo.uniformLocations.textureType, 0);
-    gl.uniform1i(shaderInfo.uniformLocations.positionType, 0);
-    
-    frameBufferObjs.forEach((frameBufferObj) => {
-      frameBufferObj.clear();
+    this.shaderProcesses.forEach((shaderProcess) => {
+      shaderProcess.process(this.globalOptions);
     });
-    this.renderableObjs.forEach((renderableObj) => {
-      (renderableObj.getId() === undefined) ? renderableObj.createRenderableObjectId(this.renderableObjs) : undefined;
-      renderableObj.render(gl, shaderInfo, frameBufferObjs);
+    this.shaderProcesses.forEach((shaderProcess) => {
+      shaderProcess.postprocess();
     });
-    this.drawFrameBufferObjs();
   }
-  drawFrameBufferObjs() {
-    const gl = this.gl;
-    const shaderInfo = this.processShaderInfo;
-    const albedoFbo = this.getAlbedoFbo();
-    const selectionFbo = this.getSelectionFbo();
-    const depthFbo = this.getDepthFbo();
-    const normalFbo = this.getNormalFbo();
-    gl.uniform1i(shaderInfo.uniformLocations.textureType, 0);
-    gl.uniform1i(shaderInfo.uniformLocations.positionType, 1);
-    gl.disable(gl.DEPTH_TEST);
-    this.albedoRectangle.texture = albedoFbo.texture;
-    this.albedoRectangle.render(gl, shaderInfo, undefined);
-    this.selectionRectangle.texture = selectionFbo.texture;
-    this.selectionRectangle.render(gl, shaderInfo, undefined);
-    this.depthRectangle.texture = depthFbo.texture;
-    this.depthRectangle.render(gl, shaderInfo, undefined);
-    this.normalRectangle.texture = normalFbo.texture;
-    this.normalRectangle.render(gl, shaderInfo, undefined);
-    gl.enable(gl.DEPTH_TEST);
+  getMainFbo() {
+    const positionType = 0;
+    const textureType = 1;
+    const clearColor = vec3.fromValues(0.5, 0.5, 0.5);
+    if (!this.mainFbo) {
+      this.mainFbo = new FrameBufferObject(this.gl, this.gl.canvas, this.defaultShaderInfo, {positionType, textureType, clearColor});
+    }
+    return this.mainFbo;
   }
   getAlbedoFbo() {
+    const positionType = 0;
+    const textureType = 1;
     if (!this.albedoFbo) {
-      this.albedoFbo = new FrameBufferObject(this.gl, this.gl.canvas, this.processShaderInfo, {
-        positionType : 0,
-        textureType : 1,
-        clearColor : vec3.fromValues(0.5, 0.5, 0.5)
-      });
+      this.albedoFbo = new FrameBufferObject(this.gl, this.gl.canvas, this.defaultShaderInfo, {positionType, textureType});
     }
     return this.albedoFbo;
   }
   getSelectionFbo() {
+    const positionType = 0;
+    const textureType = 4;
     if (!this.selectionFbo) {
-      this.selectionFbo = new FrameBufferObject(this.gl, this.gl.canvas, this.processShaderInfo, {
-        positionType : 0,
-        textureType : 4,
-      });
+      this.selectionFbo = new FrameBufferObject(this.gl, this.gl.canvas, this.defaultShaderInfo, {positionType, textureType});
     }
     return this.selectionFbo;
   }
   getDepthFbo() {
+    const positionType = 2;
+    const textureType = 3;
     if (!this.depthFbo) {
-      this.depthFbo = new FrameBufferObject(this.gl, this.gl.canvas, this.processShaderInfo, {
-        positionType : 2,
-        textureType : 3,
-      });
+      this.depthFbo = new FrameBufferObject(this.gl, this.gl.canvas, this.defaultShaderInfo, {positionType, textureType});
     }
     return this.depthFbo;
   }
   getNormalFbo() {
+    const positionType = 3;
+    const textureType = 5;
     if (!this.normalFbo) {
-      this.normalFbo = new FrameBufferObject(this.gl, this.gl.canvas, this.processShaderInfo, {
-        positionType : 3,
-        textureType : 5,
-      });
+      this.normalFbo = new FrameBufferObject(this.gl, this.gl.canvas, this.defaultShaderInfo, {positionType, textureType});
     }
     return this.normalFbo;
   }

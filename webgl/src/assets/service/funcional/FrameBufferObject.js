@@ -12,24 +12,20 @@ export default class FrameBufferObject {
    * @param {*} options 
    */
   constructor(gl, canvas, shaderInfo, options) {
-    /** @type {WebGLRenderingContext} */
     this.gl = gl;
     this.canvas = canvas;
+    this.shaderInfo = shaderInfo;
     this.frameBuffer = gl.createFramebuffer();
     this.depthBuffer = gl.createRenderbuffer();
     this.texture = gl.createTexture();
     this.clearColor = vec3.fromValues(1.0, 1.0, 1.0);
-    this.shaderInfo = shaderInfo;
-    this.width = new Int32Array(1);
-    this.height = new Int32Array(1);
-    this.width[0] = canvas.width;
-    this.height[0] = canvas.height;
     this.textureType = 0;
     this.positionType = 0;
     this.init(options);
   }
-
   init(options) {
+    const gl = this.gl;
+    const canvas = this.canvas;
     if (options?.textureType) {
       this.textureType = options.textureType;
     }
@@ -40,7 +36,11 @@ export default class FrameBufferObject {
       this.clearColor = options.clearColor;
     }
 
-    const gl = this.gl;
+    this.width = new Int32Array(1);
+    this.height = new Int32Array(1);
+    this.width[0] = (options?.width) ? options.width : canvas.width;
+    this.height[0] = (options?.height) ? options.height : canvas.height;
+    
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, this.texture);  
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
@@ -120,6 +120,5 @@ export default class FrameBufferObject {
   }
   decodeNormal(normal){
     return vec3.fromValues(normal[0] * 2.0 - 1.0, normal[1] * 2.0 - 1.0, normal[2] * 2.0 - 1.0);
-    //return normal * 2.0 - 1.0;
   }
 }

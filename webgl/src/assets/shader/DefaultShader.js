@@ -103,15 +103,8 @@ const fragmentShaderSource = `
 
   void main(void) {
     if (uTextureType == 1) {
-      float edgeWidth = 0.01;
-      if ((vTextureCoordinate.x <= 1.0 && vTextureCoordinate.x >= 1.0 - edgeWidth) || (vTextureCoordinate.x >= 0.0 && vTextureCoordinate.x <= edgeWidth)) {
-        gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
-      } else if ((vTextureCoordinate.y <= 1.0 && vTextureCoordinate.y >= 1.0 - edgeWidth) || (vTextureCoordinate.y >= 0.0 && vTextureCoordinate.y <= edgeWidth)) {
-        gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
-      } else {
-        vec4 textureColor = texture2D(uTexture, vec2(vTextureCoordinate.x, 1.0 - vTextureCoordinate.y));
+      vec4 textureColor = texture2D(uTexture, vec2(vTextureCoordinate.x, 1.0 - vTextureCoordinate.y));
         gl_FragColor = vec4(textureColor.rgb * vLighting, textureColor.a);
-      }
     } else if (uTextureType == 2) {
       vec4 textureColor = texture2D(uTexture, vTextureCoordinate);
       gl_FragColor = vec4(textureColor.rgb * vLighting, textureColor.a);
@@ -128,7 +121,7 @@ const fragmentShaderSource = `
   }
 `;
 
-export const PostProcessShader = {
+export const DefaultShader = {
   attributes: attributes,
   uniforms: uniforms,
   vertexShaderSource: vertexShaderSource,
