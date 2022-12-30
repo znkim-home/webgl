@@ -20,7 +20,7 @@ export default class Screen extends Renderable {
     if (options?.position) this.position = vec3.set(this.position, options.position.x, options.position.y, options.position.z);
     if (options?.color) this.color = vec4.set(this.color, options?.color.r, options?.color.g, options?.color.b, options?.color.a);
     if (options?.texture) this.texture = options.texture; 
-    if (options?.forDebug) this.forDebug = true;
+    if (options?.forDebug) this.forDebug = options.forDebug;
     if (options?.uniformLocation) this.uniformLocation = options.uniformLocation;
   }
   render(gl, shaderInfo) {

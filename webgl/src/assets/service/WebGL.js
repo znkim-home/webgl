@@ -42,12 +42,13 @@ export default class WebGL {
     this.renderableObjectList = new RenderableObjectList();
     this.shaderProcesses = [];
     this.globalOptions = {
-      fovyDegree : 90,
+      fovyDegree : 70,
       aspect : undefined,
       near : 0.1,
       far : 10000.0,
       pointSize : 8.0,
       lineWidth : 3.0,
+      debugMode : false,
     }
     this.init(canvas);
   }
@@ -117,13 +118,13 @@ export default class WebGL {
       shaderProcess.process(this.globalOptions);
     });
     this.shaderProcesses.forEach((shaderProcess) => {
-      shaderProcess.postprocess();
+      shaderProcess.postprocess(this.globalOptions);
     });
   }
   getMainFbo() {
     const positionType = 0;
     const textureType = 1;
-    const clearColor = vec3.fromValues(0.5, 0.5, 0.5);
+    const clearColor = vec3.fromValues(0.2, 0.2, 0.2);
     if (!this.mainFbo) {
       this.mainFbo = new FrameBufferObject(this.gl, this.gl.canvas, this.defaultShaderInfo, {positionType, textureType, clearColor});
     }

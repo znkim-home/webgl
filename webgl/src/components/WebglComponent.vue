@@ -101,13 +101,13 @@ export default {
       const MAXVALUE = this.blocks.BLOCK_SIZE;
       for (let x = 0; x < MAXVALUE; x++) {
         for (let y = 0; y < MAXVALUE; y++) {
-          let randomValue = Math.ceil(Math.randomInt(0) / 4);
+          let randomValue = Math.ceil(Math.randomInt(0) / 4) + 1;
           for (let z = 0; z < MAXVALUE; z++) {
             if (z < randomValue) {
               let originX = (x - OFFSET) * 128;
               let originY = (y - OFFSET) * 128;
               let originZ = z * 128;
-              let polygon = this.createDirt([originX, originY, originZ / 2]);
+              let polygon = (z <= 0) ? this.createStone([originX, originY, originZ / 2]) : this.createDirt([originX, originY, originZ / 2]);
               this.blocks.pos[x][y][z] = polygon;
             }
           }
@@ -121,14 +121,26 @@ export default {
       camera.rotate(0, 0, 0);
     },
     initImage() {
-      let image = new Image();
-      image.crossOrigin = "";
-      image.onload = () => {
-        this.image = image;
-        this.initGround();
-      }
-      image.src = "/image/dirt_16.png";
-      //image.src = "/image/duck_256.jpg";
+      this.images = [];
+      let imagePaths = ["/image/cube/dirt.png", "/image/cube/stone.png", "/image/cube/cobblestone.png"];
+      let imageLength = imagePaths.length;
+
+      let loadedCount = 0;
+      imagePaths.forEach((imagePath, index) => {
+        let image = new Image();
+        image.crossOrigin = "";
+        image.onload = () => {
+          console.log("loaded : ", imagePath);
+          this.images[index] = image;
+          loadedCount++;
+          //this.images[index] = image;
+          if (imageLength == loadedCount) {
+            console.log("inited!");
+            this.initGround();
+          }
+        }
+        image.src = imagePath;
+      });
     },
     correctCoord(coordinate, unit = 10000) {
       let x = coordinate[0] - Math.floor(coordinate[0]);
@@ -217,7 +229,17 @@ export default {
         position: { x: origin[0] + 64, y: origin[1] + 64, z: origin[2]},
         color: { r: 0.0, g: 0.5, b: 1.0, a: 1.0 },
         height: 128,
-        image : this.image
+        image : this.images[0]
+      });
+      return polygon;
+    },
+    createStone(origin) {
+      let coordinates = [[-64, -64], [64, -64], [64, 64], [-64, 64]];
+      let polygon = this.createPolygon(coordinates, {
+        position: { x: origin[0] + 64, y: origin[1] + 64, z: origin[2]},
+        color: { r: 0.0, g: 0.5, b: 1.0, a: 1.0 },
+        height: 128,
+        image : this.images[1]
       });
       return polygon;
     },
