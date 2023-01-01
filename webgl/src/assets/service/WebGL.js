@@ -155,7 +155,7 @@ export default class WebGL {
     return this.depthFbo;
   }
   getNormalFbo() {
-    const positionType = 3;
+    const positionType = 0;
     const textureType = 5;
     if (!this.normalFbo) {
       this.normalFbo = new FrameBufferObject(this.gl, this.gl.canvas, this.defaultShaderInfo, {positionType, textureType});

@@ -19,7 +19,13 @@ const vertexShaderSource = `
   varying vec3 vTransformedNormal;
   varying vec2 vTextureCoordinate;
   varying float depth;
+
   void main(void) {
+    int kernelSize = 16; // kernel point length;
+    float fkernelSize = float(kerenlSize);
+    
+
+
     vColor = aVertexColor;
     gl_PointSize = uPointSize;
 
@@ -28,12 +34,12 @@ const vertexShaderSource = `
     vTransformedNormal = aVertexNormal;
     
     if (uPositionType == 1) {
-      gl_Position = vec4(-1.0 + 2.0 * aVertexPosition.xy, 0.0, 1.0);
+      gl_Position = vec4(-1.0 + 2.0 * aVertexPosition.xy, 0.0, 1.0); // fixed position
     } else if (uPositionType == 2) {
-      gl_Position = uProjectionMatrix * orthoPosition;
       depth = -(orthoPosition.z / 10000.0);  
-    } else if (uPositionType == 3) {
-      gl_Position = uProjectionMatrix * orthoPosition;
+      gl_Position = uProjectionMatrix * orthoPosition; // depth
+    } else if (uPositionType == 3) { // SSAO
+
     } else {
       gl_Position = uProjectionMatrix * orthoPosition;
     }
