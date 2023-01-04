@@ -46,7 +46,7 @@ export default class WebGL {
       aspect : undefined,
       near : 0.1,
       far : 10000.0,
-      pointSize : 8.0,
+      pointSize : 16.0,
       lineWidth : 3.0,
       debugMode : false,
     }
@@ -83,7 +83,7 @@ export default class WebGL {
     gl.enable(gl.DEPTH_TEST);
     gl.depthFunc(gl.LEQUAL);
     this.buffer = new Buffer(gl);
-    this.buffer.init();
+    //this.buffer.init();
     this.resizeCanvas();
 
     this.defaultShader = new Shader(gl);

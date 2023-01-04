@@ -2,6 +2,7 @@ const {mat2, mat3, mat4, vec2, vec3, vec4} = self.glMatrix; // eslint-disable-li
 
 import ShaderProcess from './abstract/ShaderProcess';
 import Screen from './Screen.js';
+import Buffer from './Buffer.js';
 
 class ScreenShaderProcess extends ShaderProcess {
   screens;
@@ -10,8 +11,10 @@ class ScreenShaderProcess extends ShaderProcess {
     super(gl, shader);
     this.camera = camera;
     this.frameBufferObjs = frameBufferObjs;
+    this.buffer = new Buffer(gl);
   }
   preprocess() {
+
     const shaderInfo = this.getShader().shaderInfo;
     this.screens = [];
     this.mainScreen = new Screen([[0, 0], [1, 0], [1, 1], [0, 1]], {reverse : true, forDebug : false, uniformLocation : shaderInfo.uniformLocations.mainTexture});
@@ -24,6 +27,8 @@ class ScreenShaderProcess extends ShaderProcess {
     this.screens.push(this.selectionScreen);
     this.screens.push(this.normalScreen);
     this.screens.push(this.depthScreen);
+
+    this.noiseTexture = this.buffer.createNoiseTexture();
   }
   process(globalOptions) {
     // /** @type {WebGLRenderingContext} */
@@ -38,9 +43,40 @@ class ScreenShaderProcess extends ShaderProcess {
     gl.frontFace(gl.CCW);
     gl.lineWidth(globalOptions.lineWidth);
 
+    //let aspectRatio = tc.width / tc.height;
+    const fovy = Math.radian(this.camera.fovyDegree);
+    let tangentOfHalfFovy = Math.tan(fovy / 2);
+
+    let projectionMatrix = mat4.create();
+    mat4.perspective(projectionMatrix, fovy, globalOptions.aspect, globalOptions.near, globalOptions.far);
+    gl.uniformMatrix4fv(shaderInfo.uniformLocations.projectionMatrix, false, projectionMatrix);
+
     gl.uniform1i(shaderInfo.uniformLocations.isMain, 0);
     gl.uniform1f(shaderInfo.uniformLocations.screenWidth, canvas.width);
     gl.uniform1f(shaderInfo.uniformLocations.screenHeight, canvas.height);
+    gl.uniform1f(shaderInfo.uniformLocations.tangentOfHalfFovy, tangentOfHalfFovy);
+
+    gl.uniform1f(shaderInfo.uniformLocations.near, globalOptions.near);
+    gl.uniform1f(shaderInfo.uniformLocations.far, globalOptions.far);
+
+    const ssaoKernelSample = [ 0.33, 0.0, 0.85,
+      0.25, 0.3, 0.5,
+      0.1, 0.3, 0.85,
+      -0.15, 0.2, 0.85,
+      -0.33, 0.05, 0.6,
+      -0.1, -0.15, 0.85,
+      -0.05, -0.32, 0.25,
+      0.2, -0.15, 0.85,
+      0.6, 0.0, 0.55,
+      0.5, 0.6, 0.45,
+      -0.01, 0.7, 0.35,
+      -0.33, 0.5, 0.45,
+      -0.45, 0.0, 0.55,
+      -0.65, -0.5, 0.7,
+      0.0, -0.5, 0.55,
+      0.33, 0.3, 0.35];
+    const ssaoKernel = new Float32Array(ssaoKernelSample);
+    gl.uniform3fv(shaderInfo.uniformLocations.ssaoKernel, ssaoKernel);
 
     this.screens.forEach((ascreen, index) => {
       const textureProperty = gl["TEXTURE" + index];
@@ -49,6 +85,9 @@ class ScreenShaderProcess extends ShaderProcess {
       gl.uniform1i(ascreen.uniformLocation, index);
       //console.log(screen.texture);
     });
+    gl.activeTexture(gl["TEXTURE" + this.screens.length]);
+    gl.bindTexture(gl.TEXTURE_2D, this.noiseTexture);
+    gl.uniform1i(shaderInfo.uniformLocations.noiseTexture, this.screens.length);
   }
   postprocess(globalOptions) {
     const gl = this.getGl();

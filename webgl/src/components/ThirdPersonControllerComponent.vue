@@ -49,7 +49,15 @@ export default {
         const mouseY = canvas.height - e.y;
         const ratioX = mouseX / canvas.width;
         const ratioY = mouseY / canvas.height;
-        let position = this.getScreenPosition(ratioX, ratioY, canvas.width, canvas.height, -e.deltaY);
+        let depth = webGl.depthFbo.getDepth(mouseX, mouseY);
+
+        if (depth > 5000) {
+          return;
+        }
+
+        let offset = depth * 10 / -e.deltaY;
+        let position = this.getScreenPosition(ratioX, ratioY, canvas.width, canvas.height, offset);
+        console.log(depth, -e.deltaY, offset);
         camera.setPosition(position[0], position[1], position[2]);
       }
       canvas.onmousedown = (e) => {
@@ -58,10 +66,7 @@ export default {
         const blocks = this.blocks;
         const mouseX = e.x;
         const mouseY = canvas.height - e.y;
-        //let selectionId = webGl.selectionFbo.getColor(mouseX, mouseY);
         let depth = webGl.depthFbo.getDepth(mouseX, mouseY);
-        let normal = webGl.normalFbo.getNormal(mouseX, mouseY);
-        console.log(normal);
 
         let ratioX = mouseX / canvas.width;
         let ratioY = mouseY / canvas.height;
@@ -99,8 +104,41 @@ export default {
           this.controllerStatus.pivotPosition = pos;
           this.controllerStatus.rotateStatus = true;
         } else if (e.button == 0) {
+
+          let normal = webGl.normalFbo.getNormal(mouseX, mouseY);
+          //depth = webGl.depthFbo.getDepth(mouseX, mouseY) + 5;
           depth = webGl.depthFbo.getDepth(mouseX, mouseY) + 5;
           let pos = this.getScreenPosition(ratioX, ratioY, canvas.width, canvas.height, depth);
+          console.log(normal);
+
+          let rm = camera.getRotationMatrix();
+          let normalVec4 = vec4.fromValues(normal[0], normal[1], normal[2], 1.0);
+          let rotatedNormal = vec4.transformMat4(vec4.create(), normalVec4, rm);
+          //console.log(normal[0] );
+
+          //let heading = Math.atan2(rotatedNormal[0], rotatedNormal[2]);
+          //let pitch = -Math.asin(rotatedNormal[1]);
+
+          let heading = Math.atan2(rotatedNormal[0], rotatedNormal[2]);
+          let pitch = -Math.asin(rotatedNormal[1]);
+          heading = Math.degree(heading);
+          pitch = Math.degree(pitch);
+          //console.log(heading, pitch);
+          /*this.$parent.createPoint({
+            position: { x: pos[0], y: pos[1], z: pos[2] },
+            color: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
+          });*/
+
+          this.$parent.createCylinder({
+            position: { x: pos[0], y: pos[1], z: pos[2] },
+            rotation: { heading : 0.0, pitch : pitch, roll : heading},
+            color: { r: 0.0, g: 0.0, b: 1.0, a: 1.0 },
+            radius : 50,
+            height: 100,
+          });
+
+          //this.$parent.createDirt(pos);
+
           if (this.controllerStatus.ctrlStatus) {
             let blockX = Math.floor(pos[0] / 128);
             let blockY = Math.floor(pos[1] / 128);

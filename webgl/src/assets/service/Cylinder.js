@@ -1,31 +1,42 @@
 import Buffer from './Buffer.js';
-import Renderable from './abstract/Renderable';
+import Renderable from './abstract/Renderable.js';
 import Triangle from './geometry/Triangle.js';
 import Tessellator from './Tessellation/Tessellator.js';
 
 const { mat2, mat3, mat4, vec2, vec3, vec4 } = self.glMatrix; // eslint-disable-line no-unused-vars
 
-export default class Polygon extends Renderable {
+export default class Cylinder extends Renderable {
   height;
-  coordinates;
   triangles;
   image;
 
-  constructor(coordinates, options) {
+  constructor(options) {
     super();
-    this.init(coordinates, options);
+    this.init(options);
   }
 
-  init(coordinates, options) {
+  init(options) {
     this.triangles = [];
+    this.radius = 1.0;
     this.height = 3.0;
-    if (coordinates) this.coordinates = coordinates;
+    this.density = 36;
+    if (options?.radius) this.radius = options.radius;
     if (options?.height) this.height = options.height;
+    if (options?.density) this.density = options.density;
     if (options?.position) this.position = vec3.set(this.position, options.position.x, options.position.y, options.position.z);
     if (options?.rotation) this.rotation = vec3.set(this.rotation, options.rotation.pitch, options.rotation.roll, options.rotation.heading);
     if (options?.color) this.color = vec4.set(this.color, options?.color.r, options?.color.g, options?.color.b, options?.color.a);
     if (options?.image) this.image = options.image;
   }
+
+  rotate(xValue, yValue, tm) {
+    let pitchAxis = vec3.fromValues(1, 0, 0);
+    //let headingMatrix = mat4.fromZRotation(mat4.create(), xValue);
+    let pitchMatrix = mat4.fromRotation(mat4.create(), yValue, pitchAxis);
+
+     return mat4.multiply(tm, tm, pitchMatrix);
+  }
+
   render(gl, shaderInfo, frameBufferObjs) {
     let tm = this.getTransformMatrix();
     let rm = this.getRotationMatrix();
@@ -44,31 +55,25 @@ export default class Polygon extends Renderable {
     frameBufferObjs.forEach((frameBufferObj) => {
       const textureType = frameBufferObj.textureType;
       frameBufferObj.bind();
+      //gl.uniform1i(shaderInfo.uniformLocations.textureType, 0);
+      //gl.enableVertexAttribArray(shaderInfo.attributeLocations.vertexColor);
+      //buffer.bindBuffer(buffer.colorGlBuffer, 4, shaderInfo.attributeLocations.vertexColor);
       if (textureType > 0) {
         gl.bindTexture(gl.TEXTURE_2D, buffer.texture);
       }
       if (textureType >= 1 && textureType <= 3) { // texture, reverseY, depth
-        if (buffer.texture && this.image) {
-          gl.enableVertexAttribArray(shaderInfo.attributeLocations.textureCoordinate);
-          buffer.bindBuffer(buffer.textureGlBuffer, 2, shaderInfo.attributeLocations.textureCoordinate);
-        } else {
-          gl.enableVertexAttribArray(shaderInfo.attributeLocations.vertexColor);
-          buffer.bindBuffer(buffer.colorGlBuffer, 4, shaderInfo.attributeLocations.vertexColor);
-        }
+        gl.enableVertexAttribArray(shaderInfo.attributeLocations.textureCoordinate);
+        buffer.bindBuffer(buffer.textureGlBuffer, 2, shaderInfo.attributeLocations.textureCoordinate);
       } else if (textureType == 4) { // selection
         gl.enableVertexAttribArray(shaderInfo.attributeLocations.vertexColor);
         buffer.bindBuffer(buffer.selectionColorGlBuffer, 4, shaderInfo.attributeLocations.vertexColor);
-      } else { // defualt color
+      } else { // defulat color
         gl.enableVertexAttribArray(shaderInfo.attributeLocations.vertexColor);
         buffer.bindBuffer(buffer.colorGlBuffer, 4, shaderInfo.attributeLocations.vertexColor);
       }
-
-      //gl.enableVertexAttribArray(shaderInfo.attributeLocations.vertexColor);
-      //buffer.bindBuffer(buffer.colorGlBuffer, 4, shaderInfo.attributeLocations.vertexColor);
       gl.drawElements(gl.TRIANGLES, buffer.indicesLength, gl.UNSIGNED_SHORT, 0);
       frameBufferObj.unbind();
     });
-    //gl.uniform1i(shaderInfo.uniformLocations.textureType, 0);
   }
   // overriding
   getBuffer(gl) {
@@ -82,8 +87,23 @@ export default class Polygon extends Renderable {
       let normals = [];
       let textureCoordinates = [];
 
-      let topPositions = this.coordinates.map((coordinate) => vec3.fromValues(coordinate[0], coordinate[1], this.position[2] + this.height));
-      let bottomPositions = this.coordinates.map((coordinate) => vec3.fromValues(coordinate[0], coordinate[1], this.position[2]));
+      this.coordinates = [];
+      let angleOffset = (360 / this.density);
+      let origin = vec2.fromValues(0.0, 0.0);
+      //console.log(origin);
+
+      let rotateVec2 = vec2.fromValues(0.0, 0.0 + this.radius);
+      for (let i = 0; i < this.density; i++) {
+        let angle = Math.radian(i * angleOffset);
+        //let x = this.position[0] + Math.cos(angle) * this.radius;
+        //let y = this.position[1] + Math.sin(angle) * this.radius;
+        let rotated = vec2.rotate(vec2.create(), rotateVec2, origin, angle);
+        //console.log(rotated);
+        this.coordinates.push(rotated);
+      }
+
+      let topPositions = this.coordinates.map((coordinate) => vec3.fromValues(coordinate[0], coordinate[1], this.height));
+      let bottomPositions = this.coordinates.map((coordinate) => vec3.fromValues(coordinate[0], coordinate[1], 0.0));
       let bbox = this.getMinMax(topPositions);
       bbox.minz = this.position[2];
       bbox.maxz = this.position[2] + this.height;
@@ -93,8 +113,22 @@ export default class Polygon extends Renderable {
         bottomPositions.reverse();
       }
       
-      let topTriangles = Tessellator.tessellate(topPositions);
-      let bottomTriangles = Tessellator.tessellate(bottomPositions, false);
+      let topOrigin = vec3.fromValues(0.0, 0.0, this.height);
+      let topTriangles = topPositions.map((topPosition, index) => {
+        let nextPosition = topPositions.getNext(index);
+        return new Triangle(topOrigin, topPosition, nextPosition);
+      });
+
+      let bottomOrigin = vec3.fromValues(0.0, 0.0, 0.0);
+      let bottomTriangles = bottomPositions.map((bottomPosition, index) => {
+        let nextPosition = bottomPositions.getNext(index);
+        return new Triangle(bottomOrigin, nextPosition, bottomPosition);
+      });
+      //let bottomTriangles = Tessellator.tessellate(bottomPositions, false);
+      //let sideTriangles = this.createSideTriangle(topPositions, bottomPositions, true);
+
+      //let topTriangles = Tessellator.tessellate(topPositions);
+      //let bottomTriangles = Tessellator.tessellate(bottomPositions, false);
       let sideTriangles = this.createSideTriangle(topPositions, bottomPositions, true);
 
       let triangles = [];

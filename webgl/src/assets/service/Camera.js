@@ -187,6 +187,9 @@ export default class Camera {
     let modelViewMatrixInv = this.getModelViewMatrix();
     mat4.invert(modelViewMatrixInv, modelViewMatrixInv);
     mat4.transpose(normalMatrix4, modelViewMatrixInv);
+    normalMatrix4[3] = 0.0;
+    normalMatrix4[7] = 0.0;
+    normalMatrix4[11] = 0.0;
     return normalMatrix4;
   }
   getViewRay(tc, relFar) {

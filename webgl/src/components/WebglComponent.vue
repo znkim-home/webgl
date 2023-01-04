@@ -45,6 +45,7 @@ import Polygon from "@/assets/service/Polygon.js";
 import Rectangle from "@/assets/service/Rectangle.js"
 import Point from "@/assets/service/Point.js";
 import Line from "@/assets/service/Line.js";
+import Cylinder from "@/assets/service/Cylinder";
 
 export default {
   name: "WebglComponent",
@@ -184,7 +185,7 @@ export default {
             let coordinates = geometry.coordinates[0][0];
             let resultCoordinates = coordinates
               .map((coordinate) => {
-                let correctCoord = this.correctCoord(coordinate, 80000);
+                let correctCoord = this.correctCoord(coordinate, 100000);
                 minx = correctCoord[0] < minx ? correctCoord[0] : minx;
                 miny = correctCoord[1] < miny ? correctCoord[1] : miny;
                 maxx = correctCoord[0] > maxx ? correctCoord[0] : maxx;
@@ -193,7 +194,7 @@ export default {
               })
               .reverse();
             extrusions.push({
-              height: feature.properties.build_height,
+              height: feature.properties.build_height * 2,
               coordinates: resultCoordinates,
             });
           });
@@ -202,8 +203,9 @@ export default {
           extrusions.forEach((extrusion) => {
             this.createPolygon(extrusion.coordinates, {
               position: { x: -posx, y: -poxy, z: 0 },
-              color: { r: 0.3, g: 0.3, b: 0.3, a: 1.0 },
+              color: { r: 0.7, g: 0.7, b: 0.7, a: 1.0 },
               height: extrusion.height,
+              image : this.images[2]
             });
           });
         });
@@ -222,6 +224,13 @@ export default {
       this.webGl.renderableObjectList.set(renderableObjects.filter((renderableObj) => {
         return renderableObj.id !== obj.id;
       }));
+    },
+    createCylinder(options) {
+      let cylinder = new Cylinder(options);
+      this.webGl.renderableObjectList.push(cylinder);
+      options.color = {r : 0.0, g : 0.0, b : 1.0, a : 1.0};
+      options.image = this.images[1]
+      return cylinder;
     },
     createDirt(origin) {
       let coordinates = [[-64, -64], [64, -64], [64, 64], [-64, 64]];

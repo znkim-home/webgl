@@ -13,30 +13,31 @@ export default class Point extends Renderable {
     if (options?.position) this.position = vec3.set(this.position, options.position.x, options.position.y, options.position.z);
     if (options?.color) this.color = vec4.set(this.color, options?.color.r, options?.color.g, options?.color.b, options?.color.a);
   }
-  render(gl, shaderInfo, renderOptions) {
+  render(gl, shaderInfo, frameBufferObjs) {
     let tm = this.getTransformMatrix();
     gl.uniformMatrix4fv(shaderInfo.uniformLocations.objectMatrix, false, tm);
 
     let buffer = this.getBuffer(gl, shaderInfo);
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffer.indicesGlBuffer);
-    gl.enableVertexAttribArray(shaderInfo.attributeLocations.vertexPosition);
-    gl.enableVertexAttribArray(shaderInfo.attributeLocations.vertexColor);
-    
-    let textureType = buffer.texture ? 1 : 0;
-    textureType = (renderOptions?.textureType !== undefined) ? renderOptions?.textureType : textureType;
-    gl.uniform1i(shaderInfo.uniformLocations.textureType, textureType);
-
-    if (textureType == 4) { // selection
-      buffer.bindBuffer(buffer.selectionColorGlBuffer, 4, shaderInfo.attributeLocations.vertexColor);
-    } else {
-      buffer.bindBuffer(buffer.colorGlBuffer, 4, shaderInfo.attributeLocations.vertexColor);
-    }
-    buffer.bindBuffer(buffer.positionsGlBuffer, 3, shaderInfo.attributeLocations.vertexPosition);
-    //buffer.bindBuffer(buffer.colorGlBuffer, 4, shaderInfo.attributeLocations.vertexColor);
-
-    gl.disable(gl.DEPTH_TEST);
-    gl.drawElements(gl.POINTS, buffer.indicesLength, gl.UNSIGNED_SHORT, 0);
-    gl.enable(gl.DEPTH_TEST);
+    frameBufferObjs.forEach((frameBufferObj) => {
+      const textureType = frameBufferObj.textureType;
+      frameBufferObj.bind();
+      //gl.uniform1i(shaderInfo.uniformLocations.textureType, 0);
+      if (textureType == 4) {
+        gl.enableVertexAttribArray(shaderInfo.attributeLocations.vertexColor);
+        buffer.bindBuffer(buffer.selectionColorGlBuffer, 4, shaderInfo.attributeLocations.vertexColor);
+      } else {
+        gl.enableVertexAttribArray(shaderInfo.attributeLocations.vertexColor);
+        buffer.bindBuffer(buffer.colorGlBuffer, 4, shaderInfo.attributeLocations.vertexColor);
+      }
+      gl.enableVertexAttribArray(shaderInfo.attributeLocations.vertexPosition);
+      buffer.bindBuffer(buffer.positionsGlBuffer, 3, shaderInfo.attributeLocations.vertexPosition);
+      
+      gl.disable(gl.DEPTH_TEST);
+      gl.drawElements(gl.POINTS, buffer.indicesLength, gl.UNSIGNED_SHORT, 0);
+      gl.enable(gl.DEPTH_TEST);
+      frameBufferObj.unbind();
+    });
   }
   getBuffer(gl) {
     if (this.buffer === undefined || this.dirty === true) {

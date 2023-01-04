@@ -29,15 +29,22 @@ export default class Renderable {
     if (!this.transformMatrix || this.dirty === true) {
       let tm = mat4.create();
       mat4.identity(tm);
-      mat4.rotate(tm, tm, Math.radian(this.rotation[0]), vec3.fromValues(1, 0, 0));
-      mat4.rotate(tm, tm, Math.radian(this.rotation[1]), vec3.fromValues(0, 1, 0));
-      mat4.rotate(tm, tm, Math.radian(this.rotation[2]), vec3.fromValues(0, 0, 1));
+      mat4.rotate(tm, tm, Math.radian(this.rotation[1]), vec3.fromValues(0, 1, 0)); // pitch
+      mat4.rotate(tm, tm, Math.radian(this.rotation[2]), vec3.fromValues(0, 0, 1)); // roll
+      mat4.rotate(tm, tm, Math.radian(this.rotation[0]), vec3.fromValues(1, 0, 0)); // heading
       tm[12] = this.position[0];
       tm[13] = this.position[1];
       tm[14] = this.position[2];
       this.transformMatrix = tm;
     }
     return this.transformMatrix;
+  }
+  getRotationMatrix() {
+    this.rotationMatrix = mat4.clone(this.getTransformMatrix());
+    this.rotationMatrix[12] = 0;
+    this.rotationMatrix[13] = 0;
+    this.rotationMatrix[14] = 0;
+    return this.rotationMatrix;
   }
   getId() {
     return this.id;

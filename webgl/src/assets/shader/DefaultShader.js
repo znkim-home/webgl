@@ -1,5 +1,5 @@
 const attributes = ["aVertexPosition", "aVertexColor", "aVertexNormal", "aTextureCoordinate"];
-const uniforms = ["uModelViewMatrix", "uProjectionMatrix", "uObjectMatrix", "uNormalMatrix", "uPointSize", "uPositionType", "uTexture", "uTextureType"];
+const uniforms = ["uModelViewMatrix", "uProjectionMatrix", "uObjectMatrix", "uRotationMatrix", "uNormalMatrix", "uPointSize", "uPositionType", "uTexture", "uTextureType"];
 const vertexShaderSource = `
   precision mediump float;
 
@@ -11,6 +11,7 @@ const vertexShaderSource = `
   uniform mat4 uModelViewMatrix;
   uniform mat4 uProjectionMatrix;
   uniform mat4 uObjectMatrix;
+  uniform mat4 uRotationMatrix;
   uniform mat4 uNormalMatrix;
   uniform float uPointSize;
   uniform int uPositionType; // 1: plane, 2: depth, basic
@@ -21,17 +22,19 @@ const vertexShaderSource = `
   varying float depth;
 
   void main(void) {
-    int kernelSize = 16; // kernel point length;
-    float fkernelSize = float(kerenlSize);
-    
-
+    //int kernelSize = 16; // kernel point length;
+    //float fkernelSize = float(kerenlSize);
 
     vColor = aVertexColor;
     gl_PointSize = uPointSize;
 
     vec4 transformedPosition = uObjectMatrix * vec4(aVertexPosition, 1.0);
     vec4 orthoPosition = uModelViewMatrix * vec4(transformedPosition.xyz, 1.0);
-    vTransformedNormal = aVertexNormal;
+    
+    vec3 rotatedNormal = (uRotationMatrix * vec4(aVertexNormal, 1.0)).xyz;
+    vTransformedNormal = normalize(uNormalMatrix * vec4(rotatedNormal, 1.0)).xyz;
+
+
     
     if (uPositionType == 1) {
       gl_Position = vec4(-1.0 + 2.0 * aVertexPosition.xy, 0.0, 1.0); // fixed position
