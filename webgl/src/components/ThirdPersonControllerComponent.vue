@@ -111,31 +111,26 @@ export default {
           let pos = this.getScreenPosition(ratioX, ratioY, canvas.width, canvas.height, depth);
           console.log(normal);
 
-          let rm = camera.getRotationMatrix();
-          let normalVec4 = vec4.fromValues(normal[0], normal[1], normal[2], 1.0);
-          let rotatedNormal = vec4.transformMat4(vec4.create(), normalVec4, rm);
-          //console.log(normal[0] );
-
+          //let rm = camera.getRotationMatrix();
+          //let normalVec4 = vec4.fromValues(normal[0], normal[1], normal[2], 1.0);
+          //let rotatedNormal = vec4.transformMat4(vec4.create(), normalVec4, rm);
           //let heading = Math.atan2(rotatedNormal[0], rotatedNormal[2]);
           //let pitch = -Math.asin(rotatedNormal[1]);
-
-          let heading = Math.atan2(rotatedNormal[0], rotatedNormal[2]);
-          let pitch = -Math.asin(rotatedNormal[1]);
-          heading = Math.degree(heading);
-          pitch = Math.degree(pitch);
+          //heading = Math.degree(heading);
+          //pitch = Math.degree(pitch);
           //console.log(heading, pitch);
           /*this.$parent.createPoint({
             position: { x: pos[0], y: pos[1], z: pos[2] },
             color: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
           });*/
 
-          this.$parent.createCylinder({
+          /*this.$parent.createCylinder({
             position: { x: pos[0], y: pos[1], z: pos[2] },
             rotation: { heading : 0.0, pitch : pitch, roll : heading},
             color: { r: 0.0, g: 0.0, b: 1.0, a: 1.0 },
             radius : 50,
             height: 100,
-          });
+          });*/
 
           //this.$parent.createDirt(pos);
 

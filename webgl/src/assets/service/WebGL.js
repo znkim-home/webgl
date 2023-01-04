@@ -122,43 +122,38 @@ export default class WebGL {
     });
   }
   getMainFbo() {
-    const positionType = 0;
     const textureType = 1;
     const clearColor = vec3.fromValues(0.2, 0.2, 0.2);
     if (!this.mainFbo) {
-      this.mainFbo = new FrameBufferObject(this.gl, this.gl.canvas, this.defaultShaderInfo, {positionType, textureType, clearColor});
+      this.mainFbo = new FrameBufferObject(this.gl, this.gl.canvas, this.defaultShaderInfo, {textureType, clearColor});
     }
     return this.mainFbo;
   }
   getAlbedoFbo() {
-    const positionType = 0;
     const textureType = 1;
     if (!this.albedoFbo) {
-      this.albedoFbo = new FrameBufferObject(this.gl, this.gl.canvas, this.defaultShaderInfo, {positionType, textureType});
+      this.albedoFbo = new FrameBufferObject(this.gl, this.gl.canvas, this.defaultShaderInfo, {textureType});
     }
     return this.albedoFbo;
   }
   getSelectionFbo() {
-    const positionType = 0;
-    const textureType = 4;
+    const textureType = 2;
     if (!this.selectionFbo) {
-      this.selectionFbo = new FrameBufferObject(this.gl, this.gl.canvas, this.defaultShaderInfo, {positionType, textureType});
+      this.selectionFbo = new FrameBufferObject(this.gl, this.gl.canvas, this.defaultShaderInfo, {textureType});
     }
     return this.selectionFbo;
   }
   getDepthFbo() {
-    const positionType = 2;
     const textureType = 3;
     if (!this.depthFbo) {
-      this.depthFbo = new FrameBufferObject(this.gl, this.gl.canvas, this.defaultShaderInfo, {positionType, textureType});
+      this.depthFbo = new FrameBufferObject(this.gl, this.gl.canvas, this.defaultShaderInfo, {textureType});
     }
     return this.depthFbo;
   }
   getNormalFbo() {
-    const positionType = 0;
-    const textureType = 5;
+    const textureType = 4;
     if (!this.normalFbo) {
-      this.normalFbo = new FrameBufferObject(this.gl, this.gl.canvas, this.defaultShaderInfo, {positionType, textureType});
+      this.normalFbo = new FrameBufferObject(this.gl, this.gl.canvas, this.defaultShaderInfo, {textureType});
     }
     return this.normalFbo;
   }

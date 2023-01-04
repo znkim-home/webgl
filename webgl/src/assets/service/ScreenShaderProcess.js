@@ -43,7 +43,7 @@ class ScreenShaderProcess extends ShaderProcess {
     gl.frontFace(gl.CCW);
     gl.lineWidth(globalOptions.lineWidth);
 
-    //let aspectRatio = tc.width / tc.height;
+    let aspectRatio = (canvas.width / canvas.height);
     const fovy = Math.radian(this.camera.fovyDegree);
     let tangentOfHalfFovy = Math.tan(fovy / 2);
 
@@ -52,12 +52,12 @@ class ScreenShaderProcess extends ShaderProcess {
     gl.uniformMatrix4fv(shaderInfo.uniformLocations.projectionMatrix, false, projectionMatrix);
 
     gl.uniform1i(shaderInfo.uniformLocations.isMain, 0);
-    gl.uniform1f(shaderInfo.uniformLocations.screenWidth, canvas.width);
-    gl.uniform1f(shaderInfo.uniformLocations.screenHeight, canvas.height);
-    gl.uniform1f(shaderInfo.uniformLocations.tangentOfHalfFovy, tangentOfHalfFovy);
+    gl.uniform1f(shaderInfo.uniformLocations.aspectRatio, aspectRatio);
 
-    gl.uniform1f(shaderInfo.uniformLocations.near, globalOptions.near);
-    gl.uniform1f(shaderInfo.uniformLocations.far, globalOptions.far);
+    gl.uniform1f(shaderInfo.uniformLocations.tangentOfHalfFovy, tangentOfHalfFovy);
+    gl.uniform2fv(shaderInfo.uniformLocations.screenSize, vec2.fromValues(canvas.width, canvas.height));
+    gl.uniform2fv(shaderInfo.uniformLocations.nearFar, vec2.fromValues(globalOptions.near, globalOptions.far));
+    gl.uniform2fv(shaderInfo.uniformLocations.noiseScale, vec2.fromValues(canvas.width / 4.0, canvas.height / 4.0));
 
     const ssaoKernelSample = [ 0.33, 0.0, 0.85,
       0.25, 0.3, 0.5,
@@ -83,7 +83,6 @@ class ScreenShaderProcess extends ShaderProcess {
       gl.activeTexture(textureProperty);
       gl.bindTexture(gl.TEXTURE_2D, ascreen.texture);
       gl.uniform1i(ascreen.uniformLocation, index);
-      //console.log(screen.texture);
     });
     gl.activeTexture(gl["TEXTURE" + this.screens.length]);
     gl.bindTexture(gl.TEXTURE_2D, this.noiseTexture);

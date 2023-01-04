@@ -20,7 +20,6 @@ export default class FrameBufferObject {
     this.texture = gl.createTexture();
     this.clearColor = vec3.fromValues(1.0, 1.0, 1.0);
     this.textureType = 0;
-    this.positionType = 0;
     this.init(options);
   }
   init(options) {
@@ -28,9 +27,6 @@ export default class FrameBufferObject {
     const canvas = this.canvas;
     if (options?.textureType) {
       this.textureType = options.textureType;
-    }
-    if (options?.positionType) {
-      this.positionType = options.positionType;
     }
     if (options?.clearColor) {
       this.clearColor = options.clearColor;
@@ -69,7 +65,6 @@ export default class FrameBufferObject {
   bind() {
     const gl = this.gl;
     gl.uniform1i(this.shaderInfo.uniformLocations.textureType, this.textureType);
-    gl.uniform1i(this.shaderInfo.uniformLocations.positionType, this.positionType);
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.frameBuffer);
   }
   unbind() {
