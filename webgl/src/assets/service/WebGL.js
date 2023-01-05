@@ -1,127 +1,163 @@
+const {mat2, mat3, mat4, vec2, vec3, vec4} = self.glMatrix; // eslint-disable-line no-unused-vars
 import Shader from './Shader.js';
+import { DefaultShader } from '../shader/DefaultShader.js';
+import { ScreenShader } from '../shader/ScreenShader.js';
 import Buffer from './Buffer.js';
 import Camera from './Camera.js';
+import FrameBufferObject from './funcional/FrameBufferObject.js';
+
+import DefaultShaderProcess from './DefaultShaderProcess.js';
+import ScreenShaderProcess from './ScreenShaderProcess.js';
+import RenderableObjectList from './funcional/RenderableObjectList.js';
+
+
+Math.degree = (radian) => radian * 180 / Math.PI;
+Math.radian = (degree) => degree * Math.PI / 180;
+Math.randomInt = () => Math.ceil(Math.random() * 10);
+Array.prototype.get = function(index) {return this[this.loopIndex(index)]};
+Array.prototype.getPrev = function(index) {return this[this.loopIndex(index - 1)]};
+Array.prototype.getNext = function(index) {return this[this.loopIndex(index + 1)]};
+Array.prototype.loopIndex = function(index) {
+  if (index < 0) return index % this.length + this.length;
+  else return index % this.length;
+};
 
 export default class WebGL {
-  gl = undefined;
-  canvas = undefined;
-  shader = undefined;
-  buffer = undefined;
-  camera = undefined;
-  //testTransform = [0, 0, -5];
-  //testRotate = [0, 0, 0];
-  //testDirection = [0, 0, 0];
+  gl;
+  shader;
+  buffer;
+  camera;
+  canvas;
+  shaderProcesses;
+  frameBufferObjs;
+  renderableObjectList;
+  globalOptions;
 
-
-  now = undefined;
-
+  albedoFbo;
+  selectionFbo;
+  depthFbo;
+  normalFbo;
   constructor(canvas) {
-    this.canvas = canvas;
-    this.init();
+    this.frameBufferObjs = [];
+    this.renderableObjectList = new RenderableObjectList();
+    this.shaderProcesses = [];
+    this.globalOptions = {
+      fovyDegree : 70,
+      aspect : undefined,
+      near : 0.1,
+      far : 10000.0,
+      pointSize : 8.0,
+      lineWidth : 3.0,
+      debugMode : false,
+    }
+    this.init(canvas);
   }
-  get gl() {
-    return this.gl;
-  }
-
-  init() {
-    const canvas = this.canvas;
+  init(canvas) {
     try {
+      this.canvas = canvas;
       this.gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
+      if (!this.gl) {
+        throw new Error("Unable to initialize WebGL. Your browser may not support it.");
+      }
     } catch(e) {
       console.error(e);
-      return;
     }
-    if (!this.gl) {
-      console.error("Unable to initialize WebGL. Your browser may not support it.");
-      return;
-    }
-    const gl = this.gl;
-    gl.viewport(0, 0, canvas.width, canvas.height);
-    gl.clearColor(0, 0, 0, 1);
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   }
   resizeCanvas() {
     const canvas = this.canvas;
     const displayWidth  = canvas.clientWidth;
     const displayHeight = canvas.clientHeight;
-    const needResize = (canvas.width !== displayWidth) || (canvas.height !== displayHeight);
-    if (needResize) {
+    const isChanged = (canvas.width !== displayWidth) || (canvas.height !== displayHeight);
+    if (isChanged) {
       canvas.width  = displayWidth;
       canvas.height = displayHeight;
+      this.frameBufferObjs.forEach((frameBufferObj) => {
+        frameBufferObj.init();
+      });
     }
-    return needResize;
+    this.globalOptions.aspect = (canvas.width / canvas.height);
+    return isChanged;
   }
-  startRender(data) {
+  startRender() {
     const gl = this.gl;
     gl.enable(gl.DEPTH_TEST);
     gl.depthFunc(gl.LEQUAL);
-    this.shader = new Shader(gl);
     this.buffer = new Buffer(gl);
-    this.shader.init(data.vertexShaderSource, data.fragmentShaderSource);
-    this.buffer.init(data);
-    this.camera = new Camera();
-    this.camera.setPosition(0, -5, 10);
+    //this.buffer.init();
+    this.resizeCanvas();
+
+    this.defaultShader = new Shader(gl);
+    this.defaultShader.init(DefaultShader);
+    this.defaultShaderInfo = this.defaultShader.shaderInfo;
+    this.screenShader = new Shader(gl);
+    this.screenShader.init(ScreenShader);
+    this.screenShaderInfo = this.screenShader.shaderInfo;
     
-    requestAnimationFrame(this.render.bind(this));
+    this.camera = new Camera({fovyDegree : this.globalOptions.fovyDegree});
+
+    this.frameBufferObjs.push(this.getMainFbo());
+    this.frameBufferObjs.push(this.getAlbedoFbo());
+    this.frameBufferObjs.push(this.getSelectionFbo());
+    this.frameBufferObjs.push(this.getNormalFbo());
+    this.frameBufferObjs.push(this.getDepthFbo());
+
+    this.shaderProcesses.push(new DefaultShaderProcess(gl, this.defaultShader, this.camera, this.frameBufferObjs, this.renderableObjectList));
+    this.shaderProcesses.push(new ScreenShaderProcess(gl, this.screenShader, this.camera, this.frameBufferObjs));
+    this.shaderProcesses.forEach((shaderProcess) => {
+      shaderProcess.preprocess();
+    });
+    this.render();
   }
-  render(now) {
-    this.now = now;
-    //console.log(now);
-    //now *= 0.001;
-    //this.deltaTime = (now - this.then);
-    //this.then = now;
+  render() {
     this.scene();
     requestAnimationFrame(this.render.bind(this));
   }
-  
   scene() {
-    const gl = this.gl;
-    const canvas = this.canvas;
-    const mat4 = self.glMatrix.mat4;
-    //const vec3 = self.glMatrix.vec3;
-    const shader = this.shader;
-    const buffer = this.buffer;
-
-    const shaderInfo = shader.shaderInfo;
-    const buffers = buffer.buffers;
-
     this.resizeCanvas();
-    gl.viewport(0, 0, canvas.width, canvas.height);
-    gl.clearColor(0, 0.2, 0.2, 1);
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-    const fov = this.toRadian(45); // FieldOfView
-    const aspect = canvas.width / canvas.height; // Aspect ratio
-    const near = 0.1; // Near Frustum
-    const far = 100.0; // Far Frustum
-
-    let projectionMatrix = mat4.create();
-    mat4.perspective(projectionMatrix, fov, aspect, near, far);
-    
-    //this.camera.setPosition(0, -5, 10);
-    //this.camera.rotate([1, 0, 0], 1);
-    let modelViewMatrix = this.camera.getModelViewMatrix();
-    
-    this.bindBuffer(3, buffers.positions, shaderInfo.attributeLocations.vertexPosition);
-    this.bindBuffer(4, buffers.colors, shaderInfo.attributeLocations.vertexColor);
-    
-    gl.uniformMatrix4fv(shaderInfo.uniformLocations.projectionMatrix, false, projectionMatrix);
-    gl.uniformMatrix4fv(shaderInfo.uniformLocations.ModelViewMatrix, false, modelViewMatrix);
-
-    const offset = 0;
-    const vertexCount = 36;
-    const type = gl.UNSIGNED_SHORT;
-    gl.drawElements(gl.TRIANGLES, vertexCount, type, offset);
+    this.shaderProcesses.forEach((shaderProcess) => {
+      shaderProcess.process(this.globalOptions);
+    });
+    this.shaderProcesses.forEach((shaderProcess) => {
+      shaderProcess.postprocess(this.globalOptions);
+    });
   }
-
-  bindBuffer(numComponents, buffer, position) {
-      const gl = this.gl;
-      gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-      gl.vertexAttribPointer(position, numComponents, gl.FLOAT, false, 0, 0);
-      gl.enableVertexAttribArray(position);
+  getMainFbo() {
+    const textureType = 1;
+    const clearColor = vec3.fromValues(0.2, 0.2, 0.2);
+    if (!this.mainFbo) {
+      this.mainFbo = new FrameBufferObject(this.gl, this.gl.canvas, this.defaultShaderInfo, {textureType, clearColor});
+    }
+    return this.mainFbo;
   }
-
-  toRadian(degree) {
-    return degree * Math.PI / 180;
+  getAlbedoFbo() {
+    const textureType = 1;
+    if (!this.albedoFbo) {
+      this.albedoFbo = new FrameBufferObject(this.gl, this.gl.canvas, this.defaultShaderInfo, {textureType});
+    }
+    return this.albedoFbo;
+  }
+  getSelectionFbo() {
+    const textureType = 2;
+    if (!this.selectionFbo) {
+      this.selectionFbo = new FrameBufferObject(this.gl, this.gl.canvas, this.defaultShaderInfo, {textureType});
+    }
+    return this.selectionFbo;
+  }
+  getDepthFbo() {
+    const textureType = 3;
+    if (!this.depthFbo) {
+      this.depthFbo = new FrameBufferObject(this.gl, this.gl.canvas, this.defaultShaderInfo, {textureType});
+    }
+    return this.depthFbo;
+  }
+  getNormalFbo() {
+    const textureType = 4;
+    if (!this.normalFbo) {
+      this.normalFbo = new FrameBufferObject(this.gl, this.gl.canvas, this.defaultShaderInfo, {textureType});
+    }
+    return this.normalFbo;
+  }
+  get gl() {
+    return this.gl;
   }
 }
