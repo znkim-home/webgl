@@ -1,2 +1,2 @@
 # webgl
-znkim's WebGL Pratice Project
+znkim's WebGL Practice Project
