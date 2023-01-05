@@ -25,44 +25,34 @@ export default class Rectangle extends Renderable {
     if (options?.image && !options?.texture) this.image = options.image;
     if (options?.reverse) this.reverse = true; 
   }
-  render(gl, shaderInfo, renderOptions) {
+  render(gl, shaderInfo, frameBufferObjs) {
     let tm = this.getTransformMatrix();
+    let rm = this.getRotationMatrix();
     gl.uniformMatrix4fv(shaderInfo.uniformLocations.objectMatrix, false, tm);
+    gl.uniformMatrix4fv(shaderInfo.uniformLocations.rotationMatrix, false, rm);
 
     let buffer = this.getBuffer(gl, false);
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffer.indicesGlBuffer);
-    
-    let textureType = 0;
-    if (renderOptions?.textureType !== undefined) {
-      textureType = renderOptions.textureType;
-    } else if (buffer.texture) {
-      textureType = this.reverse ? 2 : 1;
-    }
-    
-    if (textureType > 0) {
-      gl.bindTexture(gl.TEXTURE_2D, buffer.texture);
-    }
-    gl.uniform1i(shaderInfo.uniformLocations.textureType, textureType);
-
-    if (textureType >= 1 && textureType <= 3) { // texture, reverseY, depth
-      gl.enableVertexAttribArray(shaderInfo.attributeLocations.textureCoordinate);
-      buffer.bindBuffer(buffer.textureGlBuffer, 2, shaderInfo.attributeLocations.textureCoordinate);
-    } else if (textureType == 4) { // selection
-      gl.enableVertexAttribArray(shaderInfo.attributeLocations.vertexColor);
-      buffer.bindBuffer(buffer.selectionColorGlBuffer, 4, shaderInfo.attributeLocations.vertexColor);
-    } else { // defulat color
-      gl.enableVertexAttribArray(shaderInfo.attributeLocations.vertexColor);
-      buffer.bindBuffer(buffer.colorGlBuffer, 4, shaderInfo.attributeLocations.vertexColor);
-    }
-
     gl.enableVertexAttribArray(shaderInfo.attributeLocations.vertexPosition);
     buffer.bindBuffer(buffer.postionsGlBuffer, 3, shaderInfo.attributeLocations.vertexPosition);
-
     gl.enableVertexAttribArray(shaderInfo.attributeLocations.vertexNormal);
     buffer.bindBuffer(buffer.normalGlBuffer, 3, shaderInfo.attributeLocations.vertexNormal);
+    gl.enableVertexAttribArray(shaderInfo.attributeLocations.vertexColor);
+    buffer.bindBuffer(buffer.colorGlBuffer, 4, shaderInfo.attributeLocations.vertexColor);
+    gl.enableVertexAttribArray(shaderInfo.attributeLocations.vertexSelectionColor);
+    buffer.bindBuffer(buffer.selectionColorGlBuffer, 4, shaderInfo.attributeLocations.vertexSelectionColor);
 
-    gl.drawElements(gl.TRIANGLES, buffer.indicesLength, gl.UNSIGNED_SHORT, 0);
-    gl.uniform1i(shaderInfo.uniformLocations.textureType, 0);
+    frameBufferObjs.forEach((frameBufferObj) => {
+      //const textureType = frameBufferObj.textureType;
+      frameBufferObj.bind();
+      if (this.image || this.texture) {
+        gl.bindTexture(gl.TEXTURE_2D, buffer.texture);
+        gl.enableVertexAttribArray(shaderInfo.attributeLocations.textureCoordinate);
+        buffer.bindBuffer(buffer.textureGlBuffer, 2, shaderInfo.attributeLocations.textureCoordinate);
+      }
+      gl.drawElements(gl.TRIANGLES, buffer.indicesLength, gl.UNSIGNED_SHORT, 0);
+      frameBufferObj.unbind();
+    });
   }
   getBuffer(gl) {
     this.dirty = (this.buffer === undefined || this.length != this.coordinates.length) ? true : false;
@@ -109,7 +99,9 @@ export default class Rectangle extends Renderable {
       if (this.texture) {
         this.buffer.texture = this.texture;
       } else if (!this.texture && this.image) {
-        this.buffer.texture = this.buffer.createTexture(this.image);
+        let texture = this.buffer.createTexture(this.image);
+        this.buffer.texture = texture;
+        this.texture = texture;
       }
       this.buffer.postionsGlBuffer = this.buffer.createBuffer(this.buffer.positionsVBO);
       this.buffer.colorGlBuffer = this.buffer.createBuffer(this.buffer.colorVBO);

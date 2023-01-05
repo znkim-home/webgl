@@ -1,20 +1,17 @@
 import Buffer from './Buffer.js';
 import Renderable from './abstract/Renderable.js';
 import Triangle from './geometry/Triangle.js';
-import Tessellator from './Tessellation/Tessellator.js';
+//import Tessellator from './Tessellation/Tessellator.js';
+import { PolyTree } from '../domain/PolyTree.js';
+import { House } from '../domain/House.js';
 
 const { mat2, mat3, mat4, vec2, vec3, vec4 } = self.glMatrix; // eslint-disable-line no-unused-vars
 
-export default class Cylinder extends Renderable {
-  height;
-  triangles;
-  image;
-
+export default class Obj extends Renderable {
   constructor(options) {
     super();
     this.init(options);
   }
-
   init(options) {
     this.triangles = [];
     this.radius = 1.0;
@@ -28,21 +25,11 @@ export default class Cylinder extends Renderable {
     if (options?.color) this.color = vec4.set(this.color, options?.color.r, options?.color.g, options?.color.b, options?.color.a);
     if (options?.image) this.image = options.image;
   }
-
-  rotate(xValue, yValue, tm) {
-    let pitchAxis = vec3.fromValues(1, 0, 0);
-    //let headingMatrix = mat4.fromZRotation(mat4.create(), xValue);
-    let pitchMatrix = mat4.fromRotation(mat4.create(), yValue, pitchAxis);
-
-     return mat4.multiply(tm, tm, pitchMatrix);
-  }
-
   render(gl, shaderInfo, frameBufferObjs) {
     let tm = this.getTransformMatrix();
     let rm = this.getRotationMatrix();
     gl.uniformMatrix4fv(shaderInfo.uniformLocations.objectMatrix, false, tm);
     gl.uniformMatrix4fv(shaderInfo.uniformLocations.rotationMatrix, false, rm);
-
     let buffer = this.getBuffer(gl, false);
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffer.indicesGlBuffer);
     gl.enableVertexAttribArray(shaderInfo.attributeLocations.vertexPosition);
@@ -53,7 +40,6 @@ export default class Cylinder extends Renderable {
     buffer.bindBuffer(buffer.colorGlBuffer, 4, shaderInfo.attributeLocations.vertexColor);
     gl.enableVertexAttribArray(shaderInfo.attributeLocations.vertexSelectionColor);
     buffer.bindBuffer(buffer.selectionColorGlBuffer, 4, shaderInfo.attributeLocations.vertexSelectionColor);
-
     frameBufferObjs.forEach((frameBufferObj) => {
       frameBufferObj.bind();
       if (this.image || this.texture) {
@@ -76,56 +62,87 @@ export default class Cylinder extends Renderable {
       let positions = [];
       let normals = [];
       let textureCoordinates = [];
+      //let indices = [];
+      let coordinates = [];
 
-      this.coordinates = [];
-      let angleOffset = (360 / this.density);
-      let origin = vec2.fromValues(0.0, 0.0);
-      //console.log(origin);
-
-      let rotateVec2 = vec2.fromValues(0.0, 0.0 + this.radius);
-      for (let i = 0; i < this.density; i++) {
-        let angle = Math.radian(i * angleOffset);
-        let rotated = vec2.rotate(vec2.create(), rotateVec2, origin, angle);
-        this.coordinates.push(rotated);
-      }
-
-      let topPositions = this.coordinates.map((coordinate) => vec3.fromValues(coordinate[0], coordinate[1], this.height));
-      let bottomPositions = this.coordinates.map((coordinate) => vec3.fromValues(coordinate[0], coordinate[1], 0.0));
-      let bbox = this.getMinMax(topPositions);
-      bbox.minz = this.position[2];
-      bbox.maxz = this.position[2] + this.height;
-
-      if (Tessellator.validateCCW(topPositions) < 0) {
-        topPositions.reverse();
-        bottomPositions.reverse();
-      }
+      let pt = PolyTree;
+      //let house = House;
       
-      let topOrigin = vec3.fromValues(0.0, 0.0, this.height);
-      let topTriangles = topPositions.map((topPosition, index) => {
-        let nextPosition = topPositions.getNext(index);
-        return new Triangle(topOrigin, topPosition, nextPosition);
-      });
-      let bottomOrigin = vec3.fromValues(0.0, 0.0, 0.0);
-      let bottomTriangles = bottomPositions.map((bottomPosition, index) => {
-        let nextPosition = bottomPositions.getNext(index);
-        return new Triangle(bottomOrigin, nextPosition, bottomPosition);
-      });
-      let sideTriangles = this.createSideTriangle(topPositions, bottomPositions, true);
+      if (Math.randomInt() % 2 == 0) {
+        pt = House;
+      } else {
+        pt = PolyTree;
+      }
+      //pt = house;
+      //pt = PolyTree;
 
       let triangles = [];
-      triangles = triangles.concat(topTriangles);
-      triangles = triangles.concat(bottomTriangles);
-      triangles = triangles.concat(sideTriangles);
-      this.triangles = triangles;
+      pt.vertices.replaceAll('v ', '').split('\n').forEach((vertice) => {
+        let xyz = vertice.split(" ");
+        coordinates.push(vec3.fromValues(xyz[0], xyz[2], xyz[1]));
+      });
+      /*pt.normals.replaceAll('vn ', '').split('\n').forEach((normal) => {
+        normal.split(" ").forEach((data) => {
+          normals.push(data);
+        });
+      });*/
+      /*pt.textureCoordinates.replaceAll('vt ', '').split('\n').forEach((textureCoordinate) => {
+        textureCoordinate.split(" ").forEach((data) => {
+          textureCoordinates.push(data);
+        });
+      });*/
+
+      let testColor = vec4.fromValues(0.5, 0.3, 0.1, 0.0);
+      pt.indices1.replaceAll('f ', '').split('\n').forEach((indicesText) => {
+        let indicesSplited = indicesText.split(" ");
+        let length = indicesSplited.length;
+        if (length >= 3) {
+          let theIndices = indicesSplited.map((theIndex) => {
+            return theIndex.split("/")[0];
+          })
+          let theCoordinates = theIndices.map((theIndex) => {
+            return coordinates[theIndex - 1];
+          });
+          for (let loop = 2; loop < length; loop++) {
+            triangles.push(new Triangle(theCoordinates[0], theCoordinates[loop], theCoordinates[loop-1]));
+            testColor.forEach((value) => colors.push(value));
+            testColor.forEach((value) => colors.push(value));
+            testColor.forEach((value) => colors.push(value));
+          }
+        } 
+      });
+
+      if (pt?.indices2) {
+        pt.indices2.replaceAll('f ', '').split('\n').forEach((indicesText) => {
+          let indicesSplited = indicesText.split(" ");
+          let length = indicesSplited.length;
+          if (length >= 3) {
+            let theIndices = indicesSplited.map((theIndex) => {
+              return theIndex.split("/")[0];
+            })
+            let theCoordinates = theIndices.map((theIndex) => {
+              return coordinates[theIndex - 1];
+            });
+            for (let loop = 2; loop < length; loop++) {
+              triangles.push(new Triangle(theCoordinates[0], theCoordinates[loop], theCoordinates[loop-1]));
+              color.forEach((value) => colors.push(value));
+              color.forEach((value) => colors.push(value));
+              color.forEach((value) => colors.push(value));
+            }
+          } 
+        });
+      }
+
       triangles.forEach((triangle) => {
         let trianglePositions = triangle.positions;
         let normal = triangle.getNormal();
         trianglePositions.forEach((position) => { // vec3
           position.forEach((value) => positions.push(value));
           normal.forEach((value) => normals.push(value));
-          color.forEach((value) => colors.push(value));
+          //color.forEach((value) => colors.push(value));
           selectionColor.forEach((value) => selectionColors.push(value));
-          let xoffset = bbox.maxx - bbox.minx;
+          
+          /*let xoffset = bbox.maxx - bbox.minx;
           let yoffset = bbox.maxy - bbox.miny;
           let zoffset = bbox.maxz - bbox.minz;
           if (normal[0] == 1 || normal[0] == -1) {
@@ -137,12 +154,16 @@ export default class Cylinder extends Renderable {
           } else if (normal[2] == 1 || normal[2] == -1) {
             textureCoordinates.push((position[0] - bbox.minx) / xoffset);
             textureCoordinates.push((position[1] - bbox.miny) / yoffset);
-          }
+          }*/
         });
       });
 
+
+      this.coordinates = [];
+
       let indices = new Uint16Array(positions.length);
       this.buffer.indicesVBO = indices.map((obj, index) => index);
+      //this.buffer.indicesVBO = new Uint16Array(indices);
       this.buffer.positionsVBO = new Float32Array(positions);
       this.buffer.normalVBO = new Float32Array(normals);
       this.buffer.colorVBO = new Float32Array(colors);
@@ -163,32 +184,5 @@ export default class Cylinder extends Renderable {
       this.dirty = false;
     }
     return this.buffer;
-  }
-  createSideTriangle(topPositions, bottomPositions, isCCW = true) {
-    let triangles = [];
-    if (topPositions.length != bottomPositions.length) {
-      throw new Error("plane length is not matched.");
-    }
-    let length = topPositions.length;
-    for (let i = 0; i < length; i++) {
-      let topA = topPositions.getPrev(i);
-      let topB = topPositions.get(i);
-      let bottomA = bottomPositions.getPrev(i);
-      let bottomB = bottomPositions.get(i);
-      if (isCCW) {
-        triangles.push(new Triangle(topB, topA, bottomA));
-        triangles.push(new Triangle(topB, bottomA, bottomB));
-      } else {
-        triangles.push(new Triangle(topB, bottomA, topA));
-        triangles.push(new Triangle(topB, bottomB, bottomA));
-      }
-    }
-    return triangles;
-  }
-  createRandomColor() {
-    let r = Math.round(Math.random() * 10) / 10;
-    let g = Math.round(Math.random() * 10) / 10;
-    let b = Math.round(Math.random() * 10) / 10;
-    return vec4.fromValues(r, g, b, 1.0);
   }
 }

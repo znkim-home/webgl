@@ -46,6 +46,7 @@ import Rectangle from "@/assets/service/Rectangle.js"
 import Point from "@/assets/service/Point.js";
 import Line from "@/assets/service/Line.js";
 import Cylinder from "@/assets/service/Cylinder";
+import Obj from "@/assets/service/Obj";
 
 export default {
   name: "WebglComponent",
@@ -80,7 +81,7 @@ export default {
     },
     initBlocks() {
       this.blocks = {
-        BLOCK_SIZE : 8
+        BLOCK_SIZE : 16
       }
       const MAXVALUE = this.blocks.BLOCK_SIZE;
       let xpos = [];
@@ -162,7 +163,7 @@ export default {
         let rectangle = new Rectangle(coordinates, options);
         this.webGl.renderableObjectList.push(rectangle);
         options.color = {r : 0.0, g : 1.0, b : 0.0, a : 1.0};
-        options.image = undefined;
+        options.image = image;
       }
       image.src = "/image/chess.png";
     },
@@ -225,11 +226,16 @@ export default {
         return renderableObj.id !== obj.id;
       }));
     },
+    createObject(options) {
+      options.image = this.images[2];
+      let object = new Obj(options);
+      this.webGl.renderableObjectList.push(object);
+      return object;
+    },
     createCylinder(options) {
+      options.image = this.images[2];
       let cylinder = new Cylinder(options);
       this.webGl.renderableObjectList.push(cylinder);
-      options.color = {r : 0.0, g : 0.0, b : 1.0, a : 1.0};
-      options.image = this.images[1]
       return cylinder;
     },
     createDirt(origin) {

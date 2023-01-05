@@ -46,7 +46,7 @@ export default class WebGL {
       aspect : undefined,
       near : 0.1,
       far : 10000.0,
-      pointSize : 16.0,
+      pointSize : 8.0,
       lineWidth : 3.0,
       debugMode : false,
     }

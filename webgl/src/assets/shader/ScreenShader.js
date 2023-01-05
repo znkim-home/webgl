@@ -1,6 +1,7 @@
 const attributes = ["aVertexPosition", "aTextureCoordinate"];
 const uniforms = ["uIsMain", "uSsaoKernel", "uScreenSize", "uNoiseScale", "uAspectRatio", "uProjectionMatrix", "uTangentOfHalfFovy", "uNearFar", "uMainTexture", "uAlbedoTexture", "uSelectionTexture", "uNormalTexture", "uDepthTexture", "uNoiseTexture"];
 const vertexShaderSource = `
+  #pragma vscode_glsllint_stage : vert
   attribute vec3 aVertexPosition;
   attribute vec2 aTextureCoordinate;
 
@@ -12,6 +13,7 @@ const vertexShaderSource = `
 `;
 
 const fragmentShaderSource = `
+  #pragma vscode_glsllint_stage : frag
   precision highp float;
   
   uniform int uIsMain;
@@ -110,27 +112,40 @@ const fragmentShaderSource = `
     return vec4(occlusionA / fKernelSize, occlusionB / fKernelSize, occlusionC / fKernelSize, 1.0);
   }
 
+  float compareNormalOffset(in vec4 normalA, in vec4 normalB) {
+    float result = 0.0; 
+    result += abs(normalA.x - normalB.x);
+    result += abs(normalA.y - normalB.y);
+    result += abs(normalA.z - normalB.z);
+    return result;
+  }
+
   bool isEdge(vec2 screenPos) {
     float width = 1.0 / uScreenSize.x;
 	  float height = 1.0 / uScreenSize.y;
     vec2 rightPos = vec2(screenPos.x + width, screenPos.y);
     vec2 bottomPos = vec2(screenPos.x, screenPos.y + height);
     vec2 crossPos = vec2(screenPos.x + width, screenPos.y + height);
+
     float selection = convertColorToId(getSelection(screenPos));
     float selectionRight = convertColorToId(getSelection(rightPos));
     float selectionBottom = convertColorToId(getSelection(bottomPos));
     float selectionCross = convertColorToId(getSelection(crossPos));
+
     vec4 normal = decodeNormal(getNormal(screenPos));
     vec4 normalRight = decodeNormal(getNormal(rightPos));
     vec4 normalBottom = decodeNormal(getNormal(bottomPos));
     vec4 normalCross = decodeNormal(getNormal(crossPos));
-    float depth = unpackDepth(getDepth(screenPos));
-    float depthRight = unpackDepth(getDepth(rightPos));
-    float depthBottom = unpackDepth(getDepth(bottomPos));
-    float depthCross = unpackDepth(getDepth(crossPos));
+
+    float compareOffset = 0.3;
+    bool normalCompareRight = compareOffset < compareNormalOffset(normal, normalRight);
+    bool normalCompareBottom = compareOffset < compareNormalOffset(normal, normalBottom);
+    bool normalCompareCross = compareOffset < compareNormalOffset(normal, normalCross);
+
+    bool isEdgeByNormalCompare = normalCompareRight || normalCompareBottom || normalCompareCross;
     bool isEdgeBySelection = selection != selectionBottom || selection != selectionRight || selection != selectionCross;
-    bool isEdgeByNormal = normal != normalBottom || normal != normalRight || normal != normalCross;
-    return isEdgeByNormal || isEdgeBySelection;
+
+    return isEdgeByNormalCompare || isEdgeBySelection;
   }
 
   void main(void) {
