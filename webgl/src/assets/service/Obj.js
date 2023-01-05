@@ -4,6 +4,7 @@ import Triangle from './geometry/Triangle.js';
 //import Tessellator from './Tessellation/Tessellator.js';
 import { PolyTree } from '../domain/PolyTree.js';
 import { House } from '../domain/House.js';
+import { WoodenWatch } from '../domain/WoodenWatch.js';
 
 const { mat2, mat3, mat4, vec2, vec3, vec4 } = self.glMatrix; // eslint-disable-line no-unused-vars
 
@@ -68,10 +69,14 @@ export default class Obj extends Renderable {
       let pt = PolyTree;
       //let house = House;
       
-      if (Math.randomInt() % 2 == 0) {
+
+      let scaler = Math.randomInt();
+      if (scaler % 3 == 0) {
         pt = House;
-      } else {
+      } else if (scaler % 3 == 1) {
         pt = PolyTree;
+      } else {
+        pt = WoodenWatch;
       }
       //pt = house;
       //pt = PolyTree;
@@ -79,7 +84,7 @@ export default class Obj extends Renderable {
       let triangles = [];
       pt.vertices.replaceAll('v ', '').split('\n').forEach((vertice) => {
         let xyz = vertice.split(" ");
-        coordinates.push(vec3.fromValues(xyz[0], xyz[2], xyz[1]));
+        coordinates.push(vec3.fromValues(xyz[0] * scaler, xyz[2] * scaler, xyz[1] * scaler));
       });
       /*pt.normals.replaceAll('vn ', '').split('\n').forEach((normal) => {
         normal.split(" ").forEach((data) => {
