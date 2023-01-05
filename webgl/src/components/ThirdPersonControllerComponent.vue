@@ -50,12 +50,12 @@ export default {
         const ratioX = mouseX / canvas.width;
         const ratioY = mouseY / canvas.height;
         let depth = webGl.depthFbo.getDepth(mouseX, mouseY);
-
-        if (depth > 5000) {
+        let selectionColor = webGl.selectionFbo.getColor(mouseX, mouseY);
+        if (selectionColor == 4294967295) {
           return;
         }
 
-        let offset = depth * 10 / -e.deltaY;
+        let offset = depth * 20 / -e.deltaY;
         let position = this.getScreenPosition(ratioX, ratioY, canvas.width, canvas.height, offset);
         camera.setPosition(position[0], position[1], position[2]);
       }
@@ -66,16 +66,16 @@ export default {
         const mouseY = canvas.height - e.y;
         let ratioX = mouseX / canvas.width;
         let ratioY = mouseY / canvas.height;
-        console.log(e);
+        
+        let selectionColor = webGl.selectionFbo.getColor(mouseX, mouseY);
+        if (selectionColor == 4294967295) {
+          return;
+        }
+
         if (e.button == 0) {
           let normal = webGl.normalFbo.getNormal(mouseX, mouseY);
           let depth = webGl.depthFbo.getDepth(mouseX, mouseY);
           let pos = this.getScreenPosition(ratioX, ratioY, canvas.width, canvas.height, depth);
-
-          /*this.$parent.createPoint({
-            position: { x: pos[0], y: pos[1], z: pos[2] },
-            color: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
-          });*/
 
           let rm = camera.getRotationMatrix();
           let normalVec4 = vec4.fromValues(normal[0], normal[1], normal[2], 1.0);
@@ -93,29 +93,11 @@ export default {
             height: 100,
           });*/
 
-
-
           this.$parent.createObject({
             position: { x: pos[0], y: pos[1], z: pos[2]},
             rotation: { heading : 0.0, pitch : pitch, roll : heading},
             color: { r: 0.3, g: 0.7, b: 0.3, a: 1.0 },
           });
-
-          /*let rm = camera.getRotationMatrix();
-          let normalVec4 = vec4.fromValues(normal[0], normal[1], normal[2], 1.0);
-          let rotatedNormal = vec4.transformMat4(vec4.create(), normalVec4, rm);
-          let heading = Math.atan2(rotatedNormal[0], rotatedNormal[2]);
-          let pitch = -Math.asin(rotatedNormal[1]);
-          heading = Math.degree(heading);
-          pitch = Math.degree(pitch);
-          this.$parent.createCylinder({
-            position: { x: pos[0], y: pos[1], z: pos[2] },
-            rotation: { heading : 0.0, pitch : pitch, roll : heading},
-            color: { r: 0.7, g: 0.3, b: 0.3, a: 1.0 },
-            radius : 30,
-            height: 150,
-            density: 128,
-          });*/
         }
       }
       canvas.onmousedown = (e) => {
@@ -128,7 +110,8 @@ export default {
 
         let ratioX = mouseX / canvas.width;
         let ratioY = mouseY / canvas.height;
-        if (depth > 5000) {
+        let selectionColor = webGl.selectionFbo.getColor(mouseX, mouseY);
+        if (selectionColor == 4294967295) {
           return;
         }
         const OFFSET = this.blocks.BLOCK_SIZE / 2;
@@ -162,31 +145,9 @@ export default {
           this.controllerStatus.pivotPosition = pos;
           this.controllerStatus.rotateStatus = true;
         } else if (e.button == 0) {
-          //let normal = webGl.normalFbo.getNormal(mouseX, mouseY);
           depth = webGl.depthFbo.getDepth(mouseX, mouseY) + 5;
           let pos = this.getScreenPosition(ratioX, ratioY, canvas.width, canvas.height, depth);
           
-          /*let rm = camera.getRotationMatrix();
-          let normalVec4 = vec4.fromValues(normal[0], normal[1], normal[2], 1.0);
-          let rotatedNormal = vec4.transformMat4(vec4.create(), normalVec4, rm);
-          let heading = Math.atan2(rotatedNormal[0], rotatedNormal[2]);
-          let pitch = -Math.asin(rotatedNormal[1]);
-          heading = Math.degree(heading);
-          pitch = Math.degree(pitch);
-          this.$parent.createCylinder({
-            position: { x: pos[0], y: pos[1], z: pos[2] },
-            rotation: { heading : 0.0, pitch : pitch, roll : heading},
-            color: { r: 0.0, g: 0.0, b: 1.0, a: 1.0 },
-            radius : 50,
-            height: 100,
-          });*/
-
-          /*this.$parent.createPoint({
-            position: { x: pos[0], y: pos[1], z: pos[2] },
-            color: { r: 0.3, g: 0.3, b: 1.0, a: 1.0 },
-          });*/
-          //this.$parent.createDirt(pos);
-
           if (this.controllerStatus.ctrlStatus) {
             let blockX = Math.floor(pos[0] / 128);
             let blockY = Math.floor(pos[1] / 128);
@@ -225,8 +186,9 @@ export default {
         } else if (this.controllerStatus.rotateStatus) {
           camera.rotationOrbit(-xValue, -yValue, this.controllerStatus.pivotPosition);
         } else if (this.controllerStatus.zoomStatus) {
+          let depth = webGl.depthFbo.getDepth(mouseX, mouseY);
           let ray = this.controllerStatus.zoomCameraRay;
-          let scaledRay = vec3.scale(vec3.create(), ray, yValue * 2000);
+          let scaledRay = vec3.scale(vec3.create(), ray, yValue * depth);
           let position = vec3.add(vec3.create(), camera.position, scaledRay);
           camera.setPosition(position[0], position[1], position[2]);
         }

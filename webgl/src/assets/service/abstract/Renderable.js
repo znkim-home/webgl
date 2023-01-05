@@ -8,6 +8,7 @@ export default class Renderable {
   color;
   selectionColor;
   transformMatrix;
+  rotationMatrix;
   dirty = false;
 
   constructor() {
@@ -40,10 +41,12 @@ export default class Renderable {
     return this.transformMatrix;
   }
   getRotationMatrix() {
-    this.rotationMatrix = mat4.clone(this.getTransformMatrix());
-    this.rotationMatrix[12] = 0;
-    this.rotationMatrix[13] = 0;
-    this.rotationMatrix[14] = 0;
+    if (!this.rotationMatrix || this.dirty === true) {
+      this.rotationMatrix = mat4.clone(this.getTransformMatrix());
+      this.rotationMatrix[12] = 0;
+      this.rotationMatrix[13] = 0;
+      this.rotationMatrix[14] = 0;
+    }
     return this.rotationMatrix;
   }
   getId() {

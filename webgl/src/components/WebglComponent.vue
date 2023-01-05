@@ -81,7 +81,7 @@ export default {
     },
     initBlocks() {
       this.blocks = {
-        BLOCK_SIZE : 16
+        BLOCK_SIZE : 8
       }
       const MAXVALUE = this.blocks.BLOCK_SIZE;
       let xpos = [];
