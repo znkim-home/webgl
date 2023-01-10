@@ -20,22 +20,26 @@ export default class FrameBufferObject {
     this.texture = gl.createTexture();
     this.clearColor = vec3.fromValues(1.0, 1.0, 1.0);
     this.textureType = 0;
-    this.init(options);
+    this.options = options;
+    this.init();
   }
-  init(options) {
+  init() {
     const gl = this.gl;
     const canvas = this.canvas;
-    if (options?.textureType) {
-      this.textureType = options.textureType;
+    if (this.options?.textureType) {
+      this.textureType = this.options.textureType;
     }
-    if (options?.clearColor) {
-      this.clearColor = options.clearColor;
+    if (this.options?.clearColor) {
+      this.clearColor = this.options.clearColor;
+    }
+    if (this.options?.name) {
+      this.name = this.options.name;
     }
 
     this.width = new Int32Array(1);
     this.height = new Int32Array(1);
-    this.width[0] = (options?.width) ? options.width : canvas.width;
-    this.height[0] = (options?.height) ? options.height : canvas.height;
+    this.width[0] = (this.options?.width) ? this.options.width : canvas.width;
+    this.height[0] = (this.options?.height) ? this.options.height : canvas.height;
     
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, this.texture);  

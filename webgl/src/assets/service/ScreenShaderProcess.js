@@ -7,14 +7,14 @@ import Buffer from './Buffer.js';
 class ScreenShaderProcess extends ShaderProcess {
   screens;
   frameBufferObjs;
-  constructor(gl, shader, camera, frameBufferObjs) {
+  constructor(gl, shader, camera, frameBufferObjs, sun) {
     super(gl, shader);
     this.camera = camera;
     this.frameBufferObjs = frameBufferObjs;
     this.buffer = new Buffer(gl);
+    this.sun = sun;
   }
   preprocess() {
-
     const shaderInfo = this.getShader().shaderInfo;
     this.screens = [];
     this.mainScreen = new Screen([[0, 0], [1, 0], [1, 1], [0, 1]], {reverse : true, forDebug : false, uniformLocation : shaderInfo.uniformLocations.mainTexture});
@@ -22,12 +22,14 @@ class ScreenShaderProcess extends ShaderProcess {
     this.selectionScreen = new Screen([[0.85, 0.7], [1, 0.7], [1, 0.85], [0.85, 0.85]], {reverse : true, forDebug : true, uniformLocation : shaderInfo.uniformLocations.selectionTexture});
     this.normalScreen = new Screen([[0.85, 0.55], [1, 0.55], [1, 0.7], [0.85, 0.7]], {reverse : true, forDebug : true, uniformLocation : shaderInfo.uniformLocations.normalTexture});
     this.depthScreen = new Screen([[0.85, 0.40], [1, 0.40], [1, 0.55], [0.85, 0.55]], {reverse : true, forDebug : true, uniformLocation : shaderInfo.uniformLocations.depthTexture});
+    //this.lightMapDepthScreen = new Screen([[0.92, 0.25], [1, 0.25], [1, 0.40], [0.92, 0.40]], {reverse : true, forDebug : true, uniformLocation : shaderInfo.uniformLocations.lightMapTexture});
+    this.lightMapDepthScreen = new Screen([[0.85, 0.25], [1, 0.25], [1, 0.40], [0.85, 0.40]], {reverse : true, forDebug : true, uniformLocation : shaderInfo.uniformLocations.lightMapTexture});
     this.screens.push(this.mainScreen);
     this.screens.push(this.albedoScreen);
     this.screens.push(this.selectionScreen);
     this.screens.push(this.normalScreen);
     this.screens.push(this.depthScreen);
-
+    this.screens.push(this.lightMapDepthScreen);
     this.noiseTexture = this.buffer.createNoiseTexture();
   }
   process(globalOptions) {
@@ -47,9 +49,20 @@ class ScreenShaderProcess extends ShaderProcess {
     const fovy = Math.radian(this.camera.fovyDegree);
     let tangentOfHalfFovy = Math.tan(fovy / 2);
 
+    let orthographicMatrix = mat4.create();
+    mat4.ortho(orthographicMatrix, -2048, 2048, -2048, 2048, 0, 2048);
+    gl.uniformMatrix4fv(shaderInfo.uniformLocations.orthographicMatrix, false, orthographicMatrix);
+
     let projectionMatrix = mat4.create();
     mat4.perspective(projectionMatrix, fovy, globalOptions.aspect, globalOptions.near, globalOptions.far);
     gl.uniformMatrix4fv(shaderInfo.uniformLocations.projectionMatrix, false, projectionMatrix);
+    let cameraTransformMatrix = this.camera.getTransformMatrix();
+    gl.uniformMatrix4fv(shaderInfo.uniformLocations.cameraTransformMatrix, false, cameraTransformMatrix);
+
+    let sunModelViewMatrix = this.sun.getModelViewMatrix();
+    gl.uniformMatrix4fv(shaderInfo.uniformLocations.sunModelViewMatrix, false, sunModelViewMatrix);
+    let sunNormalMatrix = this.sun.getNormalMatrix();
+    gl.uniformMatrix4fv(shaderInfo.uniformLocations.sunNormalMatrix, false, sunNormalMatrix);
 
     gl.uniform1i(shaderInfo.uniformLocations.isMain, 0);
     gl.uniform1f(shaderInfo.uniformLocations.aspectRatio, aspectRatio);

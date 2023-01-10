@@ -70,13 +70,17 @@ export default class Obj extends Renderable {
       //let house = House;
       
 
-      let scaler = Math.randomInt();
-      if (scaler % 3 == 0) {
+      let randomValue = Math.randomInt();
+      let scaler = 1;
+      if (randomValue % 3 == 0) {
         pt = House;
-      } else if (scaler % 3 == 1) {
+        scaler = 1;
+      } else if (randomValue % 3 == 1) {
         pt = PolyTree;
+        scaler = 1.5;
       } else {
         pt = WoodenWatch;
+        scaler = 3;
       }
       //pt = house;
       //pt = PolyTree;

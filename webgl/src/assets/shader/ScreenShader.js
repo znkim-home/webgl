@@ -1,5 +1,9 @@
 const attributes = ["aVertexPosition", "aTextureCoordinate"];
-const uniforms = ["uIsMain", "uSsaoKernel", "uScreenSize", "uNoiseScale", "uAspectRatio", "uProjectionMatrix", "uTangentOfHalfFovy", "uNearFar", "uMainTexture", "uAlbedoTexture", "uSelectionTexture", "uNormalTexture", "uDepthTexture", "uNoiseTexture"];
+const uniforms = ["uIsMain", "uSsaoKernel", "uScreenSize", "uNoiseScale", 
+"uAspectRatio", "uProjectionMatrix", "uTangentOfHalfFovy", "uNearFar", 
+"uMainTexture", "uAlbedoTexture", "uSelectionTexture", "uNormalTexture", 
+"uDepthTexture", "uNoiseTexture", "uLightMapTexture", "uCameraTransformMatrix", "uSunModelViewMatrix", "uOrthographicMatrix", "uSunNormalMatrix"];
+
 const vertexShaderSource = `
   #pragma vscode_glsllint_stage : vert
   attribute vec3 aVertexPosition;
@@ -24,17 +28,22 @@ const fragmentShaderSource = `
   uniform vec2 uNearFar;
   uniform vec2 uNoiseScale;
   uniform mat4 uProjectionMatrix;
-  
+  uniform mat4 uCameraTransformMatrix;
+  uniform mat4 uSunModelViewMatrix;
+  uniform mat4 uOrthographicMatrix;
+  uniform mat4 uSunNormalMatrix;
+
   uniform sampler2D uMainTexture;
   uniform sampler2D uAlbedoTexture;
   uniform sampler2D uSelectionTexture;
   uniform sampler2D uNormalTexture;
   uniform sampler2D uDepthTexture;
+  uniform sampler2D uLightMapTexture;
   uniform sampler2D uNoiseTexture;
   uniform vec3 uSsaoKernel[16];
 
   varying vec2 vTextureCoordinate;
-
+  
   const int kernelSize = 16;
   const float fKernelSize = float(kernelSize);
 
@@ -63,6 +72,7 @@ const fragmentShaderSource = `
     return texture2D(uNormalTexture, screenPos);
   }
   vec4 getDepth(vec2 screenPos) {
+    //return texture2D(uLightMapTexture, screenPos);
     return texture2D(uDepthTexture, screenPos);
   }
 
@@ -156,6 +166,28 @@ const fragmentShaderSource = `
     vec4 albedo = getAlbedo(screenPos);
     vec4 normal = decodeNormal(getNormal(screenPos));
 
+    float linearDepth = unpackDepth(getDepth(screenPos));
+    float originDepth = linearDepth * uNearFar.y;
+    vec3 positionCC = getViewRay(screenPos, originDepth);
+    vec4 positionWC = uCameraTransformMatrix * vec4(positionCC, 1.0);
+    vec4 positionSC = uSunModelViewMatrix * vec4(positionWC.xyz, 1.0);
+
+    //mat4 uOrthographicMatrixInv = inverse(uOrthographicMatrix);
+
+    positionSC = uOrthographicMatrix * positionSC;
+    vec3 positionUnitarySCaux = positionSC.xyz / positionSC.w; // Range : -1.0 ~ 1.0
+    vec3 positionUnitarySC = positionUnitarySCaux * 0.5 + 0.5; // Range = 0.0 ~ 1.0
+
+    vec4 fromDepthSunTextureVec4 = texture2D(uLightMapTexture, positionUnitarySC.xy) ;
+    fromDepthSunTextureVec4 = fromDepthSunTextureVec4 * 1.001;
+
+    float fromDepthSunTexture = unpackDepth(fromDepthSunTextureVec4);
+
+    bool isShadow = false;
+    isShadow = positionUnitarySC.z > fromDepthSunTexture;
+    
+
+
     vec3 ambientLight = vec3(0.3, 0.3, 0.3);
     vec3 directionalLightColor = vec3(0.9, 0.9, 0.9);
     vec3 directionalVector = normalize(vec3(0.6, 0.6, 0.9));
@@ -168,8 +200,11 @@ const fragmentShaderSource = `
       } else {
         vec4 ssaoResult = getSSAO(screenPos);
         gl_FragColor = vec4(albedo.xyz * vLighting * ssaoResult.z, 1.0);
-        //vec3 objectColor = vec3(0.5, 0.5, 0.5);
-        //gl_FragColor = vec4(objectColor * vLighting * ssaoResult.z, 1.0);
+
+        
+        if (isShadow) {
+          gl_FragColor = vec4(gl_FragColor.xyz * 0.5, gl_FragColor.a);
+        }
       }
     } else {
       vec4 textureColor = texture2D(uMainTexture, vTextureCoordinate);

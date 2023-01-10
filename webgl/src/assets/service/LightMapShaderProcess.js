@@ -1,14 +1,14 @@
 const {mat2, mat3, mat4, vec2, vec3, vec4} = self.glMatrix; // eslint-disable-line no-unused-vars
 
 import ShaderProcess from './abstract/ShaderProcess';
-//import Rectangle from './Rectangle.js';
 
-class DefaultShaderProcess extends ShaderProcess {
+class LightMapShaderProcess extends ShaderProcess {
   renderableList;
   frameBufferObjs;
-  constructor(gl, shader, camera, frameBufferObjs, renderableList) {
+  constructor(gl, shader, camera, frameBufferObjs, renderableList, sun) {
     super(gl, shader);
     this.camera = camera;
+    this.sun = sun;
     this.frameBufferObjs = frameBufferObjs;
     this.renderableList = renderableList;
   }
@@ -25,18 +25,17 @@ class DefaultShaderProcess extends ShaderProcess {
 
     let projectionMatrix = mat4.create();
     mat4.perspective(projectionMatrix, this.camera.fovyRadian, globalOptions.aspect, globalOptions.near, globalOptions.far);
-    //mat4.ortho(projectionMatrix, -2048, 2048, -2048, 2048, -2048, 2048);
 
-    let modelViewMatrix = this.camera.getModelViewMatrix();
-    let normalMatrix = this.camera.getNormalMatrix();
+    let orthographicMatrix = mat4.create();
+    mat4.ortho(orthographicMatrix, -2048, 2048, -2048, 2048, 0, 2048);
 
+    gl.uniform2fv(shaderInfo.uniformLocations.nearFar, vec2.fromValues(0, 2048));
+
+    let modelViewMatrix = this.sun.getModelViewMatrix();
     gl.uniformMatrix4fv(shaderInfo.uniformLocations.projectionMatrix, false, projectionMatrix);
     gl.uniformMatrix4fv(shaderInfo.uniformLocations.modelViewMatrix, false, modelViewMatrix);
-    gl.uniformMatrix4fv(shaderInfo.uniformLocations.normalMatrix, false, normalMatrix);
-    gl.uniform2fv(shaderInfo.uniformLocations.nearFar, vec2.fromValues(globalOptions.near, globalOptions.far));
-    gl.uniform1f(shaderInfo.uniformLocations.pointSize, globalOptions.pointSize);
-    gl.uniform1i(shaderInfo.uniformLocations.textureType, 0);
-    
+    gl.uniformMatrix4fv(shaderInfo.uniformLocations.orthographicMatrix, false, orthographicMatrix);
+
     this.frameBufferObjs.forEach((frameBufferObj) => {
       frameBufferObj.clear();
     });
@@ -50,4 +49,4 @@ class DefaultShaderProcess extends ShaderProcess {
   }
 }
 
-export default DefaultShaderProcess;
+export default LightMapShaderProcess;

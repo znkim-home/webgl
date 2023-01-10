@@ -50,8 +50,8 @@ export default class Screen extends Renderable {
       let rectanglePositions = this.coordinates.map((coordinate) => vec3.fromValues(coordinate[0], coordinate[1], this.position[2]));
       let bbox = this.getMinMax(rectanglePositions);
 
-      let leftTriangle = new Triangle(rectanglePositions[0], rectanglePositions[1], rectanglePositions[2]);
-      let rightTriangle = new Triangle(rectanglePositions[0], rectanglePositions[2], rectanglePositions[3]);
+      let leftTriangle = new Triangle(rectanglePositions[0], rectanglePositions[2], rectanglePositions[3]);
+      let rightTriangle = new Triangle(rectanglePositions[0], rectanglePositions[1], rectanglePositions[2]);
 
       let triangles = [leftTriangle, rightTriangle];
       triangles.forEach((triangle) => {
