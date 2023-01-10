@@ -22,8 +22,8 @@ class ScreenShaderProcess extends ShaderProcess {
     this.selectionScreen = new Screen([[0.85, 0.7], [1, 0.7], [1, 0.85], [0.85, 0.85]], {reverse : true, forDebug : true, uniformLocation : shaderInfo.uniformLocations.selectionTexture});
     this.normalScreen = new Screen([[0.85, 0.55], [1, 0.55], [1, 0.7], [0.85, 0.7]], {reverse : true, forDebug : true, uniformLocation : shaderInfo.uniformLocations.normalTexture});
     this.depthScreen = new Screen([[0.85, 0.40], [1, 0.40], [1, 0.55], [0.85, 0.55]], {reverse : true, forDebug : true, uniformLocation : shaderInfo.uniformLocations.depthTexture});
-    //this.lightMapDepthScreen = new Screen([[0.92, 0.25], [1, 0.25], [1, 0.40], [0.92, 0.40]], {reverse : true, forDebug : true, uniformLocation : shaderInfo.uniformLocations.lightMapTexture});
-    this.lightMapDepthScreen = new Screen([[0.85, 0.25], [1, 0.25], [1, 0.40], [0.85, 0.40]], {reverse : true, forDebug : true, uniformLocation : shaderInfo.uniformLocations.lightMapTexture});
+    this.lightMapDepthScreen = new Screen([[0.92, 0.25], [1, 0.25], [1, 0.40], [0.92, 0.40]], {reverse : true, forDebug : true, uniformLocation : shaderInfo.uniformLocations.lightMapTexture});
+    //this.lightMapDepthScreen = new Screen([[0.85, 0.25], [1, 0.25], [1, 0.40], [0.85, 0.40]], {reverse : true, forDebug : true, uniformLocation : shaderInfo.uniformLocations.lightMapTexture});
     this.screens.push(this.mainScreen);
     this.screens.push(this.albedoScreen);
     this.screens.push(this.selectionScreen);

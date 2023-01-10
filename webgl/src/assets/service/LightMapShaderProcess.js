@@ -23,6 +23,11 @@ class LightMapShaderProcess extends ShaderProcess {
     const shaderInfo = this.getShader().shaderInfo;
     this.getShader().useProgram();
 
+    gl.viewport(0, 0, 8182 * 2, 8182 * 2);
+    //gl.enable(gl.CULL_FACE);
+    //gl.frontFace(gl.CCW);
+    //gl.lineWidth(globalOptions.lineWidth);
+
     let projectionMatrix = mat4.create();
     mat4.perspective(projectionMatrix, this.camera.fovyRadian, globalOptions.aspect, globalOptions.near, globalOptions.far);
 

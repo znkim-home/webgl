@@ -189,7 +189,12 @@ export default class WebGL {
   getLightMapFbo() {
     const textureType = 5;
     if (!this.lightMapFbo) {
-      this.lightMapFbo = new FrameBufferObject(this.gl, this.gl.canvas, this.defaultShaderInfo, {name:"light" ,textureType:textureType});
+      this.lightMapFbo = new FrameBufferObject(this.gl, this.gl.canvas, this.defaultShaderInfo, {
+        name:"light" , 
+        textureType : textureType,
+        width : 8182 * 2,
+        height : 8182 * 2,
+    });
     }
     return this.lightMapFbo;
   }

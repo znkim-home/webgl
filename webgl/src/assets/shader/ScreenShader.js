@@ -179,7 +179,7 @@ const fragmentShaderSource = `
     vec3 positionUnitarySC = positionUnitarySCaux * 0.5 + 0.5; // Range = 0.0 ~ 1.0
 
     vec4 fromDepthSunTextureVec4 = texture2D(uLightMapTexture, positionUnitarySC.xy) ;
-    fromDepthSunTextureVec4 = fromDepthSunTextureVec4 * 1.001;
+    fromDepthSunTextureVec4 = fromDepthSunTextureVec4 * 1.0001;
 
     float fromDepthSunTexture = unpackDepth(fromDepthSunTextureVec4);
 
