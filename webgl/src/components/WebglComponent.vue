@@ -18,12 +18,44 @@
     ondragstart="return false"
     onselectstart="return false"
   >
-    <h3>tools</h3>
-    <button class="mini-btn" v-on:click="initPosition()">initPos</button>
-    <button class="mini-btn" v-on:click="getExtrusion()">extrusion</button>
-    <button class="mini-btn" v-on:click="thirdMode = false">firstPerson</button>
-    <button class="mini-btn" v-on:click="thirdMode = true">thirdPerson</button>
-    <button class="mini-btn" v-on:click="reload()">reload</button>
+    <h3>TOOLS</h3>
+    <button class="mini-btn" v-on:click="initPosition()">InitPosition</button>
+    <button class="mini-btn" v-on:click="getExtrusion()">Extrusion</button>
+    <button class="mini-btn" v-on:click="thirdMode = false">FirstPerson</button>
+    <button class="mini-btn" v-on:click="thirdMode = true">ThirdPerson</button>
+    <button class="mini-btn" v-on:click="reload()">ReloadBlocks</button>
+    <button class="mini-btn" v-on:click="removeAll()">removeAllObject</button>
+    <input type="file" class="mini-btn" id="fileUpload" accept=".obj" v-on:change="uploadObj"/>
+    <div class="block-group">
+      <label>SCALE</label>
+      <input type="range" v-model="localOptions.scale" min="1" max="10" step="1" />
+    </div>
+    <div class="block-group">
+      <label>HEADING-ROTATION</label>
+      <input type="range" v-model="localOptions.rotation" min="0" max="360" step="1" />
+    </div>
+    <div class="block-group">
+      <label>NEAR</label>
+      <input type="range" v-model="globalOptions.near" min="0.1" max="10000.0" step="1" />
+    </div>
+    <div class="block-group">
+      <label>FAR</label>
+      <input type="range" v-model="globalOptions.far" min="0.1" max="20000.0" step="1" />
+    </div>
+    <div class="block-group">
+      <label>FOVY</label>
+      <input type="range" v-model="globalOptions.fovyDegree" min="30" max="180" step="1" />
+    </div>
+    <input type="checkbox" v-model="globalOptions.cullFace"><label>CULL-FACE</label>
+    <input type="checkbox" v-model="globalOptions.depthTest"><label>DEPTH-TEST</label>
+    <input type="checkbox" v-model="globalOptions.debugMode"><label>DEBUG-MODE</label>
+    <select v-model="localOptions.blockSize">
+      <option value="4">4X4</option>
+      <option value="8">8X8</option>
+      <option value="16">16X16</option>
+      <option value="32">32X32</option>
+      <option value="64">64X64</option>
+    </select>
   </div>
   <div
     id="home"
@@ -61,6 +93,23 @@ export default {
       consoleTools: false,
       webGl: undefined,
       blocks: undefined,
+      loadedObjs: [],
+      localOptions: {
+        scale: 5.0,
+        rotation: 0.0,
+        blockSize : "8",
+      },
+      globalOptions: {
+        cullFace : true,
+        depthTest : true,
+        fovyDegree : 70,
+        aspect : undefined,
+        near : 0.1,
+        far : 10000.0,
+        pointSize : 5.0,
+        lineWidth : 3.0,
+        debugMode : true
+      }
     };
   },
   mounted() {
@@ -70,7 +119,7 @@ export default {
   methods: {
     init() {
       let canvas = document.getElementById("glcanvas");
-      let webGl = new WebGL(canvas);
+      let webGl = new WebGL(canvas, this.globalOptions);
       this.webGl = webGl;
       webGl.startRender();
       this.initImage();
@@ -79,9 +128,70 @@ export default {
       this.base(2048, 2048);
       this.initBlocks();
     },
+    uploadObj(e) {
+      //console.log(e);
+      let _this = this;
+      let file = e.target.files[0];
+      if (e.target.files[0]) {
+        let reader = new FileReader();
+        reader.onload = function(progressEvent) {
+          let objText = progressEvent.target.result;
+          let startFace = false;
+          let vertices = [];
+          let groups = [{
+            vertices : [],
+            faces : [],
+            allVertices : vertices,
+          }];
+          let groupNum = 0;
+
+          objText = objText.replaceAll("\r", "");
+
+          let lines = objText.split("\n");
+          lines.forEach((line) => {
+            if (startFace && line.indexOf("f ") != 0 && line.indexOf("usemtl") != 0 &&  line.indexOf("s ") != 0) {
+              startFace = false;
+              groups.push({
+                vertices : [],
+                faces : [],
+                allVertices : vertices
+              });
+              groupNum++;
+            }
+
+            if (line.indexOf("v ") == 0) {
+              vertices.push(line.replace("v ", ""));
+              groups[groupNum].vertices.push(line.replace("v ", ""));
+            } else if (line.indexOf("f ") == 0) {
+              groups[groupNum].faces.push(line.replace("f ", ""));
+              startFace = true;
+            }
+          });
+          _this.loadedObjs = groups;
+        };
+        reader.readAsText(file);
+      }
+    },
+    removeBlocks() {
+      if (!this.blocks) {
+        return;
+      }
+      let loop = this.blocks.BLOCK_SIZE;
+      for (let x = 0; x < loop; x++) {
+        for (let y = 0; y < loop; y++) {
+          for (let z = 0; z < loop; z++) {
+            let blockObj = this.blocks.pos[x][y][z];
+            if (blockObj) {
+              this.removeObj(blockObj);
+            }
+          }
+        }
+      }
+    },
     initBlocks() {
+      this.removeBlocks();
       this.blocks = {
-        BLOCK_SIZE : 8
+        BLOCK_SIZE : this.localOptions.blockSize
       }
       const MAXVALUE = this.blocks.BLOCK_SIZE;
       let xpos = [];
@@ -226,11 +336,24 @@ export default {
         return renderableObj.id !== obj.id;
       }));
     },
+    removeAll() {
+      this.webGl.renderableObjectList.removeAll();
+    },
     createObject(options) {
       options.image = this.images[2];
-      let object = new Obj(options);
-      this.webGl.renderableObjectList.push(object);
-      return object;
+      options.scale = this.localOptions.scale;
+      this.loadedObjs.forEach(loadedObj => {
+        let r = Math.ceil(Math.random() * 10) / 10;
+        let g = Math.ceil(Math.random() * 10) / 10;
+        let b = Math.ceil(Math.random() * 10) / 10;
+        options.color = {r, g, b}
+        let object = new Obj(options, loadedObj);
+        this.webGl.renderableObjectList.push(object);
+      })
+
+      //let object = new Obj(options, this.loadedObj);
+      //this.webGl.renderableObjectList.push(object);
+      //return object;
     },
     createCylinder(options) {
       options.image = this.images[2];
@@ -288,7 +411,7 @@ export default {
             consoleDiv.textContent.length
           );
         }
-        consoleDiv.textContent += `${new Date().toLocaleString("ko-KR")} >>>`;
+        consoleDiv.textContent += `${new Date().toLocaleString("ko-KR")} >>`;
         Array.from(arguments).forEach((el) => {
           consoleDiv.textContent += " ";
           const insertValue = typeof el === "object" ? JSON.stringify(el) : el;
@@ -308,35 +431,59 @@ export default {
 .dev-tool {
   width: 500px;
   min-height: 50px;
-  max-height: 150px;
+  max-height: 300px;
   position: absolute;
   display: block;
   z-index: 10;
   background-color: #0e0e0e;
-  opacity: 0.5;
+  opacity: 0.75;
   border-radius: 10px;
-  margin: 15px;
+  margin: 10px 10px 10px 10px;
+  padding: 10px;
   color: white;
   color-scheme: dark;
+}
+.block-group {
+  display : block;
+}
+.dev-tool label {
+	font-size: 10px;
+  display: inline-block;
+  height: 20px;
+  line-height: 20px;
+  margin: 5px 10px;
+  vertical-align: middle;
+}
+.dev-tool input{
+  vertical-align: middle;
+}
+.dev-tool input[type="range"] {
+	display: inline-block;
+  height: 20px;
+  vertical-align: middle;
+  width: 200px;
+}
+.dev-tool > input[type="file"] {
+	display: block;
 }
 .dev-tool > .console {
   padding: 5px;
   font-size: 12px;
   color: white;
-  height: 80px;
+  height: 100px;
   width: 465px;
   overflow-wrap: anywhere;
   overflow-y: auto;
   margin: 10px auto;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
   border: 1px solid #1f1f1f;
 }
 .dev-tool h3 {
   font-size: 15px;
-  padding: 10px 15px;
-  padding-bottom: 0px;
+  padding: 5px 10px;
+  padding-bottom: 7px;
   font-weight: bold;
-  color: #06ffe5;
+  color: #0640ff;
 }
 #home {
   width: 100%;
@@ -348,13 +495,13 @@ export default {
   width: 100%;
   height: 100%;
 }
-button.mini-btn {
-  padding: 5px 15px;
-  margin: 10px;
-  background-color: #585858;
-  border-radius: 5px;
+button.mini-btn, input.mini-btn {
+  padding: 5px 10px;
+  margin: 3px;
+  background-color: #313131;
+  border-radius: 3px;
   border: 0px;
-  font-size: 12px;
+  font-size: 10px;
   font-weight: unset;
 }
 </style>

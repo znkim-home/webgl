@@ -14,15 +14,14 @@ export default class Polygon extends Renderable {
     this.init(coordinates, options);
   }
 
-  init(coordinates, options) {
+  init(buffer) {
     this.triangles = [];
-    this.height = 3.0;
-    if (coordinates) this.coordinates = coordinates;
-    if (options?.height) this.height = options.height;
-    if (options?.position) this.position = vec3.set(this.position, options.position.x, options.position.y, options.position.z);
-    if (options?.rotation) this.rotation = vec3.set(this.rotation, options.rotation.pitch, options.rotation.roll, options.rotation.heading);
-    if (options?.color) this.color = vec4.set(this.color, options?.color.r, options?.color.g, options?.color.b, options?.color.a);
-    if (options?.image) this.image = options.image;
+    this.colors = buffer.colors;
+    this.selectionColors = buffer.selectionColors;
+    this.positions = buffer.positions;
+    this.normals = buffer.normals;
+    this.textures = buffer.textures;
+    this.textureCoordinates = buffer.textureCoordinates;
   }
   render(gl, shaderInfo, frameBufferObjs) {
     let tm = this.getTransformMatrix();
@@ -41,14 +40,12 @@ export default class Polygon extends Renderable {
     gl.enableVertexAttribArray(shaderInfo.attributeLocations.vertexSelectionColor);
     buffer.bindBuffer(buffer.selectionColorGlBuffer, 4, shaderInfo.attributeLocations.vertexSelectionColor);
 
+    gl.bindTexture(gl.TEXTURE_2D, buffer.texture);
+    gl.enableVertexAttribArray(shaderInfo.attributeLocations.textureCoordinate);
+    buffer.bindBuffer(buffer.textureGlBuffer, 2, shaderInfo.attributeLocations.textureCoordinate);
+
     frameBufferObjs.forEach((frameBufferObj) => {
-      const textureType = frameBufferObj.textureType;
       frameBufferObj.bind();
-      if (textureType ==  1) {
-        gl.bindTexture(gl.TEXTURE_2D, buffer.texture);
-        gl.enableVertexAttribArray(shaderInfo.attributeLocations.textureCoordinate);
-        buffer.bindBuffer(buffer.textureGlBuffer, 2, shaderInfo.attributeLocations.textureCoordinate);
-      }
       gl.drawElements(gl.TRIANGLES, buffer.indicesLength, gl.UNSIGNED_SHORT, 0);
       frameBufferObj.unbind();
     });
@@ -58,13 +55,12 @@ export default class Polygon extends Renderable {
     if (this.buffer === undefined || this.dirty === true) {
       this.buffer = new Buffer(gl);
 
-      let colors = [];
-      let selectionColors = [];
-      let positions = [];
-      let normals = [];
-      let textureCoordinates = [];
-
-
+      let colors = this.colors;
+      let selectionColors = this.selectionColors;
+      let positions = this.positions;
+      let normals = this.normals;
+      let textureCoordinates = this.textureCoordinates;
+      //let textures = this.textures;
 
       let indices = new Uint16Array(positions.length);
       this.buffer.indicesVBO = indices.map((obj, index) => index);

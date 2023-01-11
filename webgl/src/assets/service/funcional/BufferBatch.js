@@ -9,8 +9,6 @@ export default class BufferBatch {
       renderableObj.getBuffer();
 
 
-      
-
     }); 
   }
 }

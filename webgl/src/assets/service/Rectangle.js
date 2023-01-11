@@ -44,7 +44,7 @@ export default class Rectangle extends Renderable {
 
     frameBufferObjs.forEach((frameBufferObj) => {
       //const textureType = frameBufferObj.textureType;
-      frameBufferObj.bind();
+      frameBufferObj.bind(shaderInfo);
       if (this.image || this.texture) {
         gl.bindTexture(gl.TEXTURE_2D, buffer.texture);
         gl.enableVertexAttribArray(shaderInfo.attributeLocations.textureCoordinate);

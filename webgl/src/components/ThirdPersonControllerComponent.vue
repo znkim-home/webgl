@@ -96,7 +96,6 @@ export default {
           this.$parent.createObject({
             position: { x: pos[0], y: pos[1], z: pos[2]},
             rotation: { heading : 0.0, pitch : pitch, roll : heading},
-            color: { r: 0.3, g: 0.7, b: 0.3, a: 1.0 },
           });
         }
       }

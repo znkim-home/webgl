@@ -29,7 +29,7 @@ class LightMapShaderProcess extends ShaderProcess {
     //gl.lineWidth(globalOptions.lineWidth);
 
     let projectionMatrix = mat4.create();
-    mat4.perspective(projectionMatrix, this.camera.fovyRadian, globalOptions.aspect, globalOptions.near, globalOptions.far);
+    mat4.perspective(projectionMatrix, this.camera.fovyRadian, globalOptions.aspect, parseFloat(globalOptions.near), parseFloat(globalOptions.far));
 
     let orthographicMatrix = mat4.create();
     mat4.ortho(orthographicMatrix, -2048, 2048, -2048, 2048, 0, 2048);

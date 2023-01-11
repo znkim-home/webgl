@@ -66,9 +66,9 @@ export default class FrameBufferObject {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
   }
-  bind() {
+  bind(shaderInfo = this.shaderInfo) {
     const gl = this.gl;
-    gl.uniform1i(this.shaderInfo.uniformLocations.textureType, this.textureType);
+    gl.uniform1i(shaderInfo.uniformLocations.textureType, this.textureType);
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.frameBuffer);
   }
   unbind() {

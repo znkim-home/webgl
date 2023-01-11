@@ -15,12 +15,10 @@ const vertexShaderSource = `
   uniform mat4 uNormalMatrix;
   uniform float uPointSize;
   uniform vec2 uNearFar;
-  uniform int uPositionType; // 1: plane, 2: depth, basic
 
   varying vec4 vColor;
   varying vec4 vSelectionColor;
   varying vec3 vTransformedNormal;
-  varying vec2 vTextureCoordinate;
   varying float vDepth;
 
   vec4 getOrthoPosition() {
@@ -59,6 +57,7 @@ const fragmentShaderSource = `
   varying float vDepth;
 
   uniform sampler2D uTexture;
+  uniform int uTextureType;
 
   vec4 packDepth(float depth) {
     vec4 enc = vec4(1.0, 255.0, 65025.0, 16581375.0) * vDepth;

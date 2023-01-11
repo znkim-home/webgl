@@ -45,7 +45,6 @@ class ScreenShaderProcess extends ShaderProcess {
     gl.frontFace(gl.CCW);
     gl.lineWidth(globalOptions.lineWidth);
 
-    let aspectRatio = (canvas.width / canvas.height);
     const fovy = Math.radian(this.camera.fovyDegree);
     let tangentOfHalfFovy = Math.tan(fovy / 2);
 
@@ -54,7 +53,7 @@ class ScreenShaderProcess extends ShaderProcess {
     gl.uniformMatrix4fv(shaderInfo.uniformLocations.orthographicMatrix, false, orthographicMatrix);
 
     let projectionMatrix = mat4.create();
-    mat4.perspective(projectionMatrix, fovy, globalOptions.aspect, globalOptions.near, globalOptions.far);
+    mat4.perspective(projectionMatrix, fovy, globalOptions.aspect, parseFloat(globalOptions.near), parseFloat(globalOptions.far));
     gl.uniformMatrix4fv(shaderInfo.uniformLocations.projectionMatrix, false, projectionMatrix);
     let cameraTransformMatrix = this.camera.getTransformMatrix();
     gl.uniformMatrix4fv(shaderInfo.uniformLocations.cameraTransformMatrix, false, cameraTransformMatrix);
@@ -65,11 +64,11 @@ class ScreenShaderProcess extends ShaderProcess {
     gl.uniformMatrix4fv(shaderInfo.uniformLocations.sunNormalMatrix, false, sunNormalMatrix);
 
     gl.uniform1i(shaderInfo.uniformLocations.isMain, 0);
-    gl.uniform1f(shaderInfo.uniformLocations.aspectRatio, aspectRatio);
+    gl.uniform1f(shaderInfo.uniformLocations.aspectRatio, globalOptions.aspect);
 
     gl.uniform1f(shaderInfo.uniformLocations.tangentOfHalfFovy, tangentOfHalfFovy);
     gl.uniform2fv(shaderInfo.uniformLocations.screenSize, vec2.fromValues(canvas.width, canvas.height));
-    gl.uniform2fv(shaderInfo.uniformLocations.nearFar, vec2.fromValues(globalOptions.near, globalOptions.far));
+    gl.uniform2fv(shaderInfo.uniformLocations.nearFar, vec2.fromValues(parseFloat(globalOptions.near), parseFloat(globalOptions.far)));
     gl.uniform2fv(shaderInfo.uniformLocations.noiseScale, vec2.fromValues(canvas.width / 4.0, canvas.height / 4.0));
 
     const ssaoKernelSample = [ 0.33, 0.0, 0.85,
@@ -115,7 +114,7 @@ class ScreenShaderProcess extends ShaderProcess {
       gl.activeTexture(gl.TEXTURE0);
       gl.bindTexture(gl.TEXTURE_2D, screen.texture);
       screen.texture = this.frameBufferObjs[index].texture;
-      if (globalOptions.debugMode && screen.forDebug) {return;} 
+      if (!globalOptions.debugMode && screen.forDebug) {return;} 
       screen.render(gl, shaderInfo);
     });
     gl.enable(gl.DEPTH_TEST);

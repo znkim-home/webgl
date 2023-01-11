@@ -45,7 +45,7 @@ export default class Polygon extends Renderable {
 
     frameBufferObjs.forEach((frameBufferObj) => {
       const textureType = frameBufferObj.textureType;
-      frameBufferObj.bind();
+      frameBufferObj.bind(shaderInfo);
       if (textureType ==  1) {
         gl.bindTexture(gl.TEXTURE_2D, buffer.texture);
         gl.enableVertexAttribArray(shaderInfo.attributeLocations.textureCoordinate);

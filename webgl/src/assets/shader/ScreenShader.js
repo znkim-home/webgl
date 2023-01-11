@@ -99,7 +99,7 @@ const fragmentShaderSource = `
     return resultOcclusion;
   }
 
-  vec4 getSSAO(in vec2 screenPos) {
+  float getSSAO(in vec2 screenPos) {
     float occlusionA = 0.0;
     float occlusionB = 0.0;
     float occlusionC = 0.0;
@@ -115,11 +115,20 @@ const fragmentShaderSource = `
 		mat3 tbn = mat3(tangent, bitangent, normal);   
 		for (int i = 0; i < kernelSize; i++) {    	
       vec3 rotatedKernel = tbn * vec3(uSsaoKernel[i].x, uSsaoKernel[i].y, uSsaoKernel[i].z);
-      occlusionA += getOcclusion(origin, rotatedKernel, 5.0);
-      occlusionB += getOcclusion(origin, rotatedKernel, 10.0);
-      occlusionC += getOcclusion(origin, rotatedKernel, 30.0);
+      occlusionA += getOcclusion(origin, rotatedKernel, 4.0);
+      occlusionB += getOcclusion(origin, rotatedKernel, 16.0);
+      occlusionC += getOcclusion(origin, rotatedKernel, 32.0);
     }
-    return vec4(occlusionA / fKernelSize, occlusionB / fKernelSize, occlusionC / fKernelSize, 1.0);
+
+    float tolerance = 0.80;
+    float result = (occlusionA + occlusionB + occlusionC) / (fKernelSize * 3.0);
+    if (result > tolerance) {
+      result = 1.0;
+    }
+
+    return result;
+
+    //return vec4(occlusionA / fKernelSize, occlusionB / fKernelSize, occlusionC / fKernelSize, 1.0);
   }
 
   float compareNormalOffset(in vec4 normalA, in vec4 normalB) {
@@ -158,6 +167,34 @@ const fragmentShaderSource = `
     return isEdgeByNormalCompare || isEdgeBySelection;
   }
 
+  bool isShadow(vec2 screenPos) {
+    bool result = false;
+
+    float linearDepth = unpackDepth(getDepth(screenPos));
+    float originDepth = linearDepth * uNearFar.y;
+    vec3 positionCC = getViewRay(screenPos, originDepth);
+    vec4 positionWC = uCameraTransformMatrix * vec4(positionCC, 1.0);
+    vec4 positionSC = uSunModelViewMatrix * vec4(positionWC.xyz, 1.0);
+
+    positionSC = uOrthographicMatrix * positionSC;
+    vec3 positionUnitarySCaux = positionSC.xyz / positionSC.w; // Range : -1.0 ~ 1.0
+    vec3 positionUnitarySC = positionUnitarySCaux * 0.5 + 0.5; // Range = 0.0 ~ 1.0
+
+    if (positionUnitarySC.z > 0.9999) {
+      return result;
+    }
+    if (positionUnitarySC.x > 1.0 || positionUnitarySC.x < 0.0 || positionUnitarySC.y > 1.0 || positionUnitarySC.y < 0.0) {
+      return result;
+    }
+
+    vec4 fromDepthSunTextureVec4 = texture2D(uLightMapTexture, positionUnitarySC.xy) ;
+    fromDepthSunTextureVec4 = fromDepthSunTextureVec4 * 1.001;
+    float fromDepthSunTexture = unpackDepth(fromDepthSunTextureVec4);
+
+    result = positionUnitarySC.z > fromDepthSunTexture;
+    return result;
+  }
+
   void main(void) {
     float width = 1.0 / uScreenSize.x;
 	  float height = 1.0 / uScreenSize.y;
@@ -166,28 +203,6 @@ const fragmentShaderSource = `
     vec4 albedo = getAlbedo(screenPos);
     vec4 normal = decodeNormal(getNormal(screenPos));
 
-    float linearDepth = unpackDepth(getDepth(screenPos));
-    float originDepth = linearDepth * uNearFar.y;
-    vec3 positionCC = getViewRay(screenPos, originDepth);
-    vec4 positionWC = uCameraTransformMatrix * vec4(positionCC, 1.0);
-    vec4 positionSC = uSunModelViewMatrix * vec4(positionWC.xyz, 1.0);
-
-    //mat4 uOrthographicMatrixInv = inverse(uOrthographicMatrix);
-
-    positionSC = uOrthographicMatrix * positionSC;
-    vec3 positionUnitarySCaux = positionSC.xyz / positionSC.w; // Range : -1.0 ~ 1.0
-    vec3 positionUnitarySC = positionUnitarySCaux * 0.5 + 0.5; // Range = 0.0 ~ 1.0
-
-    vec4 fromDepthSunTextureVec4 = texture2D(uLightMapTexture, positionUnitarySC.xy) ;
-    fromDepthSunTextureVec4 = fromDepthSunTextureVec4 * 1.0001;
-
-    float fromDepthSunTexture = unpackDepth(fromDepthSunTextureVec4);
-
-    bool isShadow = false;
-    isShadow = positionUnitarySC.z > fromDepthSunTexture;
-    
-
-
     vec3 ambientLight = vec3(0.3, 0.3, 0.3);
     vec3 directionalLightColor = vec3(0.9, 0.9, 0.9);
     vec3 directionalVector = normalize(vec3(0.6, 0.6, 0.9));
@@ -195,17 +210,20 @@ const fragmentShaderSource = `
     vec3 vLighting = ambientLight + (directionalLightColor * directional);
 
     if (uIsMain == 1) {
-      if (isEdge(screenPos)) {
-        gl_FragColor = vec4(vec3(0.1, 0.1, 0.1), 1.0);
-      } else {
-        vec4 ssaoResult = getSSAO(screenPos);
-        gl_FragColor = vec4(albedo.xyz * vLighting * ssaoResult.z, 1.0);
+      vec3 result = albedo.xyz;
+      
+      float ssaoResult = getSSAO(screenPos);
+      result = result * ssaoResult;
 
-        
-        if (isShadow) {
-          gl_FragColor = vec4(gl_FragColor.xyz * 0.5, gl_FragColor.a);
-        }
+      //result = result * vLighting;
+      if (isShadow(screenPos)) {
+        result = result * 0.5;
       }
+
+      if (isEdge(screenPos)) {
+        result = result * 0.5;
+      }
+      gl_FragColor = vec4(result, 1.0);
     } else {
       vec4 textureColor = texture2D(uMainTexture, vTextureCoordinate);
       gl_FragColor = vec4(textureColor.rgb, textureColor.a);

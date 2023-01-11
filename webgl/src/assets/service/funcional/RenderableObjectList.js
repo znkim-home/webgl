@@ -18,4 +18,7 @@ export default class RenderableObjectList {
   pop() {
     return this.renderableObjects.pop();
   }
+  removeAll() {
+    this.renderableObjects.length = 0;
+  }
 }

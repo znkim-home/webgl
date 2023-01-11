@@ -2,22 +2,24 @@ import Buffer from './Buffer.js';
 import Renderable from './abstract/Renderable.js';
 import Triangle from './geometry/Triangle.js';
 //import Tessellator from './Tessellation/Tessellator.js';
-import { PolyTree } from '../domain/PolyTree.js';
-import { House } from '../domain/House.js';
-import { WoodenWatch } from '../domain/WoodenWatch.js';
+//import { PolyTree } from '../domain/PolyTree.js';
+//import { House } from '../domain/House.js';
+//import { WoodenWatch } from '../domain/WoodenWatch.js';
 
 const { mat2, mat3, mat4, vec2, vec3, vec4 } = self.glMatrix; // eslint-disable-line no-unused-vars
 
 export default class Obj extends Renderable {
-  constructor(options) {
+  constructor(options, objData) {
     super();
-    this.init(options);
+    this.init(options, objData);
   }
-  init(options) {
+  init(options, objData) {
     this.triangles = [];
     this.radius = 1.0;
     this.height = 3.0;
     this.density = 36;
+    this.scale = 1.0;
+
     if (options?.radius) this.radius = options.radius;
     if (options?.height) this.height = options.height;
     if (options?.density) this.density = options.density;
@@ -25,6 +27,9 @@ export default class Obj extends Renderable {
     if (options?.rotation) this.rotation = vec3.set(this.rotation, options.rotation.pitch, options.rotation.roll, options.rotation.heading);
     if (options?.color) this.color = vec4.set(this.color, options?.color.r, options?.color.g, options?.color.b, options?.color.a);
     if (options?.image) this.image = options.image;
+    if (options?.scale) this.scale = options.scale;
+
+    this.objData = objData;
   }
   render(gl, shaderInfo, frameBufferObjs) {
     let tm = this.getTransformMatrix();
@@ -66,12 +71,16 @@ export default class Obj extends Renderable {
       //let indices = [];
       let coordinates = [];
 
-      let pt = PolyTree;
+      let objData = this.objData;
+
+
+
+      //let pt = PolyTree;
       //let house = House;
       
 
-      let randomValue = Math.randomInt();
-      let scaler = 1;
+      let scaler = this.scale;
+      /*let randomValue = Math.randomInt();
       if (randomValue % 3 == 0) {
         pt = House;
         scaler = 1;
@@ -80,16 +89,53 @@ export default class Obj extends Renderable {
         scaler = 1.5;
       } else {
         pt = WoodenWatch;
-        scaler = 3;
-      }
+        scaler = 5;
+      }*/
       //pt = house;
       //pt = PolyTree;
 
+      let minX = Number.MAX_SAFE_INTEGER;
+      let minY = Number.MAX_SAFE_INTEGER;
+      let minZ = Number.MAX_SAFE_INTEGER;
+      let maxX = Number.MIN_SAFE_INTEGER;
+      let maxY = Number.MIN_SAFE_INTEGER;
+      let maxZ = Number.MIN_SAFE_INTEGER;
+
       let triangles = [];
-      pt.vertices.replaceAll('v ', '').split('\n').forEach((vertice) => {
+      objData.vertices.forEach((vertice) => {
+        let xyz = vertice.split(" ").filter(block => block !== '');
+        let x = xyz[0] * scaler;
+        let y = xyz[1] * scaler;
+        let z = xyz[2] * scaler;
+        coordinates.push(vec3.fromValues(x, z, y));
+      });
+
+      let allCoordinates = [];
+      objData.allVertices.forEach((vertice) => {
+        let xyz = vertice.split(" ").filter(block => block !== '');
+        let x = xyz[0] * scaler;
+        let y = xyz[1] * scaler;
+        let z = xyz[2] * scaler;
+
+        if (minX > x) minX = x;
+        if (minY > y) minY = y;
+        if (minZ > z) minZ = z;
+        if (maxX < x) maxX = x;
+        if (maxY < y) maxY = y;
+        if (maxZ < z) maxZ = z;
+        allCoordinates.push(vec3.fromValues(x, z, y));
+      });
+      console.log(minX, minY, minZ, maxX, maxY, maxZ);
+
+      let sizeX = (minX * -1) + maxX;
+      let sizeY = (minY * -1) + maxY; 
+      let sizeZ = (minZ * -1) + maxZ; 
+      console.log(sizeX, sizeY, sizeZ);
+
+      /*pt.vertices.replaceAll('v ', '').split('\n').forEach((vertice) => {
         let xyz = vertice.split(" ");
         coordinates.push(vec3.fromValues(xyz[0] * scaler, xyz[2] * scaler, xyz[1] * scaler));
-      });
+      });*/
       /*pt.normals.replaceAll('vn ', '').split('\n').forEach((normal) => {
         normal.split(" ").forEach((data) => {
           normals.push(data);
@@ -101,7 +147,32 @@ export default class Obj extends Renderable {
         });
       });*/
 
-      let testColor = vec4.fromValues(0.5, 0.3, 0.1, 0.0);
+      objData.faces.forEach((face) => {
+        let splitedFaces = face.split(" ").filter(block => block !== '');
+        let length = splitedFaces.length;
+        if (length >= 3) {
+          let face = splitedFaces.map((theIndex) => {
+            return parseInt(theIndex.split("/")[0]);
+          })
+          let theCoordinates = face.map((theIndex) => {
+            //theIndex = theIndex.replace("-", "");
+            if (theIndex < 0) {
+              return coordinates[coordinates.length + theIndex];
+            } else {
+              return allCoordinates[theIndex - 1];
+            }
+          });
+          for (let loop = 2; loop < length; loop++) {
+            triangles.push(new Triangle(theCoordinates[0], theCoordinates[loop], theCoordinates[loop-1]));
+            color.forEach((value) => colors.push(value));
+            color.forEach((value) => colors.push(value));
+            color.forEach((value) => colors.push(value));
+          }
+        } 
+      });
+
+
+      /*let testColor = vec4.fromValues(0.5, 0.3, 0.1, 0.0);
       pt.indices1.replaceAll('f ', '').split('\n').forEach((indicesText) => {
         let indicesSplited = indicesText.split(" ");
         let length = indicesSplited.length;
@@ -140,7 +211,7 @@ export default class Obj extends Renderable {
             }
           } 
         });
-      }
+      }*/
 
       triangles.forEach((triangle) => {
         let trianglePositions = triangle.positions;

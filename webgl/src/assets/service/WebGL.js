@@ -40,22 +40,14 @@ export default class WebGL {
   selectionFbo;
   depthFbo;
   normalFbo;
-  constructor(canvas) {
+  constructor(canvas, globalOptions = {}) {
     this.frameBufferObjs = [];
     this.defaultFrameBufferObjs = [];
     this.lightMapFrameBufferObjs = [];
 
     this.renderableObjectList = new RenderableObjectList();
     this.shaderProcesses = [];
-    this.globalOptions = {
-      fovyDegree : 70,
-      aspect : undefined,
-      near : 0.1,
-      far : 10000.0,
-      pointSize : 8.0,
-      lineWidth : 3.0,
-      debugMode : false,
-    }
+    this.globalOptions = globalOptions;
     this.init(canvas);
   }
   init(canvas) {
@@ -143,6 +135,17 @@ export default class WebGL {
   }
   scene() {
     this.resizeCanvas();
+    this.camera.syncFovyDegree(this.globalOptions.fovyDegree);
+    if (this.globalOptions.cullFace) {
+      this.gl.enable(this.gl.CULL_FACE);
+    } else {
+      this.gl.disable(this.gl.CULL_FACE);
+    }
+    if (this.globalOptions.depthTest) {
+      this.gl.enable(this.gl.DEPTH_TEST);
+    } else {
+      this.gl.disable(this.gl.DEPTH_TEST);
+    }
     this.shaderProcesses.forEach((shaderProcess) => {
       shaderProcess.process(this.globalOptions);
     });

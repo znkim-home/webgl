@@ -40,6 +40,10 @@ export default class Camera {
     }
     this.dirty = true;
   }
+  syncFovyDegree(fovyDegree = this.fovyDegree) {
+    this.fovyDegree = fovyDegree;
+    this.fovyRadian = Math.radian(this.fovyDegree);
+  }
   moveCamera(cameraPosition, startPosition, endPosition) {
     let offsetPosition = vec3.subtract(vec3.create(), startPosition, endPosition);
     vec3.add(this.position, cameraPosition, offsetPosition);

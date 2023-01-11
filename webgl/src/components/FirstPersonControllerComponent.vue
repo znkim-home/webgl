@@ -19,7 +19,7 @@ export default {
       globalOptions : {
         cameraZAxis : false,
         BLOCK_SIZE : 16,
-        MOVE_FACTOR : 20,
+        MOVE_FACTOR : 2,
         ROTATE_FACTOR : 0.1,
       }
     };
