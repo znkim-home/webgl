@@ -1,5 +1,6 @@
 export default class RenderableObjectList {
   renderableObjects;
+  length;
   constructor() {
     this.init();
   }
@@ -17,6 +18,9 @@ export default class RenderableObjectList {
   }
   pop() {
     return this.renderableObjects.pop();
+  }
+  size() {
+    return this.renderableObjects.length;
   }
   removeAll() {
     this.renderableObjects.length = 0;

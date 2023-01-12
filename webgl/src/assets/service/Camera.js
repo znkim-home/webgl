@@ -196,7 +196,7 @@ export default class Camera {
     normalMatrix4[11] = 0.0;
     return normalMatrix4;
   }
-  getViewRay(tc, relFar) {
+  getViewRay(tc, relFar = 1.0) {
     const fovy = Math.radian(this.fovyDegree);
     let aspectRatio = tc.width / tc.height;
     let tangentOfHalfFovy = Math.tan(fovy / 2);

@@ -11,7 +11,7 @@ export default class FrameBufferObject {
    * @param {*} gl
    * @param {*} options 
    */
-  constructor(gl, canvas, shaderInfo, options) {
+  constructor(gl, canvas, shaderInfo, options, globalOptions) {
     this.gl = gl;
     this.canvas = canvas;
     this.shaderInfo = shaderInfo;
@@ -21,6 +21,7 @@ export default class FrameBufferObject {
     this.clearColor = vec3.fromValues(1.0, 1.0, 1.0);
     this.textureType = 0;
     this.options = options;
+    this.globalOptions = globalOptions;
     this.init();
   }
   init() {
@@ -104,7 +105,7 @@ export default class FrameBufferObject {
     gl.readPixels(x, y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     const pixelsF32 = new Float32Array([pixels[0] / 255.0, pixels[1] / 255.0, pixels[2] / 255.0, pixels[3] / 255.0]);
-    const result = this.unpackDepth(pixelsF32) * 10000;
+    const result = this.unpackDepth(pixelsF32) * this.globalOptions.far;
     return result;
   }
   convertIdToColor(id) {

@@ -79,8 +79,8 @@ const fragmentShaderSource = `
 
   void main(void) {
     if (uTextureType == 1) {
-      //gl_FragColor = texture2D(uTexture, vTextureCoordinate);
-      gl_FragColor = vec4(vColor.xyz, vColor.a);
+      gl_FragColor = texture2D(uTexture, vTextureCoordinate);
+      //gl_FragColor = vec4(vColor.xyz, vColor.a);
     } else if (uTextureType == 2) {
       gl_FragColor = vec4(vSelectionColor.xyz, vSelectionColor.a);
     } else if (uTextureType == 3) {

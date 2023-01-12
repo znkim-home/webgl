@@ -13,18 +13,20 @@
   <div
     v-if="drawTools"
     class="dev-tool"
-    style="right: 0px; bottom: 0px"
+    style="left: 0px; top: 0px"
     oncontextmenu="return false"
     ondragstart="return false"
     onselectstart="return false"
   >
     <h3>TOOLS</h3>
-    <button class="mini-btn" v-on:click="initPosition()">InitPosition</button>
-    <button class="mini-btn" v-on:click="getExtrusion()">Extrusion</button>
-    <button class="mini-btn" v-on:click="thirdMode = false">FirstPerson</button>
-    <button class="mini-btn" v-on:click="thirdMode = true">ThirdPerson</button>
-    <button class="mini-btn" v-on:click="reload()">ReloadBlocks</button>
-    <button class="mini-btn" v-on:click="removeAll()">removeAllObject</button>
+    <div class="block-group">
+      <button class="mini-btn" v-on:click="initPosition()">InitPosition</button>
+      <button class="mini-btn" v-on:click="getExtrusion()">Extrusion</button>
+      <button class="mini-btn" v-on:click="removeAll()">removeAllObject</button>
+    </div>
+    <h2>OBJECT INFO</h2>
+    <input type="number" class="mini-btn" v-model="objectCount" v-on:change="uploadObj" readonly/>
+    <h2>OBJECT OPTIONS</h2>
     <input type="file" class="mini-btn" id="fileUpload" accept=".obj" v-on:change="uploadObj"/>
     <div class="block-group">
       <label>SCALE</label>
@@ -34,28 +36,44 @@
       <label>HEADING-ROTATION</label>
       <input type="range" v-model="localOptions.rotation" min="0" max="360" step="1" />
     </div>
+    <h2>CAMERA OPTIONS</h2>
+    <button class="mini-btn" v-on:click="thirdMode = false">FirstPerson</button>
+    <button class="mini-btn" v-on:click="thirdMode = true">ThirdPerson</button>
+    <div class="block-group">
+      <label>FOVY</label>
+      <input type="range" v-model="globalOptions.fovyDegree" min="15" max="180" step="1" />
+    </div>
     <div class="block-group">
       <label>NEAR</label>
       <input type="range" v-model="globalOptions.near" min="0.1" max="10000.0" step="1" />
     </div>
     <div class="block-group">
       <label>FAR</label>
-      <input type="range" v-model="globalOptions.far" min="0.1" max="20000.0" step="1" />
+      <input type="range" v-model="globalOptions.far" min="0.1" max="200000.0" step="1" />
     </div>
+    <h2>WEBGL OPTIONS</h2>
     <div class="block-group">
-      <label>FOVY</label>
-      <input type="range" v-model="globalOptions.fovyDegree" min="30" max="180" step="1" />
+      <input type="checkbox" v-model="globalOptions.cullFace"><label>CULL-FACE</label>
+      <input type="checkbox" v-model="globalOptions.depthTest"><label>DEPTH-TEST</label>
+      <input type="checkbox" v-model="globalOptions.debugMode"><label>DEBUG-MODE</label>
     </div>
-    <input type="checkbox" v-model="globalOptions.cullFace"><label>CULL-FACE</label>
-    <input type="checkbox" v-model="globalOptions.depthTest"><label>DEPTH-TEST</label>
-    <input type="checkbox" v-model="globalOptions.debugMode"><label>DEBUG-MODE</label>
-    <select v-model="localOptions.blockSize">
+    <h2>RENDER OPTIONS</h2>
+    <div class="block-group">
+      <input type="checkbox" v-model="globalOptions.enableSsao"><label>ENABLE-SSAO</label>
+      <input type="checkbox" v-model="globalOptions.enableGlobalLight"><label>ENABLE-SHADOW</label>
+      <input type="checkbox" v-model="globalOptions.enableEdge"><label>ENABLE-EDGE</label>
+    </div>
+    <h2>RENDER OPTIONS</h2>
+    <select v-model="localOptions.blockSize" class="mini-btn">
       <option value="4">4X4</option>
       <option value="8">8X8</option>
       <option value="16">16X16</option>
       <option value="32">32X32</option>
       <option value="64">64X64</option>
+      <option value="128">128X128</option>
+      <option value="256">256X256</option>
     </select>
+    <button class="mini-btn" v-on:click="reload()">ReloadBlocks</button>
   </div>
   <div
     id="home"
@@ -79,6 +97,7 @@ import Point from "@/assets/service/Point.js";
 import Line from "@/assets/service/Line.js";
 import Cylinder from "@/assets/service/Cylinder";
 import Obj from "@/assets/service/Obj";
+import BufferBatch from '@/assets/service/funcional/BufferBatch';
 
 export default {
   name: "WebglComponent",
@@ -97,7 +116,8 @@ export default {
       localOptions: {
         scale: 5.0,
         rotation: 0.0,
-        blockSize : "8",
+        blockSize : 8,
+        maxHeight : 8,
       },
       globalOptions: {
         cullFace : true,
@@ -105,16 +125,33 @@ export default {
         fovyDegree : 70,
         aspect : undefined,
         near : 0.1,
-        far : 10000.0,
+        far : 20000.0,
         pointSize : 5.0,
         lineWidth : 3.0,
-        debugMode : true
+        debugMode : true,
+        enableSsao : true,
+        enableGlobalLight : true,
+        enableEdge : true,
       }
     };
   },
   mounted() {
     this.init();
     //this.initConsole();
+  },
+  computed: {
+    objectCount: {
+      get() {
+        if (this.webGl) {
+          return this.webGl.renderableObjectList.size();
+        } else {
+          return 0;
+        }
+      },
+      set() {
+        console.log("can't do it");
+      },
+    }
   },
   methods: {
     init() {
@@ -191,15 +228,17 @@ export default {
     initBlocks() {
       this.removeBlocks();
       this.blocks = {
-        BLOCK_SIZE : this.localOptions.blockSize
+        BLOCK_SIZE : this.localOptions.blockSize,
+        MAX_HEIGHT : this.localOptions.maxHeight,
       }
-      const MAXVALUE = this.blocks.BLOCK_SIZE;
+      const MAX_VALUE = this.blocks.BLOCK_SIZE;
+      const MAX_HEIGHT = this.blocks.MAX_HEIGHT;
       let xpos = [];
-      for (let x = 0; x < MAXVALUE; x++) {
+      for (let x = 0; x < MAX_VALUE; x++) {
         let ypos = [];
-        for (let y = 0; y < MAXVALUE; y++) {
+        for (let y = 0; y < MAX_VALUE; y++) {
           let zpos = [];
-          for (let z = 0; z < MAXVALUE; z++) {
+          for (let z = 0; z < MAX_HEIGHT; z++) {
             zpos[z] = 0;
           }
           ypos.push(zpos);
@@ -208,23 +247,27 @@ export default {
       }
       this.blocks.pos = xpos;
     },
-    initGround() {
+    initGround(isAdd = true) {
+      let createdList = [];
       const OFFSET = this.blocks.BLOCK_SIZE / 2;
-      const MAXVALUE = this.blocks.BLOCK_SIZE;
-      for (let x = 0; x < MAXVALUE; x++) {
-        for (let y = 0; y < MAXVALUE; y++) {
+      const MAX_VALUE = this.blocks.BLOCK_SIZE;
+      const MAX_HEIGHT = this.blocks.MAX_HEIGHT;
+      for (let x = 0; x < MAX_VALUE; x++) {
+        for (let y = 0; y < MAX_VALUE; y++) {
           let randomValue = Math.ceil(Math.randomInt(0) / 4) + 1;
-          for (let z = 0; z < MAXVALUE; z++) {
+          for (let z = 0; z < MAX_HEIGHT; z++) {
             if (z < randomValue) {
               let originX = (x - OFFSET) * 128;
               let originY = (y - OFFSET) * 128;
               let originZ = z * 128;
-              let polygon = (z <= 0) ? this.createStone([originX, originY, originZ / 2]) : this.createDirt([originX, originY, originZ / 2]);
+              let polygon = (z <= 0) ? this.createStone([originX, originY, originZ / 2], isAdd) : this.createDirt([originX, originY, originZ / 2], isAdd);
               this.blocks.pos[x][y][z] = polygon;
+              createdList.push(polygon);
             }
           }
         }
       }
+      return createdList;
     },
     initPosition(dist = 2048){
       const camera = this.webGl.camera;
@@ -323,7 +366,21 @@ export default {
     },
     reload() {
       this.initBlocks();
-      this.initGround();
+      let createdList = this.initGround(false);
+      setTimeout(() => {
+        /*let filteredObjs = this.webGl.renderableObjectList.get().filter((renderableObj) => {
+          return renderableObj instanceof Polygon;
+        });*/
+
+        let filteredObjs = createdList;
+
+        let results = BufferBatch.batch100(this.webGl.gl, filteredObjs);
+        this.webGl.renderableObjectList.removeAll();
+        results.forEach((result) => {
+          this.webGl.renderableObjectList.push(result);
+        })
+        console.log(this.webGl.renderableObjectList);
+      }, 100)
     },
     setZeroPosition() {
       const webGl = this.webGl;
@@ -350,7 +407,6 @@ export default {
         let object = new Obj(options, loadedObj);
         this.webGl.renderableObjectList.push(object);
       })
-
       //let object = new Obj(options, this.loadedObj);
       //this.webGl.renderableObjectList.push(object);
       //return object;
@@ -360,26 +416,6 @@ export default {
       let cylinder = new Cylinder(options);
       this.webGl.renderableObjectList.push(cylinder);
       return cylinder;
-    },
-    createDirt(origin) {
-      let coordinates = [[-64, -64], [64, -64], [64, 64], [-64, 64]];
-      let polygon = this.createPolygon(coordinates, {
-        position: { x: origin[0] + 64, y: origin[1] + 64, z: origin[2]},
-        color: { r: 0.0, g: 0.5, b: 1.0, a: 1.0 },
-        height: 128,
-        image : this.images[0]
-      });
-      return polygon;
-    },
-    createStone(origin) {
-      let coordinates = [[-64, -64], [64, -64], [64, 64], [-64, 64]];
-      let polygon = this.createPolygon(coordinates, {
-        position: { x: origin[0] + 64, y: origin[1] + 64, z: origin[2]},
-        color: { r: 0.0, g: 0.5, b: 1.0, a: 1.0 },
-        height: 128,
-        image : this.images[1]
-      });
-      return polygon;
     },
     createCube(options) {
       let cube = new Cube(options);
@@ -394,11 +430,35 @@ export default {
       this.webGl.renderableObjectList.push(line);
       return line;
     },
-    createPolygon(coordinates, options) {
+    createPolygon(coordinates, options, isAdd = true) {
       let polygon = new Polygon(coordinates, options);
-      this.webGl.renderableObjectList.push(polygon);
+      if (isAdd) {
+        this.webGl.renderableObjectList.push(polygon);
+      } else {
+        polygon.createRenderableObjectId(this.webGl.renderableObjectList);
+      }
       options.color = {r : 0.0, g : 1.0, b : 0.0, a : 1.0};
       options.image = undefined;
+      return polygon;
+    },
+    createDirt(origin, isAdd = true) {
+      let coordinates = [[-64, -64], [64, -64], [64, 64], [-64, 64]];
+      let polygon = this.createPolygon(coordinates, {
+        position: { x: origin[0] + 64, y: origin[1] + 64, z: origin[2]},
+        color: { r: 0.0, g: 0.5, b: 1.0, a: 1.0 },
+        height: 128,
+        image : this.images[0]
+      }, isAdd);
+      return polygon;
+    },
+    createStone(origin, isAdd = true) {
+      let coordinates = [[-64, -64], [64, -64], [64, 64], [-64, 64]];
+      let polygon = this.createPolygon(coordinates, {
+        position: { x: origin[0] + 64, y: origin[1] + 64, z: origin[2]},
+        color: { r: 0.0, g: 0.5, b: 1.0, a: 1.0 },
+        height: 128,
+        image : this.images[1]
+      }, isAdd);
       return polygon;
     },
     initConsole(consoleLimit = 50000) {
@@ -431,7 +491,7 @@ export default {
 .dev-tool {
   width: 500px;
   min-height: 50px;
-  max-height: 300px;
+  max-height: 600px;
   position: absolute;
   display: block;
   z-index: 10;
@@ -483,8 +543,16 @@ export default {
   padding: 5px 10px;
   padding-bottom: 7px;
   font-weight: bold;
-  color: #0640ff;
+  color: #0084ff;
 }
+.dev-tool h2 {
+    font-size: 12px;
+    padding: 5px 3px;
+    padding-bottom: 3px;
+    font-weight: bold;
+    color: #004d96;
+}
+
 #home {
   width: 100%;
   height: 100%;

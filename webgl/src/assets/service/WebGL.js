@@ -99,7 +99,7 @@ export default class WebGL {
     
     this.camera = new Camera({fovyDegree : this.globalOptions.fovyDegree});
 
-    this.sun = new Sun({position:{x:0, y:0, z:1024}});
+    this.sun = new Sun({position:{x:0, y:0, z: 8192 / 2}});
     //this.sun.setPosition(0,0,0);
     //this.sun.moveForward(1024);
     this.sun.rotationOrbit(0.5, 0.8, vec3.fromValues(0,0,0));
@@ -157,35 +157,35 @@ export default class WebGL {
     const textureType = 1;
     const clearColor = vec3.fromValues(0.2, 0.2, 0.2);
     if (!this.mainFbo) {
-      this.mainFbo = new FrameBufferObject(this.gl, this.gl.canvas, this.defaultShaderInfo, {name:"main" ,textureType, clearColor});
+      this.mainFbo = new FrameBufferObject(this.gl, this.gl.canvas, this.defaultShaderInfo, {name:"main" ,textureType, clearColor}, this.globalOptions);
     }
     return this.mainFbo;
   }
   getAlbedoFbo() {
     const textureType = 1;
     if (!this.albedoFbo) {
-      this.albedoFbo = new FrameBufferObject(this.gl, this.gl.canvas, this.defaultShaderInfo, {name:"albedo" ,textureType});
+      this.albedoFbo = new FrameBufferObject(this.gl, this.gl.canvas, this.defaultShaderInfo, {name:"albedo" ,textureType}, this.globalOptions);
     }
     return this.albedoFbo;
   }
   getSelectionFbo() {
     const textureType = 2;
     if (!this.selectionFbo) {
-      this.selectionFbo = new FrameBufferObject(this.gl, this.gl.canvas, this.defaultShaderInfo, {name:"selection" ,textureType});
+      this.selectionFbo = new FrameBufferObject(this.gl, this.gl.canvas, this.defaultShaderInfo, {name:"selection" ,textureType}, this.globalOptions);
     }
     return this.selectionFbo;
   }
   getDepthFbo() {
     const textureType = 3;
     if (!this.depthFbo) {
-      this.depthFbo = new FrameBufferObject(this.gl, this.gl.canvas, this.defaultShaderInfo, {name:"depth" ,textureType});
+      this.depthFbo = new FrameBufferObject(this.gl, this.gl.canvas, this.defaultShaderInfo, {name:"depth" ,textureType}, this.globalOptions);
     }
     return this.depthFbo;
   }
   getNormalFbo() {
     const textureType = 4;
     if (!this.normalFbo) {
-      this.normalFbo = new FrameBufferObject(this.gl, this.gl.canvas, this.defaultShaderInfo, {name:"normal" ,textureType});
+      this.normalFbo = new FrameBufferObject(this.gl, this.gl.canvas, this.defaultShaderInfo, {name:"normal" ,textureType}, this.globalOptions);
     }
     return this.normalFbo;
   }
@@ -195,9 +195,9 @@ export default class WebGL {
       this.lightMapFbo = new FrameBufferObject(this.gl, this.gl.canvas, this.defaultShaderInfo, {
         name:"light" , 
         textureType : textureType,
-        width : 8182 * 2,
-        height : 8182 * 2,
-    });
+        width : 8182,
+        height : 8182,
+    }, this.globalOptions);
     }
     return this.lightMapFbo;
   }

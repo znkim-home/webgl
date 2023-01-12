@@ -23,7 +23,7 @@ class LightMapShaderProcess extends ShaderProcess {
     const shaderInfo = this.getShader().shaderInfo;
     this.getShader().useProgram();
 
-    gl.viewport(0, 0, 8182 * 2, 8182 * 2);
+    gl.viewport(0, 0, 8182, 8182);
     //gl.enable(gl.CULL_FACE);
     //gl.frontFace(gl.CCW);
     //gl.lineWidth(globalOptions.lineWidth);
@@ -32,9 +32,9 @@ class LightMapShaderProcess extends ShaderProcess {
     mat4.perspective(projectionMatrix, this.camera.fovyRadian, globalOptions.aspect, parseFloat(globalOptions.near), parseFloat(globalOptions.far));
 
     let orthographicMatrix = mat4.create();
-    mat4.ortho(orthographicMatrix, -2048, 2048, -2048, 2048, 0, 2048);
+    mat4.ortho(orthographicMatrix, -8192, 8192, -8192, 8192, 0, 8192);
 
-    gl.uniform2fv(shaderInfo.uniformLocations.nearFar, vec2.fromValues(0, 2048));
+    gl.uniform2fv(shaderInfo.uniformLocations.nearFar, vec2.fromValues(0, 8192));
 
     let modelViewMatrix = this.sun.getModelViewMatrix();
     gl.uniformMatrix4fv(shaderInfo.uniformLocations.projectionMatrix, false, projectionMatrix);

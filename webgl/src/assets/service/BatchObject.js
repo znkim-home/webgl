@@ -3,15 +3,15 @@ import Renderable from './abstract/Renderable';
 
 const { mat2, mat3, mat4, vec2, vec3, vec4 } = self.glMatrix; // eslint-disable-line no-unused-vars
 
-export default class Polygon extends Renderable {
+export default class BatchObject extends Renderable {
   height;
   coordinates;
   triangles;
   image;
 
-  constructor(coordinates, options) {
+  constructor(buffer) {
     super();
-    this.init(coordinates, options);
+    this.init(buffer);
   }
 
   init(buffer) {
@@ -60,7 +60,10 @@ export default class Polygon extends Renderable {
       let positions = this.positions;
       let normals = this.normals;
       let textureCoordinates = this.textureCoordinates;
-      //let textures = this.textures;
+      let textures = this.textures;
+
+      // one texture;
+      this.buffer.texture = textures[0];
 
       let indices = new Uint16Array(positions.length);
       this.buffer.indicesVBO = indices.map((obj, index) => index);
@@ -69,9 +72,6 @@ export default class Polygon extends Renderable {
       this.buffer.colorVBO = new Float32Array(colors);
       this.buffer.selectionColorVBO = new Float32Array(selectionColors);
       this.buffer.textureVBO = new Float32Array(textureCoordinates);
-      if (this.image) {
-        this.buffer.texture = this.buffer.createTexture(this.image);
-      }
       this.buffer.positionsGlBuffer = this.buffer.createBuffer(this.buffer.positionsVBO);
       this.buffer.colorGlBuffer = this.buffer.createBuffer(this.buffer.colorVBO);
       this.buffer.selectionColorGlBuffer = this.buffer.createBuffer(this.buffer.selectionColorVBO);

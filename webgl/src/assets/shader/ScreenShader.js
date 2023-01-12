@@ -2,7 +2,8 @@ const attributes = ["aVertexPosition", "aTextureCoordinate"];
 const uniforms = ["uIsMain", "uSsaoKernel", "uScreenSize", "uNoiseScale", 
 "uAspectRatio", "uProjectionMatrix", "uTangentOfHalfFovy", "uNearFar", 
 "uMainTexture", "uAlbedoTexture", "uSelectionTexture", "uNormalTexture", 
-"uDepthTexture", "uNoiseTexture", "uLightMapTexture", "uCameraTransformMatrix", "uSunModelViewMatrix", "uOrthographicMatrix", "uSunNormalMatrix"];
+"uDepthTexture", "uNoiseTexture", "uLightMapTexture", "uCameraTransformMatrix", "uSunModelViewMatrix", "uOrthographicMatrix", "uSunNormalMatrix",
+"uEnableGlobalLight", "uEnableEdge", "uEnableSsao"];
 
 const vertexShaderSource = `
   #pragma vscode_glsllint_stage : vert
@@ -41,6 +42,10 @@ const fragmentShaderSource = `
   uniform sampler2D uLightMapTexture;
   uniform sampler2D uNoiseTexture;
   uniform vec3 uSsaoKernel[16];
+
+  uniform int uEnableGlobalLight;
+  uniform int uEnableEdge;
+  uniform int uEnableSsao;
 
   varying vec2 vTextureCoordinate;
   
@@ -212,15 +217,17 @@ const fragmentShaderSource = `
     if (uIsMain == 1) {
       vec3 result = albedo.xyz;
       
-      float ssaoResult = getSSAO(screenPos);
-      result = result * ssaoResult;
+      if (uEnableSsao == 1) {
+        float ssaoResult = getSSAO(screenPos);
+        result = result * ssaoResult;
+      }
 
       //result = result * vLighting;
-      if (isShadow(screenPos)) {
+      if (uEnableGlobalLight == 1 && isShadow(screenPos)) {
         result = result * 0.5;
       }
 
-      if (isEdge(screenPos)) {
+      if (uEnableEdge == 1 && isEdge(screenPos)) {
         result = result * 0.5;
       }
       gl_FragColor = vec4(result, 1.0);

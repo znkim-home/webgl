@@ -49,7 +49,7 @@ class ScreenShaderProcess extends ShaderProcess {
     let tangentOfHalfFovy = Math.tan(fovy / 2);
 
     let orthographicMatrix = mat4.create();
-    mat4.ortho(orthographicMatrix, -2048, 2048, -2048, 2048, 0, 2048);
+    mat4.ortho(orthographicMatrix, -8192, 8192, -8192, 8192, 0, 8192);
     gl.uniformMatrix4fv(shaderInfo.uniformLocations.orthographicMatrix, false, orthographicMatrix);
 
     let projectionMatrix = mat4.create();
@@ -65,6 +65,10 @@ class ScreenShaderProcess extends ShaderProcess {
 
     gl.uniform1i(shaderInfo.uniformLocations.isMain, 0);
     gl.uniform1f(shaderInfo.uniformLocations.aspectRatio, globalOptions.aspect);
+
+    gl.uniform1i(shaderInfo.uniformLocations.enableSsao, globalOptions.enableSsao ? 1 : 0);
+    gl.uniform1i(shaderInfo.uniformLocations.enableEdge, globalOptions.enableEdge ? 1 : 0);
+    gl.uniform1i(shaderInfo.uniformLocations.enableGlobalLight, globalOptions.enableGlobalLight ? 1 : 0);
 
     gl.uniform1f(shaderInfo.uniformLocations.tangentOfHalfFovy, tangentOfHalfFovy);
     gl.uniform2fv(shaderInfo.uniformLocations.screenSize, vec2.fromValues(canvas.width, canvas.height));
