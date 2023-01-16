@@ -19,7 +19,9 @@ export default class Polygon extends Renderable {
   init(coordinates, options) {
     this.triangles = [];
     this.height = 3.0;
+    this.name = "Untitled Polygon";
     if (coordinates) this.coordinates = coordinates;
+    if (options?.name) this.name = options.name;
     if (options?.height) this.height = options.height;
     if (options?.position) this.position = vec3.set(this.position, options.position.x, options.position.y, options.position.z);
     if (options?.rotation) this.rotation = vec3.set(this.rotation, options.rotation.pitch, options.rotation.roll, options.rotation.heading);

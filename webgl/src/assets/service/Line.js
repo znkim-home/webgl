@@ -13,6 +13,7 @@ export default class Line extends Renderable {
   }
   init(coordinates, options) {
     this.length = 0;
+    this.name = "Untitled Line";
     if (coordinates) this.coordinates = coordinates;
     if (options?.height) this.height = options.height;
     if (options?.color) this.color = vec4.set(this.color, options?.color.r, options?.color.g, options?.color.b, options?.color.a);

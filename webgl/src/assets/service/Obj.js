@@ -20,6 +20,8 @@ export default class Obj extends Renderable {
     this.density = 36;
     this.scale = 1.0;
 
+    this.name = "Untitled OBJ File";
+
     if (options?.radius) this.radius = options.radius;
     if (options?.height) this.height = options.height;
     if (options?.density) this.density = options.density;

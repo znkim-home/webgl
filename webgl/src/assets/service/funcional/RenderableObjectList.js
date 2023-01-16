@@ -7,6 +7,12 @@ export default class RenderableObjectList {
   init() {
     this.renderableObjects = [];
   }
+  findById(id) {
+    let find = this.renderableObjects.find((renderableObject) => {
+      return renderableObject.id === id;
+    });
+    return find;
+  }
   set(renderableObjects) {
     this.renderableObjects = renderableObjects;
   }

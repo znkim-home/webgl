@@ -11,6 +11,7 @@ export default class Cube extends Renderable {
   
   init(options) {
     this.size = vec3.fromValues(4, 6, 8); // size : width, length, height
+    this.name = "Untitled Cube";
     if (options?.position) {
       this.position = vec3.set(this.position, options.position.x, options.position.y, options.position.z);
     }

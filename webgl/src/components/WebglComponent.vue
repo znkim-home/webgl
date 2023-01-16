@@ -11,70 +11,101 @@
     <pre class="console"></pre>
   </div>
   <div
-    v-if="drawTools"
     class="dev-tool"
     style="left: 0px; top: 0px"
     oncontextmenu="return false"
     ondragstart="return false"
     onselectstart="return false"
   >
-    <h3>TOOLS</h3>
-    <div class="block-group">
-      <button class="mini-btn" v-on:click="initPosition()">InitPosition</button>
-      <button class="mini-btn" v-on:click="getExtrusion()">Extrusion</button>
-      <button class="mini-btn" v-on:click="removeAll()">removeAllObject</button>
+    <div class="header">
+      <h3>TOOLS</h3>
+      <div class="show-hide">show/hide</div>
     </div>
-    <h2>OBJECT INFO</h2>
-    <input type="number" class="mini-btn" v-model="objectCount" v-on:change="uploadObj" readonly/>
-    <h2>OBJECT OPTIONS</h2>
-    <input type="file" class="mini-btn" id="fileUpload" accept=".obj" v-on:change="uploadObj"/>
-    <div class="block-group">
-      <label>SCALE</label>
-      <input type="range" v-model="localOptions.scale" min="1" max="10" step="1" />
+    <div v-show="drawTools">
+      <div class="block-group">
+        <button class="mini-btn" v-on:click="initPosition()">InitPosition</button>
+        <button class="mini-btn" v-on:click="getExtrusion()">Extrusion</button>
+        <button class="mini-btn" v-on:click="removeAll()">removeAllObject</button>
+      </div>
+      <h2>OBJECT OPTIONS</h2>
+      <input type="file" class="mini-btn" id="fileUpload" accept=".obj" v-on:change="uploadObj"/>
+      <div class="block-group">
+        <label>SCALE</label>
+        <input type="range" v-model="localOptions.scale" min="1" max="20" step="1" />
+      </div>
+      <div class="block-group">
+        <label>HEADING</label>
+        <input type="range" v-model="localOptions.rotationZ" min="0" max="360" step="1" v-on:input="rotateSelectedObject"/>
+      </div>
+      <div class="block-group">
+        <label>PITCH</label>
+        <input type="range" v-model="localOptions.rotationX" min="0" max="360" step="1" v-on:input="rotateSelectedObject"/>
+      </div>
+      <div class="block-group">
+        <label>ROLL</label>
+        <input type="range" v-model="localOptions.rotationY" min="0" max="360" step="1" v-on:input="rotateSelectedObject"/>
+      </div>
+      <h2>CAMERA OPTIONS</h2>
+      <button class="mini-btn" v-on:click="thirdMode = false">FirstPerson</button>
+      <button class="mini-btn" v-on:click="thirdMode = true">ThirdPerson</button>
+      <div class="block-group">
+        <label>FOVY</label>
+        <input type="range" v-model="globalOptions.fovyDegree" min="15" max="180" step="1" />
+      </div>
+      <div class="block-group">
+        <label>NEAR</label>
+        <input type="range" v-model="globalOptions.near" min="0.1" max="10000.0" step="1" />
+      </div>
+      <div class="block-group">
+        <label>FAR</label>
+        <input type="range" v-model="globalOptions.far" min="0.1" max="200000.0" step="1" />
+      </div>
+      <h2>WEBGL OPTIONS</h2>
+      <div class="block-group">
+        <input type="checkbox" v-model="globalOptions.cullFace"><label>CULL-FACE</label>
+        <input type="checkbox" v-model="globalOptions.depthTest"><label>DEPTH-TEST</label>
+        <input type="checkbox" v-model="globalOptions.debugMode"><label>DEBUG-MODE</label>
+      </div>
+      <h2>RENDER OPTIONS</h2>
+      <div class="block-group">
+        <input type="checkbox" v-model="globalOptions.enableSsao"><label>ENABLE-SSAO</label>
+        <input type="checkbox" v-model="globalOptions.enableGlobalLight"><label>ENABLE-SHADOW</label>
+        <input type="checkbox" v-model="globalOptions.enableEdge"><label>ENABLE-EDGE</label>
+      </div>
+      <h2>RENDER OPTIONS</h2>
+      <select v-model="localOptions.blockSize" class="mini-btn">
+        <option value="4">4X4</option>
+        <option value="8">8X8</option>
+        <option value="16">16X16</option>
+        <option value="32">32X32</option>
+        <option value="64">64X64</option>
+        <option value="128">128X128</option>
+        <option value="256">256X256</option>
+      </select>
+      <button class="mini-btn" v-on:click="reload(true)">ReloadBlocks</button>
+      <button class="mini-btn" v-on:click="reload(false)">ReloadBatchedBlocks</button>
     </div>
-    <div class="block-group">
-      <label>HEADING-ROTATION</label>
-      <input type="range" v-model="localOptions.rotation" min="0" max="360" step="1" />
-    </div>
-    <h2>CAMERA OPTIONS</h2>
-    <button class="mini-btn" v-on:click="thirdMode = false">FirstPerson</button>
-    <button class="mini-btn" v-on:click="thirdMode = true">ThirdPerson</button>
-    <div class="block-group">
-      <label>FOVY</label>
-      <input type="range" v-model="globalOptions.fovyDegree" min="15" max="180" step="1" />
-    </div>
-    <div class="block-group">
-      <label>NEAR</label>
-      <input type="range" v-model="globalOptions.near" min="0.1" max="10000.0" step="1" />
-    </div>
-    <div class="block-group">
-      <label>FAR</label>
-      <input type="range" v-model="globalOptions.far" min="0.1" max="200000.0" step="1" />
-    </div>
-    <h2>WEBGL OPTIONS</h2>
-    <div class="block-group">
-      <input type="checkbox" v-model="globalOptions.cullFace"><label>CULL-FACE</label>
-      <input type="checkbox" v-model="globalOptions.depthTest"><label>DEPTH-TEST</label>
-      <input type="checkbox" v-model="globalOptions.debugMode"><label>DEBUG-MODE</label>
-    </div>
-    <h2>RENDER OPTIONS</h2>
-    <div class="block-group">
-      <input type="checkbox" v-model="globalOptions.enableSsao"><label>ENABLE-SSAO</label>
-      <input type="checkbox" v-model="globalOptions.enableGlobalLight"><label>ENABLE-SHADOW</label>
-      <input type="checkbox" v-model="globalOptions.enableEdge"><label>ENABLE-EDGE</label>
-    </div>
-    <h2>RENDER OPTIONS</h2>
-    <select v-model="localOptions.blockSize" class="mini-btn">
-      <option value="4">4X4</option>
-      <option value="8">8X8</option>
-      <option value="16">16X16</option>
-      <option value="32">32X32</option>
-      <option value="64">64X64</option>
-      <option value="128">128X128</option>
-      <option value="256">256X256</option>
-    </select>
-    <button class="mini-btn" v-on:click="reload()">ReloadBlocks</button>
   </div>
+  <div
+    class="dev-tool"
+    style="left: 0px; bottom: 0px"
+    oncontextmenu="return false"
+    ondragstart="return false"
+    onselectstart="return false"
+  >
+    <div class="header">
+      <h3>Renders</h3>
+      <div class="show-hide">show/hide</div>
+    </div>
+    <div v-show="renderTools">
+      <h2>OBJECT INFO</h2>
+      <input type="number" class="mini-btn" v-model="renderableObject.length" :change="uploadObj" readonly/>
+      <ul>
+        <li v-for="(renderable, index) in renderableObject" :key="renderable.id" :class="{selected : (renderable == selectedObject)}">{{`[${index}] : ${renderable.name}, ${renderable.id}`}}</li>
+      </ul>
+    </div>
+  </div>
+
   <div
     id="home"
     oncontextmenu="return false"
@@ -107,15 +138,19 @@ export default {
   },
   data() {
     return {
+      selectedObject: undefined,
       thirdMode: true,
       drawTools: true,
+      renderTools: true,
       consoleTools: false,
       webGl: undefined,
       blocks: undefined,
       loadedObjs: [],
       localOptions: {
         scale: 5.0,
-        rotation: 0.0,
+        rotationX: 0.0,
+        rotationY: 0.0,
+        rotationZ: 0.0,
         blockSize : 8,
         maxHeight : 8,
       },
@@ -140,12 +175,12 @@ export default {
     //this.initConsole();
   },
   computed: {
-    objectCount: {
+    renderableObject: {
       get() {
         if (this.webGl) {
-          return this.webGl.renderableObjectList.size();
+          return this.webGl.renderableObjectList.get();
         } else {
-          return 0;
+          return [];
         }
       },
       set() {
@@ -164,6 +199,40 @@ export default {
       this.initPosition(dist);
       this.base(2048, 2048);
       this.initBlocks();
+    },
+    selectObj(id) {
+      let selectedObject = this.webGl.renderableObjectList.findById(id);
+      if (selectedObject) {
+        console.log(selectedObject, id);
+        this.localOptions.rotationX = selectedObject.rotation[0];
+        this.localOptions.rotationY = selectedObject.rotation[1];
+        this.localOptions.rotationZ = selectedObject.rotation[2];
+        this.selectedObject = selectedObject;
+        this.globalOptions.selectedObjectId = id;
+      }
+      return selectedObject;
+    },
+    diselectObj() {
+      let selectedObject = this.selectedObject;
+      if (selectedObject) {
+        this.localOptions.rotationX = 0;
+        this.localOptions.rotationY = 0;
+        this.localOptions.rotationZ = 0;
+        this.selectedObject = undefined;
+        this.globalOptions.selectedObjectId = undefined;
+      }
+      return selectedObject;
+    },
+    getSelectedObject(){
+      return this.selectedObject;
+    },
+    rotateSelectedObject() {
+      if (this.selectedObject) {
+        this.selectedObject.rotation[0] = this.localOptions.rotationX;
+        this.selectedObject.rotation[1] = this.localOptions.rotationY;
+        this.selectedObject.rotation[2] = this.localOptions.rotationZ;
+        this.selectedObject.dirty = true;
+      }
     },
     uploadObj(e) {
       //console.log(e);
@@ -309,6 +378,7 @@ export default {
       image.onload = () => {
         let coordinates = [[-halfWidth, -halfHeight], [halfWidth, -halfHeight], [halfWidth, halfHeight], [-halfWidth, halfHeight]];
         let options = {
+          id : 8612,
           position: { x: 0, y: 0, z: 0 },
           color: { r: 1.0, g: 1.0, b: 0.0, a: 1.0 },
           image : image
@@ -364,23 +434,23 @@ export default {
           });
         });
     },
-    reload() {
+    reload(isBatch = false) {
       this.initBlocks();
-      let createdList = this.initGround(false);
-      setTimeout(() => {
-        /*let filteredObjs = this.webGl.renderableObjectList.get().filter((renderableObj) => {
-          return renderableObj instanceof Polygon;
-        });*/
-
-        let filteredObjs = createdList;
-
-        let results = BufferBatch.batch100(this.webGl.gl, filteredObjs);
+      if (isBatch) {
+        let createdList = this.initGround(false);
+        setTimeout(() => {
+          let filteredObjs = createdList;
+          let results = BufferBatch.batch100(this.webGl.gl, filteredObjs);
+          this.webGl.renderableObjectList.removeAll();
+          results.forEach((result) => {
+            this.webGl.renderableObjectList.push(result);
+          })
+          console.log(this.webGl.renderableObjectList);
+        }, 100)
+      } else {
         this.webGl.renderableObjectList.removeAll();
-        results.forEach((result) => {
-          this.webGl.renderableObjectList.push(result);
-        })
-        console.log(this.webGl.renderableObjectList);
-      }, 100)
+        this.initGround(true);
+      }
     },
     setZeroPosition() {
       const webGl = this.webGl;
@@ -444,6 +514,7 @@ export default {
     createDirt(origin, isAdd = true) {
       let coordinates = [[-64, -64], [64, -64], [64, 64], [-64, 64]];
       let polygon = this.createPolygon(coordinates, {
+        name: "DIRT",
         position: { x: origin[0] + 64, y: origin[1] + 64, z: origin[2]},
         color: { r: 0.0, g: 0.5, b: 1.0, a: 1.0 },
         height: 128,
@@ -454,6 +525,7 @@ export default {
     createStone(origin, isAdd = true) {
       let coordinates = [[-64, -64], [64, -64], [64, 64], [-64, 64]];
       let polygon = this.createPolygon(coordinates, {
+        name: "STONE",
         position: { x: origin[0] + 64, y: origin[1] + 64, z: origin[2]},
         color: { r: 0.0, g: 0.5, b: 1.0, a: 1.0 },
         height: 128,
@@ -489,8 +561,7 @@ export default {
 </script>
 <style scoped>
 .dev-tool {
-  width: 500px;
-  min-height: 50px;
+  width: 340px;
   max-height: 600px;
   position: absolute;
   display: block;
@@ -500,7 +571,7 @@ export default {
   border-radius: 10px;
   margin: 10px 10px 10px 10px;
   padding: 10px;
-  color: white;
+  color: #fff;
   color-scheme: dark;
 }
 .block-group {
@@ -511,7 +582,7 @@ export default {
   display: inline-block;
   height: 20px;
   line-height: 20px;
-  margin: 5px 10px;
+  margin: 2px 10px;
   vertical-align: middle;
 }
 .dev-tool input{
@@ -538,20 +609,50 @@ export default {
   margin-bottom: 10px;
   border: 1px solid #1f1f1f;
 }
-.dev-tool h3 {
-  font-size: 15px;
-  padding: 5px 10px;
-  padding-bottom: 7px;
+.dev-tool ul {
+  height: 100px;
+  overflow-y: scroll;
+  background-color: black;
+  margin: 5px 0px;
+}
+.dev-tool ul > li{
+  font-size: 11px;
+  padding: 7px 5px;
+}
+.dev-tool ul > li:nth-child(odd) {
+  background-color: #1b1b1b;
+}
+.dev-tool ul > li.selected {
+  color: red;
+  background-color: #ffff64;
   font-weight: bold;
-  color: #0084ff;
 }
 .dev-tool h2 {
-    font-size: 12px;
-    padding: 5px 3px;
-    padding-bottom: 3px;
-    font-weight: bold;
-    color: #004d96;
+  font-size: 12px;
+  padding: 5px 5px;
+  padding-bottom: 3px;
+  font-weight: bold;
+  color: #acacac;
 }
+.dev-tool h3 {
+  font-size: 15px;
+  margin: 5px;
+  font-weight: bold;
+  color: #0084ff;
+  display: inline-block;
+}
+.dev-tool div.show-hide {
+  float: right;
+  font-size: 11px;
+  color: #656565;
+  margin: 5px;
+}
+.dev-tool div.header {
+  display: block;
+  border-bottom: 2px solid black;
+  margin: 5px;
+}
+
 
 #home {
   width: 100%;

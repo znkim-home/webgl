@@ -20,6 +20,7 @@ export default class Cylinder extends Renderable {
     this.radius = 1.0;
     this.height = 3.0;
     this.density = 36;
+    this.name = "Untitled Cylinder";
     if (options?.radius) this.radius = options.radius;
     if (options?.height) this.height = options.height;
     if (options?.density) this.density = options.density;

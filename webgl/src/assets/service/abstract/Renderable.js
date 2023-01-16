@@ -2,6 +2,7 @@ const {mat2, mat3, mat4, vec2, vec3, vec4} = self.glMatrix; // eslint-disable-li
 // abstract
 export default class Renderable {
   id;
+  name;
   buffer;
   position;
   rotation;
@@ -15,6 +16,7 @@ export default class Renderable {
     if (this.constructor === Renderable) {
       throw new Error("Renderable is abstract class. Created an instance of an abstract class.");
     }
+    this.name = "Untitled";
     this.position = vec3.fromValues(0, 0, 0);
     this.rotation = vec3.fromValues(0, 0, 0);
     this.color = vec4.fromValues(0.5, 0.5, 0.5, 1);
@@ -110,7 +112,8 @@ export default class Renderable {
   createRenderableObjectId(renderableList) {
     let result = this.id;
     while (result === undefined) {
-      let randomId = Math.ceil(Math.random() * 10000000000000);
+      const ID_RANGE = 10000000;
+      let randomId = Math.ceil(Math.random() * ID_RANGE);
       let obj = renderableList.get().find((renderableObj) => {
         return renderableObj.id == randomId;
       });

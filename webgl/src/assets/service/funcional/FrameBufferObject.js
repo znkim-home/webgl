@@ -113,7 +113,10 @@ export default class FrameBufferObject {
     return [calc(id, 16777216), calc(id, 65536), calc(id, 256), calc(id, 1)];
   }
   convertColorToId(color) {
-    return (color[0] * 16777216) + (color[1] * 65536) + (color[2] * 256) +(color[3]);
+    return (color[0] * 16777216) + (color[1] * 65536) + (color[2] * 256) + (color[3]);
+  }
+  convertColor255ToId(color) {
+    return (color[0] * 16777216 * 255) + (color[1] * 65536 * 255) + (color[2] * 256 * 255) + (color[3] * 255);
   }
   unpackDepth(rgba_depth) {
     return rgba_depth[0] + rgba_depth[1] * 1.0 / 255.0 + rgba_depth[2] * 1.0 / 65025.0 + rgba_depth[3] * 1.0 / 16581375.0;

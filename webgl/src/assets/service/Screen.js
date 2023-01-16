@@ -16,6 +16,7 @@ export default class Screen extends Renderable {
   }
   init(coordinates, options) {
     this.length = 0;
+    this.name = "Untitled Screen";
     if (coordinates) this.coordinates = coordinates;
     if (options?.position) this.position = vec3.set(this.position, options.position.x, options.position.y, options.position.z);
     if (options?.color) this.color = vec4.set(this.color, options?.color.r, options?.color.g, options?.color.b, options?.color.a);

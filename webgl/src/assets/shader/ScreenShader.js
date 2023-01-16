@@ -3,7 +3,7 @@ const uniforms = ["uIsMain", "uSsaoKernel", "uScreenSize", "uNoiseScale",
 "uAspectRatio", "uProjectionMatrix", "uTangentOfHalfFovy", "uNearFar", 
 "uMainTexture", "uAlbedoTexture", "uSelectionTexture", "uNormalTexture", 
 "uDepthTexture", "uNoiseTexture", "uLightMapTexture", "uCameraTransformMatrix", "uSunModelViewMatrix", "uOrthographicMatrix", "uSunNormalMatrix",
-"uEnableGlobalLight", "uEnableEdge", "uEnableSsao"];
+"uEnableGlobalLight", "uEnableEdge", "uEnableSsao", "uSelectedObjectId"];
 
 const vertexShaderSource = `
   #pragma vscode_glsllint_stage : vert
@@ -46,6 +46,7 @@ const fragmentShaderSource = `
   uniform int uEnableGlobalLight;
   uniform int uEnableEdge;
   uniform int uEnableSsao;
+  uniform float uSelectedObjectId;
 
   varying vec2 vTextureCoordinate;
   
@@ -56,7 +57,7 @@ const fragmentShaderSource = `
     return vec4(normal.xyz * 2.0 - 1.0, normal.w);
   }
   float convertColorToId(vec4 color) {
-    return (color.r * 16777216.0) + (color.g * 65536.0) + (color.b * 256.0) + (color.a);
+    return (color.r * 255.0 * 16777216.0) + (color.g * 255.0 * 65536.0) + (color.b * 255.0 * 256.0) + (color.a * 255.0);
   }
   float unpackDepth(vec4 packedDepth) {
     return dot(packedDepth, vec4(1.0, 1.0 / 255.0, 1.0 / 65025.0, 1.0 / 16581375.0));
@@ -104,7 +105,7 @@ const fragmentShaderSource = `
     return resultOcclusion;
   }
 
-  float getSSAO(in vec2 screenPos) {
+  vec4 getSSAO(in vec2 screenPos) {
     float occlusionA = 0.0;
     float occlusionB = 0.0;
     float occlusionC = 0.0;
@@ -120,7 +121,7 @@ const fragmentShaderSource = `
 		mat3 tbn = mat3(tangent, bitangent, normal);   
 		for (int i = 0; i < kernelSize; i++) {    	
       vec3 rotatedKernel = tbn * vec3(uSsaoKernel[i].x, uSsaoKernel[i].y, uSsaoKernel[i].z);
-      occlusionA += getOcclusion(origin, rotatedKernel, 4.0);
+      occlusionA += getOcclusion(origin, rotatedKernel, 8.5);
       occlusionB += getOcclusion(origin, rotatedKernel, 16.0);
       occlusionC += getOcclusion(origin, rotatedKernel, 32.0);
     }
@@ -130,10 +131,9 @@ const fragmentShaderSource = `
     if (result > tolerance) {
       result = 1.0;
     }
+    //return result;
 
-    return result;
-
-    //return vec4(occlusionA / fKernelSize, occlusionB / fKernelSize, occlusionC / fKernelSize, 1.0);
+    return vec4(occlusionA / fKernelSize, occlusionB / fKernelSize, occlusionC / fKernelSize, 1.0);
   }
 
   float compareNormalOffset(in vec4 normalA, in vec4 normalB) {
@@ -150,11 +150,13 @@ const fragmentShaderSource = `
     vec2 rightPos = vec2(screenPos.x + width, screenPos.y);
     vec2 bottomPos = vec2(screenPos.x, screenPos.y + height);
     vec2 crossPos = vec2(screenPos.x + width, screenPos.y + height);
-
+    vec2 leftPos = vec2(screenPos.x - width, screenPos.y);
+    
     float selection = convertColorToId(getSelection(screenPos));
     float selectionRight = convertColorToId(getSelection(rightPos));
     float selectionBottom = convertColorToId(getSelection(bottomPos));
     float selectionCross = convertColorToId(getSelection(crossPos));
+    float selectionLeft = convertColorToId(getSelection(leftPos));
 
     vec4 normal = decodeNormal(getNormal(screenPos));
     vec4 normalRight = decodeNormal(getNormal(rightPos));
@@ -167,7 +169,7 @@ const fragmentShaderSource = `
     bool normalCompareCross = compareOffset < compareNormalOffset(normal, normalCross);
 
     bool isEdgeByNormalCompare = normalCompareRight || normalCompareBottom || normalCompareCross;
-    bool isEdgeBySelection = selection != selectionBottom || selection != selectionRight || selection != selectionCross;
+    bool isEdgeBySelection = selection != selectionBottom || selection != selectionRight || selection != selectionCross || selection != selectionLeft;
 
     return isEdgeByNormalCompare || isEdgeBySelection;
   }
@@ -208,6 +210,9 @@ const fragmentShaderSource = `
     vec4 albedo = getAlbedo(screenPos);
     vec4 normal = decodeNormal(getNormal(screenPos));
 
+    vec4 selectionColor = getSelection(screenPos);
+    float selection = convertColorToId(getSelection(screenPos));
+
     vec3 ambientLight = vec3(0.3, 0.3, 0.3);
     vec3 directionalLightColor = vec3(0.9, 0.9, 0.9);
     vec3 directionalVector = normalize(vec3(0.6, 0.6, 0.9));
@@ -218,8 +223,20 @@ const fragmentShaderSource = `
       vec3 result = albedo.xyz;
       
       if (uEnableSsao == 1) {
-        float ssaoResult = getSSAO(screenPos);
-        result = result * ssaoResult;
+        //float ssaoResult = getSSAO(screenPos);
+        float tolerance = 0.80;
+        vec4 ssaoResult = getSSAO(screenPos);
+
+        if (ssaoResult.x < tolerance) {
+          result = result * ssaoResult.x;
+        }
+        if (ssaoResult.y < tolerance) {
+          result = result * (ssaoResult.y + 0.1);
+        }
+        if (ssaoResult.z < tolerance) {
+          result = result * (ssaoResult.z + 0.2);
+        }
+        //result = result * ssaoResult;
       }
 
       //result = result * vLighting;
@@ -227,8 +244,14 @@ const fragmentShaderSource = `
         result = result * 0.5;
       }
 
+      if (selection == uSelectedObjectId) {
+        result.b = result.b * 1.5;
+      }
       if (uEnableEdge == 1 && isEdge(screenPos)) {
         result = result * 0.5;
+        if (selection == uSelectedObjectId) {
+          result.b = 1.0;
+        }
       }
       gl_FragColor = vec4(result, 1.0);
     } else {

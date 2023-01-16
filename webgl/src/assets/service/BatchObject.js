@@ -15,6 +15,8 @@ export default class BatchObject extends Renderable {
   }
 
   init(buffer) {
+    this.name = "Untitled BatchObject";
+
     this.triangles = [];
     this.colors = buffer.colors;
     this.selectionColors = buffer.selectionColors;

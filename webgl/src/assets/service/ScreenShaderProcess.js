@@ -64,6 +64,7 @@ class ScreenShaderProcess extends ShaderProcess {
     gl.uniformMatrix4fv(shaderInfo.uniformLocations.sunNormalMatrix, false, sunNormalMatrix);
 
     gl.uniform1i(shaderInfo.uniformLocations.isMain, 0);
+    gl.uniform1f(shaderInfo.uniformLocations.selectedObjectId, globalOptions.selectedObjectId);
     gl.uniform1f(shaderInfo.uniformLocations.aspectRatio, globalOptions.aspect);
 
     gl.uniform1i(shaderInfo.uniformLocations.enableSsao, globalOptions.enableSsao ? 1 : 0);

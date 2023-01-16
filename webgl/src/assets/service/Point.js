@@ -9,6 +9,7 @@ export default class Point extends Renderable {
     this.init(options);
   }
   init(options) {
+    this.name = "Untitled Point";
     if (options?.height) this.height = options.height;
     if (options?.position) this.position = vec3.set(this.position, options.position.x, options.position.y, options.position.z);
     if (options?.color) this.color = vec4.set(this.color, options?.color.r, options?.color.g, options?.color.b, options?.color.a);
