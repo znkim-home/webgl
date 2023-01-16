@@ -67,11 +67,13 @@ export default class Polygon extends Renderable {
       let normals = [];
       let textureCoordinates = [];
 
-      let topPositions = this.coordinates.map((coordinate) => vec3.fromValues(coordinate[0], coordinate[1], this.position[2] + this.height));
-      let bottomPositions = this.coordinates.map((coordinate) => vec3.fromValues(coordinate[0], coordinate[1], this.position[2]));
+      //let topPositions = this.coordinates.map((coordinate) => vec3.fromValues(coordinate[0], coordinate[1], this.position[2] + this.height));
+      //let bottomPositions = this.coordinates.map((coordinate) => vec3.fromValues(coordinate[0], coordinate[1], this.position[2]));
+      let topPositions = this.coordinates.map((coordinate) => vec3.fromValues(coordinate[0], coordinate[1], this.height));
+      let bottomPositions = this.coordinates.map((coordinate) => vec3.fromValues(coordinate[0], coordinate[1], 0));
       let bbox = this.getMinMax(topPositions);
-      bbox.minz = this.position[2];
-      bbox.maxz = this.position[2] + this.height;
+      bbox.minz = 0;
+      bbox.maxz = this.height;
 
       if (Tessellator.validateCCW(topPositions) < 0) {
         topPositions.reverse();

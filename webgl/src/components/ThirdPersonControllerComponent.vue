@@ -84,15 +84,7 @@ export default {
           let pitch = -Math.asin(rotatedNormal[1]);
           heading = Math.degree(heading);
           pitch = Math.degree(pitch);
-
-          /*this.$parent.createCylinder({
-            position: { x: pos[0], y: pos[1], z: pos[2] },
-            rotation: { heading : 0.0, pitch : pitch, roll : heading},
-            color: { r: 0.0, g: 0.0, b: 1.0, a: 1.0 },
-            radius : 50,
-            height: 100,
-          });*/
-
+          
           this.$parent.createObject({
             position: { x: pos[0], y: pos[1], z: pos[2]},
             rotation: { heading : 0.0, pitch : pitch, roll : heading},
@@ -121,13 +113,13 @@ export default {
           if (this.controllerStatus.ctrlStatus) {
             let blockX = Math.floor(pos[0] / 128);
             let blockY = Math.floor(pos[1] / 128);
-            let blockZ = Math.floor(Math.abs(pos[2] + 1) / 128);
+            let blockZ = Math.floor(pos[2] / 128);
             let originX = blockX * 128;
             let originY = blockY * 128;
             let originZ = blockZ * 128;
-            let origin = vec3.fromValues(originX, originY, originZ / 2);
+            let origin = vec3.fromValues(originX, originY, originZ);
 
-            let test = blocks.pos[blockX + OFFSET][blockY + OFFSET][blockZ];
+            let test = blocks.pos[blockX + OFFSET][blockY + OFFSET][blockZ + OFFSET];
             if (test === undefined || test != 0) {
               return;
             }
@@ -150,9 +142,8 @@ export default {
           if (this.controllerStatus.ctrlStatus) {
             let blockX = Math.floor(pos[0] / 128);
             let blockY = Math.floor(pos[1] / 128);
-            let blockZ = Math.floor(Math.abs(pos[2] + 1) / 128);
+            let blockZ = Math.floor(pos[2] / 128);
             let test = this.blocks.pos[blockX + OFFSET][blockY + OFFSET][blockZ];
-
             if (test === undefined) {
               return;
             } else if (test != 0) {

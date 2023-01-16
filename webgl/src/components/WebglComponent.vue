@@ -260,7 +260,7 @@ export default {
               let originX = (x - OFFSET) * 128;
               let originY = (y - OFFSET) * 128;
               let originZ = z * 128;
-              let polygon = (z <= 0) ? this.createStone([originX, originY, originZ / 2], isAdd) : this.createDirt([originX, originY, originZ / 2], isAdd);
+              let polygon = (z <= 0) ? this.createStone([originX, originY, originZ], isAdd) : this.createDirt([originX, originY, originZ], isAdd);
               this.blocks.pos[x][y][z] = polygon;
               createdList.push(polygon);
             }
