@@ -47,6 +47,78 @@ export default {
     },
     initMouse() {
       let canvas = document.getElementById("glcanvas");
+      canvas.ontouchstart = (e) => {
+        const webGl = this.webGl;
+        const camera = webGl.camera;
+        const target = e.targetTouches[0];
+        this.touchStartPosition = [target.clientX, target.clientY];
+        console.log(e.changedTouches);
+
+        const mouseX = target.clientX;
+        const mouseY = canvas.height -target.clientY;
+        const ratioX = mouseX / canvas.width;
+        const ratioY = mouseY / canvas.height;
+
+        let depth = webGl.depthFbo.getDepth(mouseX, mouseY);
+        let pos = this.getScreenPosition(ratioX, ratioY, canvas.width, canvas.height, depth);
+        if (e.targetTouches.length == 2) {
+          this.controllerStatus.zoomStatus = true;
+          this.controllerStatus.zoomCameraPosition = camera.position;
+          this.controllerStatus.zoomCameraRay = this.getRay(ratioX, ratioY, canvas.width, canvas.height);
+        } else if (e.targetTouches.length == 1) {
+          this.controllerStatus.moveStatus = true;
+          this.controllerStatus.movePlane = new Plane(pos, vec3.fromValues(0, 0, 1));
+          this.controllerStatus.moveCameraPosition = camera.position;
+        }
+      }
+      canvas.ontouchmove = (e) => {
+        const webGl = this.webGl;
+        const camera = webGl.camera;
+        const target = e.targetTouches[0];
+        const startPosition = this.touchStartPosition;
+        let touchMovedPosition = [startPosition[0] - target.clientX, startPosition[1] - target.clientY];
+        const mouseX = target.clientX;
+        const mouseY = canvas.height -target.clientY;
+        const ratioX = mouseX / canvas.width;
+        const ratioY = mouseY / canvas.height;
+        //const xValue = touchMovedPosition[0] * this.globalOptions.ROTATE_FACTOR;
+        const yValue = touchMovedPosition[1] * this.globalOptions.ROTATE_FACTOR;
+
+        if (this.controllerStatus.moveStatus) {
+          let ray = this.getRay(ratioX, ratioY, canvas.width, canvas.height);
+          let line = new Line(camera.position, ray);
+          let movedPosition = this.controllerStatus.movePlane.getIntersection(line);
+          if (this.controllerStatus.moveObject) {
+            let objectOffset = this.controllerStatus.moveObjectOffset;
+            let selectedObject = this.$parent.getSelectedObject();
+            selectedObject.position[0] = movedPosition[0] - objectOffset[0];
+            selectedObject.position[1] = movedPosition[1] - objectOffset[1];
+            selectedObject.dirty = true;
+          } else {
+            camera.moveCamera(this.controllerStatus.moveCameraPosition, this.controllerStatus.movePlane.position, movedPosition);
+          }
+        } else if (this.controllerStatus.zoomStatus) {
+          let depth = webGl.depthFbo.getDepth(mouseX, mouseY);
+          let ray = this.controllerStatus.zoomCameraRay;
+          let scaledRay = vec3.scale(vec3.create(), ray, yValue * depth);
+          let position = vec3.add(vec3.create(), camera.position, scaledRay);
+          camera.setPosition(position[0], position[1], position[2]);
+        }
+      }
+      canvas.ontouchend = (e) => {
+        console.log("touch end", e);
+        this.controllerStatus.moveObject = false;
+        this.controllerStatus.moveObjectOffset = undefined;
+        this.controllerStatus.moveStatus = false;
+        this.controllerStatus.movePlane = undefined;
+        this.controllerStatus.moveCameraPosition = undefined;
+        this.controllerStatus.rotateStatus = false;
+        this.controllerStatus.pivotPosition = undefined;
+        this.controllerStatus.rotateObject = false;
+        this.controllerStatus.zoomStatus = false;
+        this.controllerStatus.zoomCameraPosition = undefined;
+      }
+
       canvas.onwheel = (e) => {
         const webGl = this.webGl;
         const camera = webGl.camera;
@@ -124,11 +196,7 @@ export default {
         if (selectionColor == 4294967295) {
           return;
         }
-
-        console.log(selectionColor);
-        console.log(webGl.selectionFbo.convertIdToColor(selectionColor));
-        console.log(webGl.selectionFbo.convertColorToId(webGl.selectionFbo.convertIdToColor(selectionColor)));
-
+        
         const OFFSET = this.blocks.BLOCK_SIZE / 2;
         if (e.button == 2) {
           depth = webGl.depthFbo.getDepth(mouseX, mouseY) - 1;

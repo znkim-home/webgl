@@ -1,66 +1,45 @@
 import Buffer from './Buffer.js';
-import Renderable from './abstract/Renderable';
-import Triangle from './geometry/Triangle.js';
+import Renderable from './abstract/Renderable.js';
 import Tessellator from './Tessellation/Tessellator.js';
+import Triangle from './geometry/Triangle.js';
 
-const { mat2, mat3, mat4, vec2, vec3, vec4 } = self.glMatrix; // eslint-disable-line no-unused-vars
+const {mat2, mat3, mat4, vec2, vec3, vec4} = self.glMatrix; // eslint-disable-line no-unused-vars
 
-export default class Polygon extends Renderable {
-  height;
-  coordinates;
-  triangles;
-  image;
-
-  constructor(coordinates, options) {
+export default class TestCube extends Renderable {
+  size;
+  constructor() {
     super();
-    this.init(coordinates, options);
+    this.init();
   }
-
-  init(coordinates, options) {
-    this.triangles = [];
-    this.height = 3.0;
-    this.name = "Untitled Polygon";
-    if (coordinates) this.coordinates = coordinates;
-    if (options?.name) this.name = options.name;
-    if (options?.height) this.height = options.height;
-    if (options?.position) this.position = vec3.set(this.position, options.position.x, options.position.y, options.position.z);
-    if (options?.rotation) this.rotation = vec3.set(this.rotation, options.rotation.pitch, options.rotation.roll, options.rotation.heading);
-    if (options?.color) this.color = vec4.set(this.color, options?.color.r, options?.color.g, options?.color.b, options?.color.a);
-    if (options?.image) this.image = options.image;
+  
+  init() {
+    this.height = 128;
+    this.size = vec3.fromValues(128, 128, 128); // size : width, length, height
+    this.name = "Untitled Cube";
+    this.position = vec3.set(this.position, 0.0, 0.0, -3.0);
+    this.rotation = vec3.set(this.rotation, 1.0, 45.0, 1.0);
+    this.color = vec4.set(this.color, 1.0, 0.7, 1.0, 1.0);
   }
-  render(gl, shaderInfo, frameBufferObjs) {
+  // overriding
+  render(gl, shaderInfo) {
     let tm = this.getTransformMatrix();
-    let rm = this.getRotationMatrix();
     gl.uniformMatrix4fv(shaderInfo.uniformLocations.objectMatrix, false, tm);
-    gl.uniformMatrix4fv(shaderInfo.uniformLocations.rotationMatrix, false, rm);
 
     let buffer = this.getBuffer(gl, shaderInfo);
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffer.indicesGlBuffer);
-    gl.enableVertexAttribArray(shaderInfo.attributeLocations.vertexNormal);
-    buffer.bindBuffer(buffer.normalGlBuffer, 3, shaderInfo.attributeLocations.vertexNormal);
     gl.enableVertexAttribArray(shaderInfo.attributeLocations.vertexPosition);
-    buffer.bindBuffer(buffer.positionsGlBuffer, 3, shaderInfo.attributeLocations.vertexPosition);
     gl.enableVertexAttribArray(shaderInfo.attributeLocations.vertexColor);
+    buffer.bindBuffer(buffer.positionsGlBuffer, 3, shaderInfo.attributeLocations.vertexPosition);
     buffer.bindBuffer(buffer.colorGlBuffer, 4, shaderInfo.attributeLocations.vertexColor);
-    gl.enableVertexAttribArray(shaderInfo.attributeLocations.vertexSelectionColor);
-    buffer.bindBuffer(buffer.selectionColorGlBuffer, 4, shaderInfo.attributeLocations.vertexSelectionColor);
 
-    frameBufferObjs.forEach((frameBufferObj) => {
-      const textureType = frameBufferObj.textureType;
-      frameBufferObj.bind(shaderInfo);
-      if (textureType ==  1) {
-        gl.bindTexture(gl.TEXTURE_2D, buffer.texture);
-        gl.enableVertexAttribArray(shaderInfo.attributeLocations.textureCoordinate);
-        buffer.bindBuffer(buffer.textureGlBuffer, 2, shaderInfo.attributeLocations.textureCoordinate);
-      }
-      gl.drawElements(gl.TRIANGLES, buffer.indicesLength, gl.UNSIGNED_SHORT, 0);
-      frameBufferObj.unbind();
-    });
+    gl.drawElements(gl.TRIANGLES, buffer.indicesLength, gl.UNSIGNED_SHORT, 0);
   }
   // overriding
   getBuffer(gl) {
-    if (this.buffer === undefined || this.dirty === true) {
+    this.dirty = (this.buffer === undefined) ? true : false;
+    if (this.dirty === true) {
       this.buffer = new Buffer(gl);
+      
       let color = this.color;
       let selectionColor = this.selectionColor;
       let colors = [];
@@ -69,23 +48,20 @@ export default class Polygon extends Renderable {
       let normals = [];
       let textureCoordinates = [];
 
-      //let topPositions = this.coordinates.map((coordinate) => vec3.fromValues(coordinate[0], coordinate[1], this.position[2] + this.height));
-      //let bottomPositions = this.coordinates.map((coordinate) => vec3.fromValues(coordinate[0], coordinate[1], this.position[2]));
+      this.coordinates = [[-64, -64], [64, -64], [64, 64], [-64, 64]];
+      
       let topPositions = this.coordinates.map((coordinate) => vec3.fromValues(coordinate[0], coordinate[1], this.height));
       let bottomPositions = this.coordinates.map((coordinate) => vec3.fromValues(coordinate[0], coordinate[1], 0));
       let bbox = this.getMinMax(topPositions);
       bbox.minz = 0;
       bbox.maxz = this.height;
-
       if (Tessellator.validateCCW(topPositions) < 0) {
         topPositions.reverse();
         bottomPositions.reverse();
       }
-      
       let topTriangles = Tessellator.tessellate(topPositions);
       let bottomTriangles = Tessellator.tessellate(bottomPositions, false);
       let sideTriangles = this.createSideTriangle(topPositions, bottomPositions, true);
-
       let triangles = [];
       triangles = triangles.concat(topTriangles);
       triangles = triangles.concat(bottomTriangles);
@@ -126,16 +102,23 @@ export default class Polygon extends Renderable {
         this.buffer.texture = this.buffer.createTexture(this.image);
       }
       this.buffer.positionsGlBuffer = this.buffer.createBuffer(this.buffer.positionsVBO);
+      console.log(this.buffer.positionsVBO);
       this.buffer.colorGlBuffer = this.buffer.createBuffer(this.buffer.colorVBO);
+      console.log(this.buffer.colorVBO);
       this.buffer.selectionColorGlBuffer = this.buffer.createBuffer(this.buffer.selectionColorVBO);
+      console.log(this.buffer.selectionColorVBO);
       this.buffer.normalGlBuffer = this.buffer.createBuffer(this.buffer.normalVBO);
+      console.log(this.buffer.normalVBO);
       this.buffer.indicesGlBuffer = this.buffer.createIndexBuffer(this.buffer.indicesVBO);
+      console.log(this.buffer.indicesVBO);
       this.buffer.textureGlBuffer = this.buffer.createBuffer(this.buffer.textureVBO);
+      console.log(this.buffer.textureVBO);
       this.buffer.indicesLength = this.buffer.indicesVBO.length;
       this.dirty = false;
     }
     return this.buffer;
   }
+
   createSideTriangle(topPositions, bottomPositions, isCCW = true) {
     let triangles = [];
     if (topPositions.length != bottomPositions.length) {

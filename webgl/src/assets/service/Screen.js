@@ -71,7 +71,7 @@ export default class Screen extends Renderable {
       });
 
       this.length = this.coordinates.length;
-      let indices = new Uint16Array(positions.length);
+      let indices = new Uint16Array(positions.length/3);
       this.buffer.indicesVBO = indices.map((obj, index) => index );
       this.buffer.positionsVBO = new Float32Array(positions);
       this.buffer.colorVBO = new Float32Array(colors);

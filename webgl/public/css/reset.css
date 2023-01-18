@@ -3,6 +3,11 @@
    License: none (public domain)
 */
 
+@import url("//cdn.jsdelivr.net/gh/wan2land/d2coding/d2coding-full.css");
+@import url("//cdn.jsdelivr.net/gh/wan2land/d2coding/d2coding-subset.css");
+@import url("//cdn.jsdelivr.net/gh/wan2land/d2coding/d2coding-ligature-full.css");
+@import url("//cdn.jsdelivr.net/gh/wan2land/d2coding/d2coding-ligature-subset.css");
+
 html, body, div, span, applet, object, iframe,
 h1, h2, h3, h4, h5, h6, p, blockquote, pre,
 a, abbr, acronym, address, big, cite, code,
@@ -28,6 +33,9 @@ article, aside, details, figcaption, figure,
 footer, header, hgroup, menu, nav, section {
 	display: block;
 }
+input, select, option {
+	font-family: 'D2Coding', monospace;
+}
 html {
 	height: 100%;
 }
@@ -36,6 +44,7 @@ body {
 	line-height: 1;
   overflow: hidden;
   background-color: black;
+	font-family: 'D2Coding', monospace;
 }
 ol, ul {
 	list-style: none;

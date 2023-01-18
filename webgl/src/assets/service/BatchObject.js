@@ -67,7 +67,7 @@ export default class BatchObject extends Renderable {
       // one texture;
       this.buffer.texture = textures[0];
 
-      let indices = new Uint16Array(positions.length);
+      let indices = new Uint16Array(positions.length/3);
       this.buffer.indicesVBO = indices.map((obj, index) => index);
       this.buffer.positionsVBO = new Float32Array(positions);
       this.buffer.normalVBO = new Float32Array(normals);

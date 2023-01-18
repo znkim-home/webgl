@@ -51,15 +51,28 @@ export default class WebGL {
     this.init(canvas);
   }
   init(canvas) {
+    console.log("Init Start WebGL.");
+    let version = "";
     try {
       this.canvas = canvas;
-      this.gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
+      if (canvas.getContext("webgl2")) {
+        this.gl = canvas.getContext("webgl2");
+        version = "webgl2";
+      } else if (canvas.getContext("webgl")) {
+        this.gl = canvas.getContext("webgl");
+        version = "webgl";
+      } else if (canvas.getContext("experimental-webgl")) {
+        this.gl = canvas.getContext("experimental-webgl");
+        version = "experimental-webgl";
+      }
       if (!this.gl) {
         throw new Error("Unable to initialize WebGL. Your browser may not support it.");
       }
     } catch(e) {
+      console.log("Unable to initialize WebGL. Your browser may not support it.");
       console.error(e);
     }
+    console.log("Init Success " + version);
   }
   resizeCanvas() {
     const canvas = this.canvas;
@@ -74,6 +87,7 @@ export default class WebGL {
           frameBufferObj.init();
         }
       });
+      console.log("resizeCanvas");
     }
     this.globalOptions.aspect = (canvas.width / canvas.height);
     return isChanged;

@@ -1,16 +1,22 @@
 <template>
   <div
-    v-if="consoleTools"
+    v-show="consoleTools"
     class="dev-tool"
-    style="left: 0px; bottom: 0px"
+    style="right: 0px; bottom: 0px"
     oncontextmenu="return false"
     ondragstart="return false"
     onselectstart="return false"
   >
-    <h3>console</h3>
-    <pre class="console"></pre>
+    <div class="header">
+      <h3>Dev Console</h3>
+      <div class="show-hide" v-on:click="showConsole = !showConsole">show/hide</div>
+    </div>
+    <div v-show="showConsole">
+      <pre class="console"></pre>
+    </div>
   </div>
   <div
+    v-if="drawTools"
     class="dev-tool"
     style="left: 0px; top: 0px"
     oncontextmenu="return false"
@@ -18,14 +24,15 @@
     onselectstart="return false"
   >
     <div class="header">
-      <h3>TOOLS</h3>
-      <div class="show-hide">show/hide</div>
+      <h3>Tools</h3>
+      <div class="show-hide" v-on:click="showDraw = !showDraw">show/hide</div>
     </div>
-    <div v-show="drawTools">
+    <div v-show="showDraw">
       <div class="block-group">
         <button class="mini-btn" v-on:click="initPosition()">InitPosition</button>
         <button class="mini-btn" v-on:click="getExtrusion()">Extrusion</button>
-        <button class="mini-btn" v-on:click="removeAll()">removeAllObject</button>
+        <button class="mini-btn" v-on:click="removeAll()">RemoveAll</button>
+        <button class="mini-btn" v-on:click="consoleTools = !consoleTools">Console/Render</button>
       </div>
       <h2>OBJECT OPTIONS</h2>
       <input type="file" class="mini-btn" id="fileUpload" accept=".obj" v-on:change="uploadObj"/>
@@ -87,6 +94,7 @@
     </div>
   </div>
   <div
+    v-show="!consoleTools"
     class="dev-tool"
     style="left: 0px; bottom: 0px"
     oncontextmenu="return false"
@@ -95,9 +103,9 @@
   >
     <div class="header">
       <h3>Renders</h3>
-      <div class="show-hide">show/hide</div>
+      <div class="show-hide" v-on:click="showRender = !showRender">show/hide</div>
     </div>
-    <div v-show="renderTools">
+    <div v-show="showRender">
       <h2>OBJECT INFO</h2>
       <input type="number" class="mini-btn" v-model="renderableObject.length" :change="uploadObj" readonly/>
       <ul>
@@ -105,7 +113,6 @@
       </ul>
     </div>
   </div>
-
   <div
     id="home"
     oncontextmenu="return false"
@@ -142,7 +149,10 @@ export default {
       thirdMode: true,
       drawTools: true,
       renderTools: true,
-      consoleTools: false,
+      showDraw: false,
+      showRender: false,
+      consoleTools: true,
+      showConsole : false,
       webGl: undefined,
       blocks: undefined,
       loadedObjs: [],
@@ -171,8 +181,10 @@ export default {
     };
   },
   mounted() {
+    if (this.consoleTools) {
+      this.initConsole();
+    }
     this.init();
-    //this.initConsole();
   },
   computed: {
     renderableObject: {
@@ -197,13 +209,12 @@ export default {
       this.initImage();
       const dist = 2048;
       this.initPosition(dist);
-      this.base(2048, 2048);
+      this.base(dist, dist);
       this.initBlocks();
     },
     selectObj(id) {
       let selectedObject = this.webGl.renderableObjectList.findById(id);
       if (selectedObject) {
-        console.log(selectedObject, id);
         this.localOptions.rotationX = selectedObject.rotation[0];
         this.localOptions.rotationY = selectedObject.rotation[1];
         this.localOptions.rotationZ = selectedObject.rotation[2];
@@ -534,7 +545,6 @@ export default {
       return polygon;
     },
     initConsole(consoleLimit = 50000) {
-      this.consoleTools = true;
       const consoleToHtml = function () {
         let consoleDiv = document.querySelector(".console");
         if (consoleDiv.textContent.length > consoleLimit) {
@@ -556,10 +566,19 @@ export default {
       window.console.logCopy = window.console.log;
       window.console.log = consoleToHtml;
     },
+    unsetConsole() {
+      window.console.logCopy = window.console.log;
+      window.console.log =  window.console.logCopy;
+    }
   },
 };
 </script>
 <style scoped>
+@media ( max-width: 769px ) {
+  .dev-tool {
+    width : calc(100% - 40px) !important;
+  }
+}
 .dev-tool {
   width: 340px;
   max-height: 600px;
@@ -582,7 +601,7 @@ export default {
   display: inline-block;
   height: 20px;
   line-height: 20px;
-  margin: 2px 10px;
+  margin: 2px 8px;
   vertical-align: middle;
 }
 .dev-tool input{
@@ -597,12 +616,12 @@ export default {
 .dev-tool > input[type="file"] {
 	display: block;
 }
-.dev-tool > .console {
+.dev-tool .console {
   padding: 5px;
   font-size: 12px;
   color: white;
   height: 100px;
-  width: 465px;
+  width: 330px;
   overflow-wrap: anywhere;
   overflow-y: auto;
   margin: 10px auto;
@@ -659,10 +678,12 @@ export default {
   height: 100%;
   margin: 0;
   overflow: hidden;
+  background-color: #333366;
 }
 #home canvas {
   width: 100%;
   height: 100%;
+  background-color: #336666;
 }
 button.mini-btn, input.mini-btn {
   padding: 5px 10px;
@@ -672,5 +693,9 @@ button.mini-btn, input.mini-btn {
   border: 0px;
   font-size: 10px;
   font-weight: unset;
+}
+
+button.mini-btn:hover, input.mini-btn:hover {
+  background-color: #404040;
 }
 </style>
