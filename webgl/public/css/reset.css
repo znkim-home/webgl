@@ -38,6 +38,8 @@ input, select, option {
 }
 html {
 	height: 100%;
+	-webkit-text-size-adjust: none;
+	text-size-adjust: none;
 }
 body {
 	height: 100%;

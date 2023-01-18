@@ -70,6 +70,7 @@ export default {
           this.controllerStatus.movePlane = new Plane(pos, vec3.fromValues(0, 0, 1));
           this.controllerStatus.moveCameraPosition = camera.position;
         }
+        e.preventDefault();
       }
       canvas.ontouchmove = (e) => {
         const webGl = this.webGl;
@@ -104,6 +105,7 @@ export default {
           let position = vec3.add(vec3.create(), camera.position, scaledRay);
           camera.setPosition(position[0], position[1], position[2]);
         }
+        e.preventDefault();
       }
       canvas.ontouchend = (e) => {
         console.log("touch end", e);
@@ -117,6 +119,7 @@ export default {
         this.controllerStatus.rotateObject = false;
         this.controllerStatus.zoomStatus = false;
         this.controllerStatus.zoomCameraPosition = undefined;
+        e.preventDefault();
       }
 
       canvas.onwheel = (e) => {
