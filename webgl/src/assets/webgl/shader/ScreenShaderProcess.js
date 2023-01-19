@@ -1,8 +1,8 @@
 const {mat2, mat3, mat4, vec2, vec3, vec4} = self.glMatrix; // eslint-disable-line no-unused-vars
 
-import ShaderProcess from './abstract/ShaderProcess';
-import Screen from './Screen.js';
-import Buffer from './Buffer.js';
+import ShaderProcess from '@/assets/webgl/abstract/ShaderProcess';
+import Screen from '@/assets/webgl/renderable/Screen.js';
+import Buffer from '@/assets/webgl/Buffer.js';
 
 class ScreenShaderProcess extends ShaderProcess {
   screens;

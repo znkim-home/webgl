@@ -18,8 +18,6 @@ export default class FrameBufferObject {
     this.frameBuffer = gl.createFramebuffer();
     this.depthBuffer = gl.createRenderbuffer();
     this.texture = gl.createTexture();
-    this.clearColor = vec3.fromValues(1.0, 1.0, 1.0);
-    this.textureType = 0;
     this.options = options;
     this.globalOptions = globalOptions;
     this.init();
@@ -27,21 +25,11 @@ export default class FrameBufferObject {
   init() {
     const gl = this.gl;
     const canvas = this.canvas;
-    if (this.options?.textureType) {
-      this.textureType = this.options.textureType;
-    }
-    if (this.options?.clearColor) {
-      this.clearColor = this.options.clearColor;
-    }
-    if (this.options?.name) {
-      this.name = this.options.name;
-    }
-
-    this.width = new Int32Array(1);
-    this.height = new Int32Array(1);
-    this.width[0] = (this.options?.width) ? this.options.width : canvas.width;
-    this.height[0] = (this.options?.height) ? this.options.height : canvas.height;
-    
+    this.textureType = this.options?.textureType ? this.options.textureType : 0;
+    this.clearColor = this.options?.clearColor ? this.options.clearColor : vec3.fromValues(1.0, 1.0, 1.0);
+    this.name = this.options?.name ? this.options.name : "Untitled FrameBuffer";
+    this.width = new Int32Array([(this.options?.width) ? this.options.width : canvas.width]);
+    this.height = new Int32Array([(this.options?.height) ? this.options.height : canvas.height]);
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, this.texture);  
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
@@ -49,7 +37,6 @@ export default class FrameBufferObject {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.width[0], this.height[0], 0, gl.RGBA, gl.UNSIGNED_BYTE, null); 
-
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.frameBuffer);
     gl.bindRenderbuffer(gl.RENDERBUFFER, this.depthBuffer);
     gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, this.width[0], this.height[0]);
@@ -84,11 +71,9 @@ export default class FrameBufferObject {
     gl.readPixels(x, y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     const pixelsF32 = new Float32Array([pixels[0] / 255.0, pixels[1] / 255.0, pixels[2] / 255.0, pixels[3] / 255.0]);
-
     return this.decodeNormal(pixelsF32);
   }
   getColor(x, y) {
-    /** @type {WebGLRenderingContext} */
     const gl = this.gl;
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.frameBuffer);
     const pixels = new Uint8Array(4);

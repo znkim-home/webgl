@@ -1,10 +1,6 @@
-import Buffer from './Buffer.js';
-import Renderable from './abstract/Renderable.js';
-import Triangle from './geometry/Triangle.js';
-//import Tessellator from './Tessellation/Tessellator.js';
-//import { PolyTree } from '../domain/PolyTree.js';
-//import { House } from '../domain/House.js';
-//import { WoodenWatch } from '../domain/WoodenWatch.js';
+import Buffer from '@/assets/webgl/Buffer.js';
+import Renderable from '@/assets/webgl/abstract/Renderable.js';
+import Triangle from '@/assets/webgl/geometry/Triangle';
 
 const { mat2, mat3, mat4, vec2, vec3, vec4 } = self.glMatrix; // eslint-disable-line no-unused-vars
 

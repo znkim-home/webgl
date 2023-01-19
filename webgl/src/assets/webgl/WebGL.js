@@ -1,22 +1,21 @@
 const {mat2, mat3, mat4, vec2, vec3, vec4} = self.glMatrix; // eslint-disable-line no-unused-vars
 import Shader from './Shader.js';
-import { DefaultShader } from '../shader/DefaultShader.js';
-import { ScreenShader } from '../shader/ScreenShader.js';
-import { LightMapShader } from '../shader/LightMapShader.js';
 
 import Camera from './Camera.js';
 import Sun from './Sun.js';
-import FrameBufferObject from './funcional/FrameBufferObject.js';
+import FrameBufferObject from './functional/FrameBufferObject.js';
+import RenderableObjectList from './functional/RenderableObjectList.js';
 
-import DefaultShaderProcess from './DefaultShaderProcess.js';
-import ScreenShaderProcess from './ScreenShaderProcess.js';
-import LightMapShaderProcess from './LightMapShaderProcess.js';
-import RenderableObjectList from './funcional/RenderableObjectList.js';
-
+import { DefaultShader } from './shader/DefaultShader.js';
+import DefaultShaderProcess from './shader/DefaultShaderProcess.js';
+import { ScreenShader } from './shader/ScreenShader.js';
+import ScreenShaderProcess from './shader/ScreenShaderProcess.js';
+import { LightMapShader } from './shader/LightMapShader.js';
+import LightMapShaderProcess from './shader/LightMapShaderProcess.js';
 
 Math.degree = (radian) => radian * 180 / Math.PI;
 Math.radian = (degree) => degree * Math.PI / 180;
-Math.randomInt = () => Math.ceil(Math.random() * 10);
+Math.randomInt = () => Math.round(Math.random() * 10);
 Array.prototype.get = function(index) {return this[this.loopIndex(index)]};
 Array.prototype.getPrev = function(index) {return this[this.loopIndex(index - 1)]};
 Array.prototype.getNext = function(index) {return this[this.loopIndex(index + 1)]};
@@ -74,6 +73,10 @@ export default class WebGL {
     }
     console.log("Init Success " + version);
   }
+  checkMultiRenders() {
+    const ext = this.gl.getExtension('WEBGL_draw_buffers');
+    return (ext > -1) ? true : false;
+  }
   resizeCanvas() {
     const canvas = this.canvas;
     const displayWidth  = canvas.clientWidth;
@@ -96,11 +99,14 @@ export default class WebGL {
     const gl = this.gl;
     gl.enable(gl.DEPTH_TEST);
     gl.depthFunc(gl.LEQUAL);
-    //this.buffer = new Buffer(gl);
     this.resizeCanvas();
 
     this.defaultShader = new Shader(gl);
-    this.defaultShader.init(DefaultShader);
+    if (this.checkMultiRenders()) {
+      this.defaultShader.init(DefaultShader);
+    } else {
+      this.defaultShader.init(DefaultShader);
+    }
     this.defaultShaderInfo = this.defaultShader.shaderInfo;
 
     this.screenShader = new Shader(gl);
@@ -114,8 +120,6 @@ export default class WebGL {
     this.camera = new Camera({fovyDegree : this.globalOptions.fovyDegree});
 
     this.sun = new Sun({position:{x:0, y:0, z: 8192 / 2}});
-    //this.sun.setPosition(0,0,0);
-    //this.sun.moveForward(1024);
     this.sun.rotationOrbit(0.5, 0.8, vec3.fromValues(0,0,0));
 
     this.frameBufferObjs.push(this.getMainFbo());
@@ -131,7 +135,6 @@ export default class WebGL {
     this.defaultFrameBufferObjs.push(this.getSelectionFbo());
     this.defaultFrameBufferObjs.push(this.getNormalFbo());
     this.defaultFrameBufferObjs.push(this.getDepthFbo());
-
     this.lightMapFrameBufferObjs.push(this.getLightMapFbo());
 
     this.shaderProcesses.push(new DefaultShaderProcess(gl, this.defaultShader, this.camera, this.defaultFrameBufferObjs, this.renderableObjectList));
@@ -143,11 +146,7 @@ export default class WebGL {
     });
     this.render();
   }
-  render() {
-    this.scene();
-    requestAnimationFrame(this.render.bind(this));
-  }
-  scene() {
+  setOptions() {
     this.resizeCanvas();
     this.camera.syncFovyDegree(this.globalOptions.fovyDegree);
     if (this.globalOptions.cullFace) {
@@ -160,6 +159,13 @@ export default class WebGL {
     } else {
       this.gl.disable(this.gl.DEPTH_TEST);
     }
+  }
+  render() {
+    this.scene();
+    requestAnimationFrame(this.render.bind(this));
+  }
+  scene() {
+    this.setOptions();
     this.shaderProcesses.forEach((shaderProcess) => {
       shaderProcess.process(this.globalOptions);
     });

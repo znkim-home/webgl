@@ -8,13 +8,11 @@ export default class Plane {
   constructor(position, normal) {
     this.set(position, normal);
   }
-
   set(position, normal) {
     this.normal = normal;
     this.position = position;
     this.distance = -(normal[0] * position[0] + normal[1] * position[1] + normal[2] * position[2]);
   }
-
   getIntersection(line) {
     let normal = this.normal;
     let position = line.position;

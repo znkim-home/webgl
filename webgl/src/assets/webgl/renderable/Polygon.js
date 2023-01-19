@@ -1,7 +1,7 @@
-import Buffer from './Buffer.js';
-import Renderable from './abstract/Renderable';
-import Triangle from './geometry/Triangle.js';
-import Tessellator from './Tessellation/Tessellator.js';
+import Buffer from '@/assets/webgl/Buffer.js';
+import Renderable from '@/assets/webgl/abstract/Renderable.js';
+import Triangle from '@/assets/webgl/geometry/Triangle';
+import Tessellator from '@/assets/webgl/functional/Tessellator.js';
 
 const { mat2, mat3, mat4, vec2, vec3, vec4 } = self.glMatrix; // eslint-disable-line no-unused-vars
 
@@ -26,6 +26,7 @@ export default class Polygon extends Renderable {
     if (options?.position) this.position = vec3.set(this.position, options.position.x, options.position.y, options.position.z);
     if (options?.rotation) this.rotation = vec3.set(this.rotation, options.rotation.pitch, options.rotation.roll, options.rotation.heading);
     if (options?.color) this.color = vec4.set(this.color, options?.color.r, options?.color.g, options?.color.b, options?.color.a);
+    if (options?.texture) this.texture = options.texture;
     if (options?.image) this.image = options.image;
   }
   render(gl, shaderInfo, frameBufferObjs) {
@@ -62,15 +63,13 @@ export default class Polygon extends Renderable {
     if (this.buffer === undefined || this.dirty === true) {
       this.buffer = new Buffer(gl);
       let color = this.color;
-      let selectionColor = this.selectionColor;
       let colors = [];
+      let selectionColor = this.selectionColor;
       let selectionColors = [];
       let positions = [];
       let normals = [];
       let textureCoordinates = [];
 
-      //let topPositions = this.coordinates.map((coordinate) => vec3.fromValues(coordinate[0], coordinate[1], this.position[2] + this.height));
-      //let bottomPositions = this.coordinates.map((coordinate) => vec3.fromValues(coordinate[0], coordinate[1], this.position[2]));
       let topPositions = this.coordinates.map((coordinate) => vec3.fromValues(coordinate[0], coordinate[1], this.height));
       let bottomPositions = this.coordinates.map((coordinate) => vec3.fromValues(coordinate[0], coordinate[1], 0));
       let bbox = this.getMinMax(topPositions);
@@ -122,7 +121,9 @@ export default class Polygon extends Renderable {
       this.buffer.colorVBO = new Float32Array(colors);
       this.buffer.selectionColorVBO = new Float32Array(selectionColors);
       this.buffer.textureVBO = new Float32Array(textureCoordinates);
-      if (this.image) {
+      if (this.texture) {
+        this.buffer.texture = this.texture;
+      } else if (this.image) {
         this.buffer.texture = this.buffer.createTexture(this.image);
       }
       this.buffer.positionsGlBuffer = this.buffer.createBuffer(this.buffer.positionsVBO);

@@ -1,14 +1,13 @@
 const {mat2, mat3, mat4, vec2, vec3, vec4} = self.glMatrix; // eslint-disable-line no-unused-vars
 
-import ShaderProcess from './abstract/ShaderProcess';
+import ShaderProcess from '@/assets/webgl/abstract/ShaderProcess';
 
-class LightMapShaderProcess extends ShaderProcess {
+class DefaultShaderProcess extends ShaderProcess {
   renderableList;
   frameBufferObjs;
-  constructor(gl, shader, camera, frameBufferObjs, renderableList, sun) {
+  constructor(gl, shader, camera, frameBufferObjs, renderableList) {
     super(gl, shader);
     this.camera = camera;
-    this.sun = sun;
     this.frameBufferObjs = frameBufferObjs;
     this.renderableList = renderableList;
   }
@@ -23,24 +22,18 @@ class LightMapShaderProcess extends ShaderProcess {
     const shaderInfo = this.getShader().shaderInfo;
     this.getShader().useProgram();
 
-    gl.viewport(0, 0, 8182, 8182);
-    //gl.enable(gl.CULL_FACE);
-    //gl.frontFace(gl.CCW);
-    //gl.lineWidth(globalOptions.lineWidth);
-
     let projectionMatrix = mat4.create();
     mat4.perspective(projectionMatrix, this.camera.fovyRadian, globalOptions.aspect, parseFloat(globalOptions.near), parseFloat(globalOptions.far));
+    let modelViewMatrix = this.camera.getModelViewMatrix();
+    let normalMatrix = this.camera.getNormalMatrix();
 
-    let orthographicMatrix = mat4.create();
-    mat4.ortho(orthographicMatrix, -8192, 8192, -8192, 8192, 0, 8192);
-
-    gl.uniform2fv(shaderInfo.uniformLocations.nearFar, vec2.fromValues(0, 8192));
-
-    let modelViewMatrix = this.sun.getModelViewMatrix();
     gl.uniformMatrix4fv(shaderInfo.uniformLocations.projectionMatrix, false, projectionMatrix);
     gl.uniformMatrix4fv(shaderInfo.uniformLocations.modelViewMatrix, false, modelViewMatrix);
-    gl.uniformMatrix4fv(shaderInfo.uniformLocations.orthographicMatrix, false, orthographicMatrix);
-
+    gl.uniformMatrix4fv(shaderInfo.uniformLocations.normalMatrix, false, normalMatrix);
+    gl.uniform2fv(shaderInfo.uniformLocations.nearFar, vec2.fromValues(parseFloat(globalOptions.near), parseFloat(globalOptions.far)));
+    gl.uniform1f(shaderInfo.uniformLocations.pointSize, globalOptions.pointSize);
+    gl.uniform1i(shaderInfo.uniformLocations.textureType, 0);
+    
     this.frameBufferObjs.forEach((frameBufferObj) => {
       frameBufferObj.clear();
     });
@@ -54,4 +47,4 @@ class LightMapShaderProcess extends ShaderProcess {
   }
 }
 
-export default LightMapShaderProcess;
+export default DefaultShaderProcess;

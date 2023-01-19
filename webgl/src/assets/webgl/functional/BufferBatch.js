@@ -28,7 +28,7 @@ Float32Array.prototype.concat = function() {
 	return concatenatedArray;
 };
 
-import BatchObject from '../BatchObject.js';
+import BatchObject from '../renderable/BatchObject.js';
 
 export default class BufferBatch {
 
@@ -54,7 +54,6 @@ export default class BufferBatch {
       let buffer = renderableObj.getBuffer(gl);
       let movedPositions = [];
       buffer.positionsVBO.forEach((VBO, index) =>{
-        //console.log(VBO);
         let count = index % 3;
         if (count == 0) {
           movedPositions.push(VBO + position[0]);
@@ -64,7 +63,7 @@ export default class BufferBatch {
           movedPositions.push(VBO + position[2]);
         }
       })
-      positionsList.push(new Float32Array(movedPositions));
+      positionsList.push(movedPositions);
       normalsList.push(buffer.normalVBO);
       colorsList.push(buffer.colorVBO);
       selectionColorsList.push(buffer.selectionColorVBO);
@@ -88,10 +87,16 @@ export default class BufferBatch {
       return;
     }
     
-    let result = new Float32Array([]);
+    let result = [];
     for (let loop = 0; loop < floatObjs.length; loop++) {
-      result = result.concat(floatObjs[loop]);
+      //result = result.concat(floatObjs[loop]);
+      this.concat(result, floatObjs[loop]);
     }
-    return result;
+    return new Float32Array(result);
+  }
+  static concat(target, list) {
+    list.forEach((data) => {
+      target.push(data); 
+    });
   }
 }

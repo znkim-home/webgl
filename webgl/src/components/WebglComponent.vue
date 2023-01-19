@@ -24,7 +24,7 @@
     onselectstart="return false"
   >
     <div class="header">
-      <h3>Tools</h3>
+      <h3>Options</h3>
       <div class="show-hide" v-on:click="showDraw = !showDraw">show/hide</div>
     </div>
     <div v-show="showDraw">
@@ -89,8 +89,8 @@
         <option value="128">128X128</option>
         <option value="256">256X256</option>
       </select>
-      <button class="mini-btn" v-on:click="reload(true)">ReloadBlocks</button>
-      <button class="mini-btn" v-on:click="reload(false)">ReloadBatchedBlocks</button>
+      <button class="mini-btn" v-on:click="reload(false)">ReloadBlocks</button>
+      <button class="mini-btn" v-on:click="reload(true)">ReloadBatchedBlocks</button>
     </div>
   </div>
   <div
@@ -127,15 +127,16 @@
 <script>
 import FirstPersonControllerComponent from "./FirstPersonControllerComponent.vue";
 import ThirdPersonControllerComponent from "./ThirdPersonControllerComponent.vue";
-import WebGL from "@/assets/service/WebGL.js";
-import Cube from "@/assets/service/Cube.js";
-import Polygon from "@/assets/service/Polygon.js";
-import Rectangle from "@/assets/service/Rectangle.js"
-import Point from "@/assets/service/Point.js";
-import Line from "@/assets/service/Line.js";
-import Cylinder from "@/assets/service/Cylinder";
-import Obj from "@/assets/service/Obj";
-import BufferBatch from '@/assets/service/funcional/BufferBatch';
+import WebGL from "@/assets/webgl/WebGL.js";
+import Cube from "@/assets/webgl/renderable/Cube.js";
+import Polygon from "@/assets/webgl/renderable/Polygon.js";
+import Rectangle from "@/assets/webgl/renderable/Rectangle.js"
+import Point from "@/assets/webgl/renderable/Point.js";
+import Line from "@/assets/webgl/renderable/Line.js";
+import Cylinder from "@/assets/webgl/renderable/Cylinder";
+import Obj from "@/assets/webgl/renderable/Obj.js";
+import Buffer from "@/assets/webgl/Buffer";
+import BufferBatch from '@/assets/webgl/functional/BufferBatch.js';
 
 export default {
   name: "WebglComponent",
@@ -151,7 +152,7 @@ export default {
       renderTools: true,
       showDraw: false,
       showRender: false,
-      consoleTools: true,
+      consoleTools: false,
       showConsole : false,
       webGl: undefined,
       blocks: undefined,
@@ -162,7 +163,7 @@ export default {
         rotationY: 0.0,
         rotationZ: 0.0,
         blockSize : 8,
-        maxHeight : 8,
+        maxHeight : 6,
       },
       globalOptions: {
         cullFace : true,
@@ -173,7 +174,7 @@ export default {
         far : 20000.0,
         pointSize : 5.0,
         lineWidth : 3.0,
-        debugMode : true,
+        debugMode : false,
         enableSsao : true,
         enableGlobalLight : true,
         enableEdge : true,
@@ -246,7 +247,6 @@ export default {
       }
     },
     uploadObj(e) {
-      //console.log(e);
       let _this = this;
       let file = e.target.files[0];
       if (e.target.files[0]) {
@@ -327,6 +327,14 @@ export default {
       }
       this.blocks.pos = xpos;
     },
+    createRandomValue() {
+      const MAX_HEIGHT = this.blocks.MAX_HEIGHT;
+      let value = Math.randomInt(0) % (MAX_HEIGHT);
+      if (value < 4) {
+        value = 3;
+      }
+      return value;
+    },
     initGround(isAdd = true) {
       let createdList = [];
       const OFFSET = this.blocks.BLOCK_SIZE / 2;
@@ -334,13 +342,20 @@ export default {
       const MAX_HEIGHT = this.blocks.MAX_HEIGHT;
       for (let x = 0; x < MAX_VALUE; x++) {
         for (let y = 0; y < MAX_VALUE; y++) {
-          let randomValue = Math.ceil(Math.randomInt(0) / 4) + 1;
+          let randomValue = this.createRandomValue();
           for (let z = 0; z < MAX_HEIGHT; z++) {
             if (z < randomValue) {
               let originX = (x - OFFSET) * 128;
               let originY = (y - OFFSET) * 128;
               let originZ = z * 128;
-              let polygon = (z <= 0) ? this.createStone([originX, originY, originZ], isAdd) : this.createDirt([originX, originY, originZ], isAdd);
+              let polygon = undefined;
+              if (z > 1) {
+                polygon = this.createDirt([originX, originY, originZ], isAdd)
+              } else if (z > 0) {
+                polygon = this.createStone([originX, originY, originZ], isAdd)
+              } else if (z == 0) {
+                polygon = this.createObsidian([originX, originY, originZ], isAdd)
+              }
               this.blocks.pos[x][y][z] = polygon;
               createdList.push(polygon);
             }
@@ -357,9 +372,10 @@ export default {
     },
     initImage() {
       this.images = [];
-      let imagePaths = ["/image/cube/dirt.png", "/image/cube/stone.png", "/image/cube/cobblestone.png"];
+      this.textures = [];
+      let imagePaths = ["/image/cube/dirt.png", "/image/cube/stone.png", "/image/cube/cobblestone.png", "/image/cube/minecraft-texture.png"];
       let imageLength = imagePaths.length;
-
+      let glBuffer = new Buffer(this.webGl.gl);
       let loadedCount = 0;
       imagePaths.forEach((imagePath, index) => {
         let image = new Image();
@@ -367,6 +383,8 @@ export default {
         image.onload = () => {
           console.log("loaded : ", imagePath);
           this.images[index] = image;
+          this.textures[index] = glBuffer.createTexture(image);
+
           loadedCount++;
           //this.images[index] = image;
           if (imageLength == loadedCount) {
@@ -498,10 +516,6 @@ export default {
       this.webGl.renderableObjectList.push(cylinder);
       return cylinder;
     },
-    createCube(options) {
-      let cube = new Cube(options);
-      this.webGl.renderableObjectList.push(cube);
-    },
     createPoint(options) {
       let point = new Point(options);
       this.webGl.renderableObjectList.push(point);
@@ -511,6 +525,15 @@ export default {
       this.webGl.renderableObjectList.push(line);
       return line;
     },
+    createCube(options, isAdd = true) {
+      let cube = new Cube(options);
+      if (isAdd) {
+        this.webGl.renderableObjectList.push(cube);
+      } else {
+        cube.createRenderableObjectId(this.webGl.renderableObjectList);
+      }
+      return cube;
+    },
     createPolygon(coordinates, options, isAdd = true) {
       let polygon = new Polygon(coordinates, options);
       if (isAdd) {
@@ -518,31 +541,41 @@ export default {
       } else {
         polygon.createRenderableObjectId(this.webGl.renderableObjectList);
       }
-      options.color = {r : 0.0, g : 1.0, b : 0.0, a : 1.0};
       options.image = undefined;
       return polygon;
     },
     createDirt(origin, isAdd = true) {
-      let coordinates = [[-64, -64], [64, -64], [64, 64], [-64, 64]];
-      let polygon = this.createPolygon(coordinates, {
+      let cube = this.createCube({
         name: "DIRT",
         position: { x: origin[0] + 64, y: origin[1] + 64, z: origin[2]},
-        color: { r: 0.0, g: 0.5, b: 1.0, a: 1.0 },
+        color: { r: 0.3, g: 0.3, b: 0.3, a: 1.0 },
         height: 128,
-        image : this.images[0]
+        texture : this.textures[3],
+        texturePosition : [2, 26]
       }, isAdd);
-      return polygon;
+      return cube;
+    },
+    createObsidian(origin, isAdd = true) {
+      let cube = this.createCube({
+        name: "OBSIDIAN",
+        position: { x: origin[0] + 64, y: origin[1] + 64, z: origin[2]},
+        color: { r: 0.3, g: 0.3, b: 0.3, a: 1.0 },
+        height: 128,
+        texture : this.textures[3],
+        texturePosition : [10, 16]
+      }, isAdd);
+      return cube;
     },
     createStone(origin, isAdd = true) {
-      let coordinates = [[-64, -64], [64, -64], [64, 64], [-64, 64]];
-      let polygon = this.createPolygon(coordinates, {
+      let cube = this.createCube({
         name: "STONE",
         position: { x: origin[0] + 64, y: origin[1] + 64, z: origin[2]},
-        color: { r: 0.0, g: 0.5, b: 1.0, a: 1.0 },
+        color: { r: 0.3, g: 0.3, b: 0.3, a: 1.0 },
         height: 128,
-        image : this.images[1]
+        texture : this.textures[3],
+        texturePosition : [20, 22]
       }, isAdd);
-      return polygon;
+      return cube;
     },
     initConsole(consoleLimit = 50000) {
       const consoleToHtml = function () {
@@ -585,9 +618,9 @@ export default {
   position: absolute;
   display: block;
   z-index: 10;
-  background-color: #0e0e0e;
-  opacity: 0.75;
-  border-radius: 10px;
+  background-color: #161618;
+  opacity: 0.90;
+  border-radius: 5px;
   margin: 10px 10px 10px 10px;
   padding: 10px;
   color: #fff;
@@ -603,6 +636,7 @@ export default {
   line-height: 20px;
   margin: 2px 8px;
   vertical-align: middle;
+  min-width: 40px;
 }
 .dev-tool input{
   vertical-align: middle;
@@ -611,7 +645,7 @@ export default {
 	display: inline-block;
   height: 20px;
   vertical-align: middle;
-  width: 200px;
+  width: 220px;
 }
 .dev-tool > input[type="file"] {
 	display: block;
@@ -631,7 +665,7 @@ export default {
 .dev-tool ul {
   height: 100px;
   overflow-y: scroll;
-  background-color: black;
+  background-color: #222222;
   margin: 5px 0px;
 }
 .dev-tool ul > li{
@@ -657,7 +691,7 @@ export default {
   font-size: 15px;
   margin: 5px;
   font-weight: bold;
-  color: #0084ff;
+  color: #72afe3;
   display: inline-block;
 }
 .dev-tool div.show-hide {
@@ -668,10 +702,9 @@ export default {
 }
 .dev-tool div.header {
   display: block;
-  border-bottom: 2px solid black;
-  margin: 5px;
+  border-bottom: 1px solid #303030;
+  margin: 5px 5px;
 }
-
 
 #home {
   width: 100%;

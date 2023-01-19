@@ -2,8 +2,8 @@
   <div></div>
 </template>
 <script>
-import Line from "@/assets/service/geometry/Line";
-import Plane from "@/assets/service/geometry/Plane.js";
+import Line from "@/assets/webgl/geometry/Line";
+import Plane from "@/assets/webgl/geometry/Plane.js";
 
 const { mat2, mat3, mat4, vec2, vec3, vec4 } = self.glMatrix; // eslint-disable-line no-unused-vars
 export default {
@@ -50,9 +50,8 @@ export default {
       canvas.ontouchstart = (e) => {
         const webGl = this.webGl;
         const camera = webGl.camera;
-        const target = e.targetTouches[0];
+        const target = e.changedTouches [0];
         this.touchStartPosition = [target.clientX, target.clientY];
-        console.log(e.changedTouches);
 
         const mouseX = target.clientX;
         const mouseY = canvas.height -target.clientY;
@@ -61,11 +60,12 @@ export default {
 
         let depth = webGl.depthFbo.getDepth(mouseX, mouseY);
         let pos = this.getScreenPosition(ratioX, ratioY, canvas.width, canvas.height, depth);
-        if (e.targetTouches.length == 2) {
+        if (e.changedTouches .length >= 2) {
+          console.log(e.changedTouches);
           this.controllerStatus.zoomStatus = true;
           this.controllerStatus.zoomCameraPosition = camera.position;
           this.controllerStatus.zoomCameraRay = this.getRay(ratioX, ratioY, canvas.width, canvas.height);
-        } else if (e.targetTouches.length == 1) {
+        } else if (e.changedTouches .length == 1) {
           this.controllerStatus.moveStatus = true;
           this.controllerStatus.movePlane = new Plane(pos, vec3.fromValues(0, 0, 1));
           this.controllerStatus.moveCameraPosition = camera.position;
@@ -82,7 +82,7 @@ export default {
         const mouseY = canvas.height -target.clientY;
         const ratioX = mouseX / canvas.width;
         const ratioY = mouseY / canvas.height;
-        //const xValue = touchMovedPosition[0] * this.globalOptions.ROTATE_FACTOR;
+        const xValue = touchMovedPosition[0] * this.globalOptions.ROTATE_FACTOR;
         const yValue = touchMovedPosition[1] * this.globalOptions.ROTATE_FACTOR;
 
         if (this.controllerStatus.moveStatus) {
@@ -101,7 +101,7 @@ export default {
         } else if (this.controllerStatus.zoomStatus) {
           let depth = webGl.depthFbo.getDepth(mouseX, mouseY);
           let ray = this.controllerStatus.zoomCameraRay;
-          let scaledRay = vec3.scale(vec3.create(), ray, yValue * depth);
+          let scaledRay = vec3.scale(vec3.create(), ray, (xValue + yValue) * depth);
           let position = vec3.add(vec3.create(), camera.position, scaledRay);
           camera.setPosition(position[0], position[1], position[2]);
         }

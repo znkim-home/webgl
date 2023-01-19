@@ -1,5 +1,5 @@
-import Buffer from './Buffer.js';
-import Renderable from './abstract/Renderable';
+import Buffer from '@/assets/webgl/Buffer.js';
+import Renderable from '@/assets/webgl/abstract/Renderable.js';
 
 const { mat2, mat3, mat4, vec2, vec3, vec4 } = self.glMatrix; // eslint-disable-line no-unused-vars
 
@@ -63,8 +63,7 @@ export default class BatchObject extends Renderable {
       let normals = this.normals;
       let textureCoordinates = this.textureCoordinates;
       let textures = this.textures;
-
-      // one texture;
+      
       this.buffer.texture = textures[0];
 
       let indices = new Uint16Array(positions.length/3);

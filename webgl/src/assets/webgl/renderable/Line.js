@@ -1,5 +1,5 @@
-import Buffer from './Buffer.js';
-import Renderable from './abstract/Renderable';
+import Buffer from '@/assets/webgl/Buffer.js';
+import Renderable from '@/assets/webgl/abstract/Renderable.js';
 
 const { mat2, mat3, mat4, vec2, vec3, vec4 } = self.glMatrix; // eslint-disable-line no-unused-vars
 
