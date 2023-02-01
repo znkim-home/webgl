@@ -235,7 +235,7 @@ export default {
       }
       return selectedObject;
     },
-    getSelectedObject(){
+    getSelectedObject() {
       return this.selectedObject;
     },
     rotateSelectedObject() {
@@ -348,7 +348,7 @@ export default {
               let originX = (x - OFFSET) * 128;
               let originY = (y - OFFSET) * 128;
               let originZ = z * 128;
-              let polygon = undefined;
+              let polygon;
               if (z > 1) {
                 polygon = this.createDirt([originX, originY, originZ], isAdd)
               } else if (z > 0) {
@@ -364,7 +364,7 @@ export default {
       }
       return createdList;
     },
-    initPosition(dist = 2048){
+    initPosition(dist = 2048) {
       const camera = this.webGl.camera;
       camera.init();
       camera.setPosition(0, 0, dist);
@@ -386,7 +386,6 @@ export default {
           this.textures[index] = glBuffer.createTexture(image);
 
           loadedCount++;
-          //this.images[index] = image;
           if (imageLength == loadedCount) {
             console.log("inited!");
             this.initGround();
@@ -506,9 +505,6 @@ export default {
         let object = new Obj(options, loadedObj);
         this.webGl.renderableObjectList.push(object);
       })
-      //let object = new Obj(options, this.loadedObj);
-      //this.webGl.renderableObjectList.push(object);
-      //return object;
     },
     createCylinder(options) {
       options.image = this.images[2];

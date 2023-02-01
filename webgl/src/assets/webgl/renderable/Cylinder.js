@@ -3,7 +3,7 @@ import Renderable from '@/assets/webgl/abstract/Renderable.js';
 import Triangle from '../geometry/Triangle.js';
 import Tessellator from '../functional/Tessellator.js';
 
-const { mat2, mat3, mat4, vec2, vec3, vec4 } = self.glMatrix; // eslint-disable-line no-unused-vars
+import { mat2, mat3, mat4, vec2, vec3, vec4 } from 'gl-matrix'; // eslint-disable-line no-unused-vars
 
 export default class Cylinder extends Renderable {
   height;
@@ -32,7 +32,6 @@ export default class Cylinder extends Renderable {
 
   rotate(xValue, yValue, tm) {
     let pitchAxis = vec3.fromValues(1, 0, 0);
-    //let headingMatrix = mat4.fromZRotation(mat4.create(), xValue);
     let pitchMatrix = mat4.fromRotation(mat4.create(), yValue, pitchAxis);
 
      return mat4.multiply(tm, tm, pitchMatrix);
@@ -81,8 +80,7 @@ export default class Cylinder extends Renderable {
       this.coordinates = [];
       let angleOffset = (360 / this.density);
       let origin = vec2.fromValues(0.0, 0.0);
-      //console.log(origin);
-
+      
       let rotateVec2 = vec2.fromValues(0.0, 0.0 + this.radius);
       for (let i = 0; i < this.density; i++) {
         let angle = Math.radian(i * angleOffset);

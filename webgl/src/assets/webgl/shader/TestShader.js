@@ -1,3 +1,6 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.TestShader = void 0;
 const attributes = ["aVertexPosition", "aVertexColor"];
 const uniforms = ["uModelViewMatrix", "uProjectionMatrix", "uObjectMatrix"];
 const vertexShaderSource = `
@@ -22,7 +25,6 @@ const vertexShaderSource = `
     gl_Position = uProjectionMatrix * orthoPosition;
   }
 `;
-
 const fragmentShaderSource = `
   precision highp float;
   varying vec4 vColor;
@@ -31,10 +33,9 @@ const fragmentShaderSource = `
     gl_FragColor = vColor;
   }
 `;
-
-export const TestShader = {
-  attributes: attributes,
-  uniforms: uniforms,
-  vertexShaderSource: vertexShaderSource,
-  fragmentShaderSource: fragmentShaderSource,
+exports.TestShader = {
+    attributes: attributes,
+    uniforms: uniforms,
+    vertexShaderSource: vertexShaderSource,
+    fragmentShaderSource: fragmentShaderSource,
 };

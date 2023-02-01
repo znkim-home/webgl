@@ -4,8 +4,8 @@
 <script>
 import Line from "@/assets/webgl/geometry/Line";
 import Plane from "@/assets/webgl/geometry/Plane.js";
+import { mat2, mat3, mat4, vec2, vec3, vec4 } from 'gl-matrix'; // eslint-disable-line no-unused-vars
 
-const { mat2, mat3, mat4, vec2, vec3, vec4 } = self.glMatrix; // eslint-disable-line no-unused-vars
 export default {
   name: "FirstPerson",
   props: {
@@ -206,7 +206,6 @@ export default {
           let pos = this.getScreenPosition(ratioX, ratioY, canvas.width, canvas.height, depth);
 
           if (this.controllerStatus.altStatus) {
-            //this.$parent.diselectObj();
             console.log("empty");
           } else if (this.controllerStatus.shiftStatus) {
             let blockX = Math.floor(pos[0] / 128);

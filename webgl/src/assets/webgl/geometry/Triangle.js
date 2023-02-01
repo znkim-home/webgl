@@ -1,4 +1,4 @@
-const {vec3} = self.glMatrix; // eslint-disable-line no-unused-vars
+import { mat2, mat3, mat4, vec2, vec3, vec4 } from 'gl-matrix'; // eslint-disable-line no-unused-vars
 import Plane from './Plane.js';
 
 export default class Triangle {

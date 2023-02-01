@@ -3,7 +3,7 @@ import Renderable from '@/assets/webgl/abstract/Renderable.js';
 import Triangle from '@/assets/webgl/geometry/Triangle';
 import Tessellator from '@/assets/webgl/functional/Tessellator.js';
 
-const { mat2, mat3, mat4, vec2, vec3, vec4 } = self.glMatrix; // eslint-disable-line no-unused-vars
+import { mat2, mat3, mat4, vec2, vec3, vec4 } from 'gl-matrix'; // eslint-disable-line no-unused-vars
 
 export default class Polygon extends Renderable {
   height;

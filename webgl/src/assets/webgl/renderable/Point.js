@@ -1,7 +1,7 @@
 import Buffer from '@/assets/webgl/Buffer.js';
 import Renderable from '@/assets/webgl/abstract/Renderable.js';
 
-const { mat2, mat3, mat4, vec2, vec3, vec4 } = self.glMatrix; // eslint-disable-line no-unused-vars
+import { mat2, mat3, mat4, vec2, vec3, vec4 } from 'gl-matrix'; // eslint-disable-line no-unused-vars
 
 export default class Point extends Renderable {
   constructor(options) {
@@ -23,7 +23,6 @@ export default class Point extends Renderable {
     frameBufferObjs.forEach((frameBufferObj) => {
       const textureType = frameBufferObj.textureType;
       frameBufferObj.bind();
-      //gl.uniform1i(shaderInfo.uniformLocations.textureType, 0);
       if (textureType == 4) {
         gl.enableVertexAttribArray(shaderInfo.attributeLocations.vertexColor);
         buffer.bindBuffer(buffer.selectionColorGlBuffer, 4, shaderInfo.attributeLocations.vertexColor);

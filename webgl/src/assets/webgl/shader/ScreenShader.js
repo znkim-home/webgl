@@ -1,10 +1,12 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.ScreenShader = void 0;
 const attributes = ["aVertexPosition", "aTextureCoordinate"];
-const uniforms = ["uIsMain", "uSsaoKernel", "uScreenSize", "uNoiseScale", 
-"uAspectRatio", "uProjectionMatrix", "uTangentOfHalfFovy", "uNearFar", 
-"uMainTexture", "uAlbedoTexture", "uSelectionTexture", "uNormalTexture", 
-"uDepthTexture", "uNoiseTexture", "uLightMapTexture", "uCameraTransformMatrix", "uSunModelViewMatrix", "uOrthographicMatrix", "uSunNormalMatrix",
-"uEnableGlobalLight", "uEnableEdge", "uEnableSsao", "uSelectedObjectId"];
-
+const uniforms = ["uIsMain", "uSsaoKernel", "uScreenSize", "uNoiseScale",
+    "uAspectRatio", "uProjectionMatrix", "uTangentOfHalfFovy", "uNearFar",
+    "uMainTexture", "uAlbedoTexture", "uSelectionTexture", "uNormalTexture",
+    "uDepthTexture", "uNoiseTexture", "uLightMapTexture", "uCameraTransformMatrix", "uSunModelViewMatrix", "uOrthographicMatrix", "uSunNormalMatrix",
+    "uEnableGlobalLight", "uEnableEdge", "uEnableSsao", "uSelectedObjectId"];
 const vertexShaderSource = `
   #pragma vscode_glsllint_stage : vert
   attribute vec3 aVertexPosition;
@@ -16,7 +18,6 @@ const vertexShaderSource = `
     gl_Position = vec4(aVertexPosition.xy * 2.0 - 1.0, 0.0, 1.0);
   }
 `;
-
 const fragmentShaderSource = `
   #pragma vscode_glsllint_stage : frag
   precision highp float;
@@ -260,10 +261,9 @@ const fragmentShaderSource = `
     }
   }
 `;
-
-export const ScreenShader = {
-  attributes: attributes,
-  uniforms: uniforms,
-  vertexShaderSource: vertexShaderSource,
-  fragmentShaderSource: fragmentShaderSource,
+exports.ScreenShader = {
+    attributes: attributes,
+    uniforms: uniforms,
+    vertexShaderSource: vertexShaderSource,
+    fragmentShaderSource: fragmentShaderSource,
 };

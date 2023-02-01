@@ -2,7 +2,7 @@ import Buffer from '@/assets/webgl/Buffer.js';
 import Renderable from '@/assets/webgl/abstract/Renderable.js';
 import Triangle from '@/assets/webgl/geometry/Triangle.js';
 
-const { mat2, mat3, mat4, vec2, vec3, vec4 } = self.glMatrix; // eslint-disable-line no-unused-vars
+import { mat2, mat3, mat4, vec2, vec3, vec4 } from 'gl-matrix'; // eslint-disable-line no-unused-vars
 
 export default class Rectangle extends Renderable {
   coordinates;
@@ -47,7 +47,6 @@ export default class Rectangle extends Renderable {
     buffer.bindBuffer(buffer.selectionColorGlBuffer, 4, shaderInfo.attributeLocations.vertexSelectionColor);
 
     frameBufferObjs.forEach((frameBufferObj) => {
-      //const textureType = frameBufferObj.textureType;
       frameBufferObj.bind(shaderInfo);
       if (this.image || this.texture) {
         gl.bindTexture(gl.TEXTURE_2D, buffer.texture);
@@ -59,7 +58,7 @@ export default class Rectangle extends Renderable {
     });
   }
   getBuffer(gl) {
-    this.dirty = (this.buffer === undefined || this.length != this.coordinates.length) ? true : false;
+    this.dirty = (this.buffer === undefined || this.length != this.coordinates.length);
     if (this.dirty === true) {
       this.buffer = new Buffer(gl);
       let color = this.color;
@@ -94,7 +93,7 @@ export default class Rectangle extends Renderable {
 
       this.length = this.coordinates.length;
       let indices = new Uint16Array(positions.length/3);
-      this.buffer.indicesVBO = indices.map((obj, index) => index );
+      this.buffer.indicesVBO = indices.map((obj, index) => index);
       this.buffer.positionsVBO = new Float32Array(positions);
       this.buffer.colorVBO = new Float32Array(colors);
       this.buffer.selectionColorVBO = new Float32Array(selectionColors);

@@ -1,7 +1,7 @@
 import Buffer from '@/assets/webgl/Buffer.js';
 import Renderable from '@/assets/webgl/abstract/Renderable.js';
 import TextureCoordinator from '../functional/TextureCoodinator';
-const {mat2, mat3, mat4, vec2, vec3, vec4} = self.glMatrix; // eslint-disable-line no-unused-vars
+import { mat2, mat3, mat4, vec2, vec3, vec4 } from 'gl-matrix'; // eslint-disable-line no-unused-vars
 
 export default class Cube extends Renderable {
   size;

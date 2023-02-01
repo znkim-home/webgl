@@ -2,7 +2,7 @@ import Buffer from '@/assets/webgl/Buffer.js';
 import Renderable from '@/assets/webgl/abstract/Renderable.js';
 import Triangle from '@/assets/webgl/geometry/Triangle';
 
-const { mat2, mat3, mat4, vec2, vec3, vec4 } = self.glMatrix; // eslint-disable-line no-unused-vars
+import { mat2, mat3, mat4, vec2, vec3, vec4 } from 'gl-matrix'; // eslint-disable-line no-unused-vars
 
 export default class Obj extends Renderable {
   constructor(options, objData) {
@@ -66,31 +66,11 @@ export default class Obj extends Renderable {
       let positions = [];
       let normals = [];
       let textureCoordinates = [];
-      //let indices = [];
       let coordinates = [];
 
       let objData = this.objData;
 
-
-
-      //let pt = PolyTree;
-      //let house = House;
-      
-
       let scaler = this.scale;
-      /*let randomValue = Math.randomInt();
-      if (randomValue % 3 == 0) {
-        pt = House;
-        scaler = 1;
-      } else if (randomValue % 3 == 1) {
-        pt = PolyTree;
-        scaler = 1.5;
-      } else {
-        pt = WoodenWatch;
-        scaler = 5;
-      }*/
-      //pt = house;
-      //pt = PolyTree;
 
       let minX = Number.MAX_SAFE_INTEGER;
       let minY = Number.MAX_SAFE_INTEGER;
@@ -123,28 +103,7 @@ export default class Obj extends Renderable {
         if (maxZ < z) maxZ = z;
         allCoordinates.push(vec3.fromValues(x, z, y));
       });
-      console.log(minX, minY, minZ, maxX, maxY, maxZ);
-
-      let sizeX = (minX * -1) + maxX;
-      let sizeY = (minY * -1) + maxY; 
-      let sizeZ = (minZ * -1) + maxZ; 
-      console.log(sizeX, sizeY, sizeZ);
-
-      /*pt.vertices.replaceAll('v ', '').split('\n').forEach((vertice) => {
-        let xyz = vertice.split(" ");
-        coordinates.push(vec3.fromValues(xyz[0] * scaler, xyz[2] * scaler, xyz[1] * scaler));
-      });*/
-      /*pt.normals.replaceAll('vn ', '').split('\n').forEach((normal) => {
-        normal.split(" ").forEach((data) => {
-          normals.push(data);
-        });
-      });*/
-      /*pt.textureCoordinates.replaceAll('vt ', '').split('\n').forEach((textureCoordinate) => {
-        textureCoordinate.split(" ").forEach((data) => {
-          textureCoordinates.push(data);
-        });
-      });*/
-
+      
       objData.faces.forEach((face) => {
         let splitedFaces = face.split(" ").filter(block => block !== '');
         let length = splitedFaces.length;
@@ -153,7 +112,6 @@ export default class Obj extends Renderable {
             return parseInt(theIndex.split("/")[0]);
           })
           let theCoordinates = face.map((theIndex) => {
-            //theIndex = theIndex.replace("-", "");
             if (theIndex < 0) {
               return coordinates[coordinates.length + theIndex];
             } else {
@@ -169,70 +127,13 @@ export default class Obj extends Renderable {
         } 
       });
 
-
-      /*let testColor = vec4.fromValues(0.5, 0.3, 0.1, 0.0);
-      pt.indices1.replaceAll('f ', '').split('\n').forEach((indicesText) => {
-        let indicesSplited = indicesText.split(" ");
-        let length = indicesSplited.length;
-        if (length >= 3) {
-          let theIndices = indicesSplited.map((theIndex) => {
-            return theIndex.split("/")[0];
-          })
-          let theCoordinates = theIndices.map((theIndex) => {
-            return coordinates[theIndex - 1];
-          });
-          for (let loop = 2; loop < length; loop++) {
-            triangles.push(new Triangle(theCoordinates[0], theCoordinates[loop], theCoordinates[loop-1]));
-            testColor.forEach((value) => colors.push(value));
-            testColor.forEach((value) => colors.push(value));
-            testColor.forEach((value) => colors.push(value));
-          }
-        } 
-      });
-
-      if (pt?.indices2) {
-        pt.indices2.replaceAll('f ', '').split('\n').forEach((indicesText) => {
-          let indicesSplited = indicesText.split(" ");
-          let length = indicesSplited.length;
-          if (length >= 3) {
-            let theIndices = indicesSplited.map((theIndex) => {
-              return theIndex.split("/")[0];
-            })
-            let theCoordinates = theIndices.map((theIndex) => {
-              return coordinates[theIndex - 1];
-            });
-            for (let loop = 2; loop < length; loop++) {
-              triangles.push(new Triangle(theCoordinates[0], theCoordinates[loop], theCoordinates[loop-1]));
-              color.forEach((value) => colors.push(value));
-              color.forEach((value) => colors.push(value));
-              color.forEach((value) => colors.push(value));
-            }
-          } 
-        });
-      }*/
-
       triangles.forEach((triangle) => {
         let trianglePositions = triangle.positions;
         let normal = triangle.getNormal();
         trianglePositions.forEach((position) => { // vec3
           position.forEach((value) => positions.push(value));
           normal.forEach((value) => normals.push(value));
-          //color.forEach((value) => colors.push(value));
           selectionColor.forEach((value) => selectionColors.push(value));
-          
-          /*let xoffset = bbox.maxx - bbox.minx;
-          let yoffset = bbox.maxy - bbox.miny;
-          let zoffset = bbox.maxz - bbox.minz;
-          if (normal[0] == 1 || normal[0] == -1) {
-            textureCoordinates.push((position[1] - bbox.miny) / yoffset);
-            textureCoordinates.push((position[2] - bbox.minz) / zoffset);
-          } else if (normal[1] == 1 || normal[1] == -1) {
-            textureCoordinates.push((position[0] - bbox.minx) / xoffset);
-            textureCoordinates.push((position[2] - bbox.minz) / zoffset);
-          } else if (normal[2] == 1 || normal[2] == -1) {
-            textureCoordinates.push((position[0] - bbox.minx) / xoffset);
-            textureCoordinates.push((position[1] - bbox.miny) / yoffset);
-          }*/
         });
       });
 
@@ -241,7 +142,6 @@ export default class Obj extends Renderable {
 
       let indices = new Uint16Array(positions.length);
       this.buffer.indicesVBO = indices.map((obj, index) => index);
-      //this.buffer.indicesVBO = new Uint16Array(indices);
       this.buffer.positionsVBO = new Float32Array(positions);
       this.buffer.normalVBO = new Float32Array(normals);
       this.buffer.colorVBO = new Float32Array(colors);

@@ -1,3 +1,6 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.LightMapShader = void 0;
 const attributes = ["aVertexPosition", "aVertexColor", "aVertexSelectionColor", "aVertexNormal", "aTextureCoordinate"];
 const uniforms = ["uModelViewMatrix", "uProjectionMatrix", "uOrthographicMatrix", "uObjectMatrix", "uRotationMatrix", "uNormalMatrix", "uPointSize", "uPositionType", "uNearFar", "uTexture", "uTextureType"];
 const vertexShaderSource = `
@@ -47,7 +50,6 @@ const vertexShaderSource = `
     gl_Position = uOrthographicMatrix * orthoPosition;
   }
 `;
-
 const fragmentShaderSource = `
   precision highp float;
 
@@ -71,10 +73,9 @@ const fragmentShaderSource = `
     //gl_FragColor = vec4(vColor.xyz, vColor.a);
   }
 `;
-
-export const LightMapShader = {
-  attributes: attributes,
-  uniforms: uniforms,
-  vertexShaderSource: vertexShaderSource,
-  fragmentShaderSource: fragmentShaderSource,
+exports.LightMapShader = {
+    attributes: attributes,
+    uniforms: uniforms,
+    vertexShaderSource: vertexShaderSource,
+    fragmentShaderSource: fragmentShaderSource,
 };

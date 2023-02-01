@@ -1,4 +1,4 @@
-const {mat2, mat3, mat4, vec2, vec3, vec4} = self.glMatrix; // eslint-disable-line no-unused-vars
+import { mat2, mat3, mat4, vec2, vec3, vec4 } from 'gl-matrix'; // eslint-disable-line no-unused-vars
 
 import ShaderProcess from './abstract/ShaderProcess';
 
@@ -12,7 +12,7 @@ class DefaultShaderProcess extends ShaderProcess {
     this.renderableList = renderableList;
   }
   preprocess() {
-    const gl = this.getGl();
+    const gl = this.gl;
     console.log("==========");
     console.log("MAX_TEXTURE_SIZE", gl.getParameter(gl.MAX_TEXTURE_SIZE));
     console.log("MAX_VERTEX_ATTRIBS", gl.getParameter(gl.MAX_VERTEX_ATTRIBS));
@@ -28,10 +28,10 @@ class DefaultShaderProcess extends ShaderProcess {
   }
   process(globalOptions) {
     /** @type {WebGLRenderingContext} */
-    const gl = this.getGl();
+    const gl = this.gl;
     const canvas = gl.canvas;
-    const shaderInfo = this.getShader().shaderInfo;
-    this.getShader().useProgram();  
+    const shaderInfo = this.shaderInfo;
+    this.shader.useProgram();  
 
     gl.viewport(0, 0, canvas.width, canvas.height);
     gl.clearColor(0.1, 0.1, 0.1, 1);

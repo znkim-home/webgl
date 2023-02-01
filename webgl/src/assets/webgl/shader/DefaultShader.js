@@ -1,3 +1,6 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.DefaultShader = void 0;
 const attributes = ["aVertexPosition", "aVertexColor", "aVertexSelectionColor", "aVertexNormal", "aTextureCoordinate"];
 const uniforms = ["uModelViewMatrix", "uProjectionMatrix", "uOrthographicMatrix", "uObjectMatrix", "uRotationMatrix", "uNormalMatrix", "uPointSize", "uNearFar", "uPositionType", "uTexture", "uTextureType"];
 const vertexShaderSource = `
@@ -51,7 +54,6 @@ const vertexShaderSource = `
     vTextureCoordinate = aTextureCoordinate;
   }
 `;
-
 const fragmentShaderSource = `
   precision highp float;
 
@@ -94,10 +96,9 @@ const fragmentShaderSource = `
     }
   }
 `;
-
-export const DefaultShader = {
-  attributes: attributes,
-  uniforms: uniforms,
-  vertexShaderSource: vertexShaderSource,
-  fragmentShaderSource: fragmentShaderSource,
+exports.DefaultShader = {
+    attributes: attributes,
+    uniforms: uniforms,
+    vertexShaderSource: vertexShaderSource,
+    fragmentShaderSource: fragmentShaderSource,
 };
