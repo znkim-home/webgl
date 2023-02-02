@@ -2,6 +2,7 @@ import { mat2, mat3, mat4, vec2, vec3, vec4 } from 'gl-matrix'; // eslint-disabl
 
 import Buffer from '@/assets/webgl/Buffer.js';
 import Renderable from '@/assets/webgl/abstract/Renderable.js';
+import FrameBufferObject from '../functional/FrameBufferObject';
 
 export default class BatchObject extends Renderable {
   buffer: BufferInterface;

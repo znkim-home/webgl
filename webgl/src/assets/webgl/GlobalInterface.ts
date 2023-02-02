@@ -1,11 +1,27 @@
 declare global {
+  interface GlobalOptions {
+    fovyDegree: number;
+    aspect: number;
+    near: number;
+    far: number;
+    pointSize: number;
+    lineWidth: number;
+    debugMode: boolean;
+    cullFace: boolean;
+    depthTest: boolean;
+    enableSsao: boolean;
+    enableEdge: boolean;
+    enableGlobalLight: boolean;
+
+    selectedObjectId: number;
+  }
   interface Math {
     radian(a: number): number;
     degree(a: number): number;
     randomInt(a: number): number;
   }
   interface Array<T> {
-    get(a: number): number;
+    get(a: number): T;
     getPrev(a: number): T;
     getNext(a: number): T;
     loopIndex(a: number): T;

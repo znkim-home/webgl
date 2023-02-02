@@ -1,3 +1,4 @@
+import Shader from "../Shader";
 
 declare global {
   interface ShaderProcessInterface {
@@ -12,25 +13,14 @@ export default class ShaderProcess implements ShaderProcessInterface {
   _canvas: HTMLCanvasElement;
   _shader: any;
   _shaderInfo: any;
+  _globalOptions: GlobalOptions;
 
-  get gl(): WebGLRenderingContext {
-    return this._gl;
-  }
-  get canvas(): HTMLCanvasElement {
-    return this._canvas;
-  }
-  get shader(): any {
-    return this._shader;
-  }
-  get shaderInfo(): any {
-    return this._shaderInfo;
-  }
-
-  constructor(gl: WebGLRenderingContext, shader: any) {
+  constructor(gl: WebGLRenderingContext, shader: Shader, globalOptions: GlobalOptions) {
     this._gl = gl;
     this._canvas = <HTMLCanvasElement> gl.canvas;
     this._shader = shader;
     this._shaderInfo = shader.shaderInfo;
+    this._globalOptions = globalOptions;
   }
   preprocess(): void {
     throw new Error("preprocess() is abstract method. Abstract methods must be overriding.");
@@ -40,5 +30,21 @@ export default class ShaderProcess implements ShaderProcessInterface {
   }
   postprocess(): void {
     throw new Error("postprocess() is abstract method. Abstract methods must be overriding.");
+  }
+
+  get gl(): WebGLRenderingContext {
+    return this._gl;
+  }
+  get canvas(): HTMLCanvasElement {
+    return this._canvas;
+  }
+  get shader(): Shader {
+    return this._shader;
+  }
+  get globalOptions(): GlobalOptions {
+    return this._globalOptions;
+  }
+  get shaderInfo(): ShaderInfoInterface {
+    return this._shaderInfo;
   }
 }

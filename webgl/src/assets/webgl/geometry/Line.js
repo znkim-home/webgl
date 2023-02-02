@@ -1,10 +1,9 @@
-import { mat2, mat3, mat4, vec2, vec3, vec4 } from 'gl-matrix'; // eslint-disable-line no-unused-vars
-
-export default class Line {
-  position;
-  direction;
-  constructor(pos, dir) {
-    this.position = pos;
-    this.direction = dir;
-  }
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+class Line {
+    constructor(position, direction) {
+        this.position = position;
+        this.direction = direction;
+    }
 }
+exports.default = Line;

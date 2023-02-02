@@ -1,31 +1,37 @@
 import { mat2, mat3, mat4, vec2, vec3, vec4 } from 'gl-matrix'; // eslint-disable-line no-unused-vars
 
 import ShaderProcess from '@/assets/webgl/abstract/ShaderProcess';
+import Shader from '../Shader';
+import FrameBufferObject from '../functional/FrameBufferObject';
+import Sun from '../Sun';
+import Camera from '../Camera';
+import Renderable from '../abstract/Renderable';
 
 class LightMapShaderProcess extends ShaderProcess {
-  renderableList;
-  frameBufferObjs;
-  constructor(gl, shader, camera, frameBufferObjs, renderableList, sun) {
-    super(gl, shader);
+  screens: Array<Screen>;
+  camera: Camera;
+  sun: Sun;
+  buffer: Buffer;
+  frameBufferObjs: Array<FrameBufferObject>;
+  renderableList: RenderableListInterface;
+  constructor(gl: WebGLRenderingContext | WebGL2RenderingContext, shader: Shader, globalOptions: GlobalOptions, camera: Camera, frameBufferObjs: Array<FrameBufferObject>, renderableList: RenderableListInterface, sun: Sun) {
+    super(gl, shader, globalOptions);
     this.camera = camera;
     this.sun = sun;
     this.frameBufferObjs = frameBufferObjs;
     this.renderableList = renderableList;
   }
-  preprocess() {
-    
-  }
-  process(globalOptions) {
-    /** @type {WebGLRenderingContext} */
+  preprocess() {}
+  process() {
     const gl = this.gl;
-    /** @type {HTMLCanvasElement} */
     const shaderInfo = this.shaderInfo;
+    const globalOptions = this.globalOptions;
     this.shader.useProgram();
 
     gl.viewport(0, 0, 8182, 8182);
 
     let projectionMatrix = mat4.create();
-    mat4.perspective(projectionMatrix, this.camera.fovyRadian, globalOptions.aspect, parseFloat(globalOptions.near), parseFloat(globalOptions.far));
+    mat4.perspective(projectionMatrix, this.camera.fovyRadian, globalOptions.aspect, globalOptions.near, globalOptions.far);
 
     let orthographicMatrix = mat4.create();
     mat4.ortho(orthographicMatrix, -8192, 8192, -8192, 8192, 0, 8192);
@@ -40,14 +46,12 @@ class LightMapShaderProcess extends ShaderProcess {
     this.frameBufferObjs.forEach((frameBufferObj) => {
       frameBufferObj.clear();
     });
-    this.renderableList.get().forEach((renderableObj) => {
+    this.renderableList.get().forEach((renderableObj: Renderable) => {
       (renderableObj.getId() === undefined) ? renderableObj.createRenderableObjectId(this.renderableList) : undefined;
       renderableObj.render(gl, shaderInfo, this.frameBufferObjs);
     });
   }
-  postprocess() {
-    
-  }
+  postprocess() {}
 }
 
 export default LightMapShaderProcess;

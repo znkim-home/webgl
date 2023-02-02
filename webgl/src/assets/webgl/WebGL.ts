@@ -73,10 +73,7 @@ export default class WebGL {
       } else if (canvas.getContext("webgl")) {
         this.gl = <WebGLRenderingContext> canvas.getContext("webgl");
         version = "webgl";
-      } /* else if (canvas.getContext("experimental-webgl")) {
-        this._gl = canvas.getContext("experimental-webgl");
-        version = "experimental-webgl";
-      } */
+      }
       if (!this.gl) {
         throw new Error("Unable to initialize WebGL. Your browser may not support it.");
       }
@@ -148,9 +145,9 @@ export default class WebGL {
     this.defaultFrameBufferObjs.push(this.getDepthFbo());
     this.lightMapFrameBufferObjs.push(this.getLightMapFbo());
 
-    this.shaderProcesses.push(new DefaultShaderProcess(gl, this.defaultShader, this.camera, this.defaultFrameBufferObjs, this.renderableObjectList));
-    this.shaderProcesses.push(new LightMapShaderProcess(gl, this.lightMapShader, this.camera, this.lightMapFrameBufferObjs, this.renderableObjectList, this.sun));
-    this.shaderProcesses.push(new ScreenShaderProcess(gl, this.screenShader, this.camera, this.frameBufferObjs, this.sun));
+    this.shaderProcesses.push(new DefaultShaderProcess(gl, this.defaultShader, this.globalOptions, this.camera, this.defaultFrameBufferObjs, this.renderableObjectList));
+    this.shaderProcesses.push(new LightMapShaderProcess(gl, this.lightMapShader, this.globalOptions, this.camera, this.lightMapFrameBufferObjs, this.renderableObjectList, this.sun));
+    this.shaderProcesses.push(new ScreenShaderProcess(gl, this.screenShader, this.globalOptions, this.camera, this.frameBufferObjs, this.sun));
 
     this.shaderProcesses.forEach((shaderProcess) => {
       shaderProcess.preprocess();

@@ -1,23 +1,12 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 class ShaderProcess {
-    get gl() {
-        return this._gl;
-    }
-    get canvas() {
-        return this._canvas;
-    }
-    get shader() {
-        return this._shader;
-    }
-    get shaderInfo() {
-        return this._shaderInfo;
-    }
-    constructor(gl, shader) {
+    constructor(gl, shader, globalOptions) {
         this._gl = gl;
         this._canvas = gl.canvas;
         this._shader = shader;
         this._shaderInfo = shader.shaderInfo;
+        this._globalOptions = globalOptions;
     }
     preprocess() {
         throw new Error("preprocess() is abstract method. Abstract methods must be overriding.");
@@ -27,6 +16,21 @@ class ShaderProcess {
     }
     postprocess() {
         throw new Error("postprocess() is abstract method. Abstract methods must be overriding.");
+    }
+    get gl() {
+        return this._gl;
+    }
+    get canvas() {
+        return this._canvas;
+    }
+    get shader() {
+        return this._shader;
+    }
+    get globalOptions() {
+        return this._globalOptions;
+    }
+    get shaderInfo() {
+        return this._shaderInfo;
     }
 }
 exports.default = ShaderProcess;

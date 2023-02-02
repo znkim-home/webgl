@@ -92,7 +92,7 @@ export default class Renderable implements RenderableInterface{
     let crossed = this.cross(a, b, c);
     return vec3.normalize(crossed, crossed);
   }
-  getMinMax(positions: Array<Array<number>>):any {
+  getMinMax(positions: Array<vec3>):any {
     let minx = Number.MAX_SAFE_INTEGER;
     let miny = Number.MAX_SAFE_INTEGER;
     let maxx = Number.MIN_SAFE_INTEGER;
