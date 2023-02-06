@@ -125,18 +125,10 @@
   <third-person-controller-component v-if="thirdMode" :web-gl="webGl" :blocks="blocks"></third-person-controller-component>
 </template>
 <script>
+import {WebGL, Cube, Polygon, Rectangle, Point, Line, Cylinder, Obj, Buffer, BufferBatch} from "toy-webgl";
+
 import FirstPersonControllerComponent from "./FirstPersonControllerComponent.vue";
 import ThirdPersonControllerComponent from "./ThirdPersonControllerComponent.vue";
-import WebGL from "@/assets/webgl/WebGL.js";
-import Cube from "@/assets/webgl/renderable/Cube.js";
-import Polygon from "@/assets/webgl/renderable/Polygon.js";
-import Rectangle from "@/assets/webgl/renderable/Rectangle.js"
-import Point from "@/assets/webgl/renderable/Point.js";
-import Line from "@/assets/webgl/renderable/Line.js";
-import Cylinder from "@/assets/webgl/renderable/Cylinder";
-import Obj from "@/assets/webgl/renderable/Obj.js";
-import Buffer from "@/assets/webgl/Buffer";
-import BufferBatch from '@/assets/webgl/functional/BufferBatch.js';
 
 export default {
   name: "WebglComponent",

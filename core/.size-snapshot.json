@@ -1,7 +1,16 @@
 {
   "toygl-min.js": {
-    "bundled": 162872,
-    "minified": 93545,
-    "gzipped": 15167
+    "bundled": 160247,
+    "minified": 90766,
+    "gzipped": 15102,
+    "treeshaked": {
+      "rollup": {
+        "code": 87148,
+        "import_statements": 73
+      },
+      "webpack": {
+        "code": 90592
+      }
+    }
   }
 }

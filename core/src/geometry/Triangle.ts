@@ -1,10 +1,10 @@
 import { mat2, mat3, mat4, vec2, vec3, vec4 } from 'gl-matrix';
-import Plane from './Plane.js';
+import GeometryPlane from './GeometryPlane.js';
 
 export default class Triangle {
   positions: Array<vec3>;
   normal: vec3;
-  plane: Plane;
+  plane: GeometryPlane;
   constructor(position1: vec3, position2: vec3, position3: vec3) {
     this.positions = [position1, position2, position3];
     this.getNormal();
@@ -22,9 +22,9 @@ export default class Triangle {
     }
     return this.normal;
   }
-  getPlane(): Plane {
+  getPlane(): GeometryPlane {
     if (!this.plane) {
-      this.plane = new Plane(this.positions[0], this.normal);
+      this.plane = new GeometryPlane(this.positions[0], this.normal);
     }
     return this.plane;
   }

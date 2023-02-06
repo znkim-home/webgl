@@ -2,9 +2,9 @@
   <div></div>
 </template>
 <script>
-import Line from "@/assets/webgl/geometry/Line";
-import Plane from "@/assets/webgl/geometry/Plane.js";
-import { mat2, mat3, mat4, vec2, vec3, vec4 } from 'gl-matrix'; // eslint-disable-line no-unused-vars
+import {GeometryLine, GeometryPlane} from "toy-webgl";
+
+import {mat2, mat3, mat4, vec2, vec3, vec4} from 'gl-matrix'; // eslint-disable-line no-unused-vars
 
 export default {
   name: "FirstPerson",
@@ -53,7 +53,7 @@ export default {
         const target = e.changedTouches [0];
         this.touchStartPosition = [target.clientX, target.clientY];
 
-        const mouseX = target.clientX;
+        const mouseX = target.clientX;Plane
         const mouseY = canvas.height -target.clientY;
         const ratioX = mouseX / canvas.width;
         const ratioY = mouseY / canvas.height;
@@ -67,7 +67,7 @@ export default {
           this.controllerStatus.zoomCameraRay = this.getRay(ratioX, ratioY, canvas.width, canvas.height);
         } else if (e.changedTouches .length == 1) {
           this.controllerStatus.moveStatus = true;
-          this.controllerStatus.movePlane = new Plane(pos, vec3.fromValues(0, 0, 1));
+          this.controllerStatus.movePlane = new GeometryPlane(pos, vec3.fromValues(0, 0, 1));
           this.controllerStatus.moveCameraPosition = camera.position;
         }
         e.preventDefault();
@@ -87,7 +87,7 @@ export default {
 
         if (this.controllerStatus.moveStatus) {
           let ray = this.getRay(ratioX, ratioY, canvas.width, canvas.height);
-          let line = new Line(camera.position, ray);
+          let line = new GeometryLine(camera.position, ray);
           let movedPosition = this.controllerStatus.movePlane.getIntersection(line);
           if (this.controllerStatus.moveObject) {
             let objectOffset = this.controllerStatus.moveObjectOffset;
@@ -245,7 +245,7 @@ export default {
               this.controllerStatus.moveObject = true;
               this.controllerStatus.moveObjectOffset = vec3.sub(vec3.create(), pos, selectedObject.position);
               this.controllerStatus.moveStatus = true;
-              this.controllerStatus.movePlane = new Plane(pos, vec3.fromValues(0, 0, 1));
+              this.controllerStatus.movePlane = new GeometryPlane(pos, vec3.fromValues(0, 0, 1));
               this.controllerStatus.moveCameraPosition = camera.position;
             }
           } else if (this.controllerStatus.shiftStatus) {
@@ -271,7 +271,7 @@ export default {
             }
           } else {
             this.controllerStatus.moveStatus = true;
-            this.controllerStatus.movePlane = new Plane(pos, vec3.fromValues(0, 0, 1));
+            this.controllerStatus.movePlane = new GeometryPlane(pos, vec3.fromValues(0, 0, 1));
             this.controllerStatus.moveCameraPosition = camera.position;
           }
         }
@@ -288,7 +288,7 @@ export default {
 
         if (this.controllerStatus.moveStatus) {
           let ray = this.getRay(ratioX, ratioY, canvas.width, canvas.height);
-          let line = new Line(camera.position, ray);
+          let line = new GeometryLine(camera.position, ray);
           let movedPosition = this.controllerStatus.movePlane.getIntersection(line);
           if (this.controllerStatus.moveObject) {
             let objectOffset = this.controllerStatus.moveObjectOffset;

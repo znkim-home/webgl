@@ -1,17 +1,21 @@
 {
   "name": "toy-webgl",
-  "version": "0.0.1",
+  "version": "0.1.5",
   "private": false,
   "homepage": "https://github.com/jinope/toy-webgl",
+  "type": "module",
   "main": "./dist/toygl-min.js",
   "module": "./dist/tsdist/index.js",
+  "description": "znkim's toy webgl library",
   "exports": {
-    ".": "./dist/tsdist/index.js"
+    ".": "./dist/toygl.js",
+    "./tsdist": "./dist/tsdist/index.js"
   },
   "scripts": {
     "build-typescript": "tsc",
     "build-rollup": "rollup -c",
-    "build": "del dist -r && npm run build-typescript && npm run build-rollup"
+    "build": "del dist && npm run build-typescript && npm run build-rollup",
+    "prepublish": "npm run build"
   },
   "dependencies": {
     "core-js": "^3.8.3",
@@ -53,6 +57,5 @@
   },
   "directories": {
     "lib": "lib"
-  },
-  "description": ""
+  }
 }

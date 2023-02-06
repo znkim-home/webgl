@@ -3,7 +3,6 @@ import Sun from "./Sun";
 import Shader from "./Shader";
 import Buffer from "./Buffer";
 import Camera from "./Camera";
-
 import Cube from "./renderable/Cube";
 import Polygon from "./renderable/Polygon";
 import Rectangle from "./renderable/Rectangle";
@@ -15,5 +14,4 @@ import BufferBatch from "./functional/BufferBatch";
 import BatchObject from "./renderable/BatchObject";
 import GeometryPlane from "./geometry/GeometryPlane";
 import GeometryLine from "./geometry/GeometryLine";
-
-export { WebGL, Sun, Shader, Buffer, Camera, Cube, Polygon, Rectangle, Point, Line, Cylinder, Obj, BufferBatch, BatchObject, GeometryLine, GeometryPlane};
+export { WebGL, Sun, Shader, Buffer, Camera, Cube, Polygon, Rectangle, Point, Line, Cylinder, Obj, BufferBatch, BatchObject, GeometryLine, GeometryPlane };

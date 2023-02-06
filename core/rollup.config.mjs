@@ -10,7 +10,7 @@ export default [{
   input: 'src/index.ts',
   output: { 
     file: 'dist/toygl.js', 
-    format: 'cjs', 
+    format: 'esm', 
     name,
     globals: {
       [glMatrix] : "gl-matrix"
@@ -26,7 +26,8 @@ export default [{
 {
   input: 'src/index.ts',
   output: { 
-    file: 'dist/toygl-min.js', format: 'cjs', 
+    file: 'dist/toygl-min.js', 
+    format: 'esm', 
     name,
     globals: {
       [glMatrix] : "gl-matrix"

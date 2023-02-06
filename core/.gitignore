@@ -1,5 +1,8 @@
 .DS_Store
-/dist
+/dist/index.d.ts
+/dist/LICENSE.md
+/dist/package.json
+/dist/README.md
 /node_modules
 
 # local env files
