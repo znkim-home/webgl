@@ -1,18 +1,19 @@
 {
   "compilerOptions": {
     "target": "es6",
-    "module": "commonjs",
+    "module": "ES2015",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "baseUrl": "./",
     "strict": true,
     "strictFunctionTypes": true,
     "strictPropertyInitialization": false,
+    "moduleResolution": "node",
     "skipLibCheck": true,
-    //"outDir": "dist",
+    "outDir": "./src/assets/crispy-waffle",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["src/assets/typescript/*"]
     },
   },
-  "include": ["./src/**/*"],
+  "include": ["./src/assets/typescript/*"],
 }

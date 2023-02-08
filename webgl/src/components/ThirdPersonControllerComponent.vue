@@ -2,7 +2,7 @@
   <div></div>
 </template>
 <script>
-import {GeometryLine, GeometryPlane} from "toy-webgl";
+import {GeometryLine, GeometryPlane} from "@/assets/crispy-waffle";
 
 import {mat2, mat3, mat4, vec2, vec3, vec4} from 'gl-matrix'; // eslint-disable-line no-unused-vars
 
@@ -16,6 +16,7 @@ export default {
     return {
       controllerStatus : {
         moveStatus : false,
+        moveAxisZ: false,
         moveObject : false,
         moveObjectOffset : undefined,
         movePlane : undefined,
@@ -134,12 +135,11 @@ export default {
         if (selectionColor == 4294967295) {
           return;
         }
-
         let offset = depth * 20 / -e.deltaY;
         let position = this.getScreenPosition(ratioX, ratioY, canvas.width, canvas.height, offset);
         camera.setPosition(position[0], position[1], position[2]);
       }
-      canvas.ondblclick = (e) => {
+      canvas.addEventListener('dblclick', (e) => {
         const webGl = this.webGl;
         const camera = webGl.camera;
         const mouseX = e.x;
@@ -153,7 +153,6 @@ export default {
         }
 
         if (e.button == 0) {
-
           if (this.controllerStatus.ctrlStatus) {
             let normal = webGl.normalFbo.getNormal(mouseX, mouseY);
             let depth = webGl.depthFbo.getDepth(mouseX, mouseY);
@@ -184,7 +183,7 @@ export default {
             }
           }
         }
-      }
+      });
       canvas.onmousedown = (e) => {
         const webGl = this.webGl;
         const camera = webGl.camera;
@@ -206,7 +205,15 @@ export default {
           let pos = this.getScreenPosition(ratioX, ratioY, canvas.width, canvas.height, depth);
 
           if (this.controllerStatus.altStatus) {
-            console.log("empty");
+            let selectedObject = this.$parent.getSelectedObject();
+            if (selectedObject) {
+              this.controllerStatus.moveObject = true;
+              this.controllerStatus.moveObjectOffset = vec3.sub(vec3.create(), pos, selectedObject.position);
+              this.controllerStatus.moveStatus = true;
+              this.controllerStatus.moveAxisZ = true;
+              this.controllerStatus.movePlane = new GeometryPlane(pos, vec3.fromValues(0, 1, 0));
+              this.controllerStatus.moveCameraPosition = camera.position;
+            }
           } else if (this.controllerStatus.shiftStatus) {
             let blockX = Math.floor(pos[0] / 128);
             let blockY = Math.floor(pos[1] / 128);
@@ -229,7 +236,6 @@ export default {
             this.controllerStatus.zoomCameraPosition = camera.position;
             this.controllerStatus.zoomCameraRay = this.getRay(ratioX, ratioY, canvas.width, canvas.height);
           }
-
         } else if (e.button == 1) {
           depth = webGl.depthFbo.getDepth(mouseX, mouseY);
           let pos = this.getScreenPosition(ratioX, ratioY, canvas.width, canvas.height, depth);
@@ -245,6 +251,7 @@ export default {
               this.controllerStatus.moveObject = true;
               this.controllerStatus.moveObjectOffset = vec3.sub(vec3.create(), pos, selectedObject.position);
               this.controllerStatus.moveStatus = true;
+              this.controllerStatus.moveAxisZ = false;
               this.controllerStatus.movePlane = new GeometryPlane(pos, vec3.fromValues(0, 0, 1));
               this.controllerStatus.moveCameraPosition = camera.position;
             }
@@ -261,7 +268,6 @@ export default {
               return;
             }
           } else if (this.controllerStatus.ctrlStatus) {
-            console.log("rotate1");
             if (this.$parent.getSelectedObject()) {
               depth = webGl.depthFbo.getDepth(mouseX, mouseY);
               let pos = this.getScreenPosition(ratioX, ratioY, canvas.width, canvas.height, depth);
@@ -293,8 +299,12 @@ export default {
           if (this.controllerStatus.moveObject) {
             let objectOffset = this.controllerStatus.moveObjectOffset;
             let selectedObject = this.$parent.getSelectedObject();
-            selectedObject.position[0] = movedPosition[0] - objectOffset[0];
-            selectedObject.position[1] = movedPosition[1] - objectOffset[1];
+            if (this.controllerStatus.moveAxisZ) {
+              selectedObject.position[2] = movedPosition[2] - objectOffset[2];
+            } else {
+              selectedObject.position[0] = movedPosition[0] - objectOffset[0];
+              selectedObject.position[1] = movedPosition[1] - objectOffset[1];
+            }
             selectedObject.dirty = true;
           } else {
             camera.moveCamera(this.controllerStatus.moveCameraPosition, this.controllerStatus.movePlane.position, movedPosition);
@@ -315,23 +325,17 @@ export default {
         }
       };
       canvas.onmouseup = (e) => {
-        if (e.button == 0) {
-          this.controllerStatus.moveObject = false;
-          this.controllerStatus.moveObjectOffset = undefined;
-          this.controllerStatus.moveStatus = false;
-          this.controllerStatus.movePlane = undefined;
-          this.controllerStatus.moveCameraPosition = undefined;
-          this.controllerStatus.rotateStatus = false;
-          this.controllerStatus.pivotPosition = undefined;
-          this.controllerStatus.rotateObject = false;
-        } else if (e.button == 1) {
-          this.controllerStatus.rotateStatus = false;
-          this.controllerStatus.pivotPosition = undefined;
-          this.controllerStatus.rotateObject = false;
-        } else if (e.button == 2) {
-          this.controllerStatus.zoomStatus = false;
-          this.controllerStatus.zoomCameraPosition = undefined;
-        }
+        this.controllerStatus.moveObject = false;
+        this.controllerStatus.moveObjectOffset = undefined;
+        this.controllerStatus.moveStatus = false;
+        this.controllerStatus.moveAxisZ = false;
+        this.controllerStatus.movePlane = undefined;
+        this.controllerStatus.moveCameraPosition = undefined;
+        this.controllerStatus.rotateStatus = false;
+        this.controllerStatus.pivotPosition = undefined;
+        this.controllerStatus.rotateObject = false;
+        this.controllerStatus.zoomStatus = false;
+        this.controllerStatus.zoomCameraPosition = undefined;
       }
     },
     initKey() {

@@ -1,4 +1,5 @@
 <template>
+  <div class="dev-info" style="right: 0px; bottom: 0px">{{`${fps} FPS`}}</div>
   <div
     v-show="consoleTools"
     class="dev-tool"
@@ -31,11 +32,10 @@
       <div class="block-group">
         <button class="mini-btn" v-on:click="initPosition()">InitPosition</button>
         <button class="mini-btn" v-on:click="getExtrusion()">Extrusion</button>
+        <button class="mini-btn" v-on:click="removeObj(selectedObject)">remove</button>
         <button class="mini-btn" v-on:click="removeAll()">RemoveAll</button>
         <button class="mini-btn" v-on:click="consoleTools = !consoleTools">Console/Render</button>
       </div>
-      <h2>OBJECT OPTIONS</h2>
-      <input type="file" class="mini-btn" id="fileUpload" accept=".obj" v-on:change="uploadObj"/>
       <div class="block-group">
         <label>SCALE</label>
         <input type="range" v-model="localOptions.scale" min="1" max="20" step="1" />
@@ -109,7 +109,7 @@
       <h2>OBJECT INFO</h2>
       <input type="number" class="mini-btn" v-model="renderableObject.length" :change="uploadObj" readonly/>
       <ul>
-        <li v-for="(renderable, index) in renderableObject" :key="renderable.id" :class="{selected : (renderable == selectedObject)}">{{`[${index}] : ${renderable.name}, ${renderable.id}`}}</li>
+        <li v-for="(renderable, index) in renderableObject" :key="renderable.id" v-on:click="selectObj(renderable.id)" :class="{selected : (renderable == selectedObject)}">{{`[${index}] : ${renderable.name}, ${renderable.id}`}}</li>
       </ul>
     </div>
   </div>
@@ -121,34 +121,41 @@
   >
     <canvas id="glcanvas" width="1024" height="800">SAMPLE</canvas>
   </div>
+  <prop-component :web-gl="webGl"></prop-component>
   <first-person-controller-component v-if="!thirdMode" :web-gl="webGl" :blocks="blocks"></first-person-controller-component>
   <third-person-controller-component v-if="thirdMode" :web-gl="webGl" :blocks="blocks"></third-person-controller-component>
 </template>
 <script>
-import {WebGL, Cube, Polygon, Rectangle, Point, Line, Cylinder, Obj, Buffer, BufferBatch} from "toy-webgl";
+//import {WebGL, Cube, Polygon, Rectangle, Point, Line, Cylinder, Obj, Buffer, BufferBatch} from "crispy-waffle";
+import {WebGL, Cube, Polygon, Rectangle, Point, Line, Cylinder, Obj, Buffer, BufferBatch} from "@/assets/crispy-waffle";
 
 import FirstPersonControllerComponent from "./FirstPersonControllerComponent.vue";
 import ThirdPersonControllerComponent from "./ThirdPersonControllerComponent.vue";
+import PropComponent from "./PropComponent.vue";
+
 
 export default {
   name: "WebglComponent",
   components: {
     FirstPersonControllerComponent,
     ThirdPersonControllerComponent,
+    PropComponent,
   },
   data() {
     return {
+      fps : 0,
       selectedObject: undefined,
       thirdMode: true,
       drawTools: true,
       renderTools: true,
-      showDraw: false,
-      showRender: false,
+      showDraw: true,
+      showRender: true,
       consoleTools: false,
       showConsole : false,
       webGl: undefined,
       blocks: undefined,
       loadedObjs: [],
+      textures: [],
       localOptions: {
         scale: 5.0,
         rotationX: 0.0,
@@ -194,6 +201,14 @@ export default {
     }
   },
   methods: {
+    getFps() {
+      let webGl = this.webGl;
+      setInterval(() => {
+        if (webGl) {
+          this.fps = webGl.fps.frame;
+        }
+      }, 100);
+    },
     init() {
       let canvas = document.getElementById("glcanvas");
       let webGl = new WebGL(canvas, this.globalOptions);
@@ -204,6 +219,7 @@ export default {
       this.initPosition(dist);
       this.base(dist, dist);
       this.initBlocks();
+      this.getFps();
     },
     selectObj(id) {
       let selectedObject = this.webGl.renderableObjectList.findById(id);
@@ -253,9 +269,7 @@ export default {
             allVertices : vertices,
           }];
           let groupNum = 0;
-
           objText = objText.replaceAll("\r", "");
-
           let lines = objText.split("\n");
           lines.forEach((line) => {
             if (startFace && line.indexOf("f ") != 0 && line.indexOf("usemtl") != 0 &&  line.indexOf("s ") != 0) {
@@ -267,7 +281,6 @@ export default {
               });
               groupNum++;
             }
-
             if (line.indexOf("v ") == 0) {
               vertices.push(line.replace("v ", ""));
               groups[groupNum].vertices.push(line.replace("v ", ""));
@@ -478,10 +491,12 @@ export default {
       camera.setPosition(0, 0, -0);
     },
     removeObj(obj) {
-      let renderableObjects = this.webGl.renderableObjectList.get();
-      this.webGl.renderableObjectList.set(renderableObjects.filter((renderableObj) => {
-        return renderableObj.id !== obj.id;
-      }));
+      if (obj !== undefined) {
+        let renderableObjects = this.webGl.renderableObjectList.get();
+        this.webGl.renderableObjectList.set(renderableObjects.filter((renderableObj) => {
+          return renderableObj.id !== obj.id;
+        }));
+      }
     },
     removeAll() {
       this.webGl.renderableObjectList.removeAll();
@@ -594,11 +609,20 @@ export default {
   },
 };
 </script>
-<style scoped>
+<style>
 @media ( max-width: 769px ) {
   .dev-tool {
     width : calc(100% - 40px) !important;
   }
+}
+.dev-info {
+  width: 100px;
+  position: absolute;
+  display: block;
+  color: #000;
+  margin: 10px 10px 10px 10px;
+  text-align: right;
+  font-size: 11px;
 }
 .dev-tool {
   width: 340px;
@@ -650,24 +674,6 @@ export default {
   margin-bottom: 10px;
   border: 1px solid #1f1f1f;
 }
-.dev-tool ul {
-  height: 100px;
-  overflow-y: scroll;
-  background-color: #222222;
-  margin: 5px 0px;
-}
-.dev-tool ul > li{
-  font-size: 11px;
-  padding: 7px 5px;
-}
-.dev-tool ul > li:nth-child(odd) {
-  background-color: #1b1b1b;
-}
-.dev-tool ul > li.selected {
-  color: red;
-  background-color: #ffff64;
-  font-weight: bold;
-}
 .dev-tool h2 {
   font-size: 12px;
   padding: 5px 5px;
@@ -687,13 +693,16 @@ export default {
   font-size: 11px;
   color: #656565;
   margin: 5px;
+  cursor: pointer;
+}
+.dev-tool div.show-hide:hover {
+  color: #3b3b3b;
 }
 .dev-tool div.header {
   display: block;
   border-bottom: 1px solid #303030;
   margin: 5px 5px;
 }
-
 #home {
   width: 100%;
   height: 100%;
@@ -715,8 +724,29 @@ button.mini-btn, input.mini-btn {
   font-size: 10px;
   font-weight: unset;
 }
-
 button.mini-btn:hover, input.mini-btn:hover {
   background-color: #404040;
+}
+</style>
+
+<style scoped>
+.dev-tool ul {
+  height: 100px;
+  overflow-y: scroll;
+  background-color: #222222;
+  margin: 5px 0px;
+}
+.dev-tool ul > li{
+  font-size: 11px;
+  padding: 7px 5px;
+  cursor: pointer;
+}
+.dev-tool ul > li:nth-child(odd) {
+  background-color: #1b1b1b;
+}
+.dev-tool ul > li.selected {
+  color: red;
+  background-color: #ffff64;
+  font-weight: bold;
 }
 </style>
