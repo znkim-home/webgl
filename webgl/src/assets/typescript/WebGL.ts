@@ -222,6 +222,13 @@ export default class WebGL {
     }
     return this.selectionFbo;
   }
+  getSelectionGroupFbo() {
+    const textureType = 2;
+    if (!this.selectionFbo) {
+      this.selectionFbo = new FrameBufferObject(this.gl, this.canvas, this.defaultShaderInfo, {name:"selection" ,textureType}, this.globalOptions);
+    }
+    return this.selectionFbo;
+  }
   getDepthFbo() {
     const textureType = 3;
     if (!this.depthFbo) {

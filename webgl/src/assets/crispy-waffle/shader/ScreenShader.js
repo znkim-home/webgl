@@ -204,7 +204,7 @@ const fragmentShaderSource = `
     float width = 1.0 / uScreenSize.x;
 	  float height = 1.0 / uScreenSize.y;
     const int range = 7;
-    const float value = float(range) * 0.01;
+    const float value = float(range) * 0.05;
     const float intensity = 0.5;
 
     float result = 0.0;
@@ -216,7 +216,7 @@ const fragmentShaderSource = `
         float selection = convertColorToId(getSelection(pos));
 
         if (selection == uSelectedObjectId) {
-          result += value;
+          result += (value / float(range));
         }
       }
     }

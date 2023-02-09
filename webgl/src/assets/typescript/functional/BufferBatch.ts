@@ -39,7 +39,7 @@ export default class BufferBatch {
 
   static batch100(gl: WebGLRenderingContext | WebGL2RenderingContext, renderableObjs: Array<RenderableInterface>) {
     let results = [];
-    let unit = 500;
+    let unit = 1000;
     for (let loop = 0; loop < renderableObjs.length; loop+= unit) {
       let result = this.batch(gl, renderableObjs.slice(loop, loop + unit));
       results.push(result);

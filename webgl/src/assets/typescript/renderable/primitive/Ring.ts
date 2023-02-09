@@ -6,10 +6,11 @@ import Tessellator from '../../functional/Tessellator.js';
 import { mat2, mat3, mat4, vec2, vec3, vec4 } from 'gl-matrix'; // eslint-disable-line no-unused-vars
 import FrameBufferObject from '../../functional/FrameBufferObject.js';
 
-export default class Sphere extends Renderable {
+export default class Ring extends Renderable {
   height: number;
   triangles: Array<Triangle>;
   radius: number;
+  innerRadius: number;
   density: number;
   coordinates: Array<vec3>;
 
@@ -24,25 +25,25 @@ export default class Sphere extends Renderable {
   init(options: any) {
     this.triangles = [];
     this.radius = 1.0;
+    this.innerRadius = 0.5;
     this.height = 3.0;
-    this.density = 32;
+    this.density = 36;
     this.name = "Untitled Cylinder";
     if (options?.radius) this.radius = options.radius;
+    if (options?.innerRadius) this.innerRadius = options.innerRadius;
     if (options?.height) this.height = options.height;
     if (options?.density) this.density = options.density;
-    if (options?.position) this.position = vec3.set(this.position, options.position.x, options.position.y, options.position.z + this.radius);
+    if (options?.position) this.position = vec3.set(this.position, options.position.x, options.position.y, options.position.z + ((this.radius - this.innerRadius)/2));
     if (options?.rotation) this.rotation = vec3.set(this.rotation, options.rotation.pitch, options.rotation.roll, options.rotation.heading);
     if (options?.color) this.color = vec4.set(this.color, options?.color.r, options?.color.g, options?.color.b, options?.color.a);
     if (options?.texture) this.texture = options.texture;
     if (options?.image) this.image = options.image;
   }
-
   rotate(xValue: number, yValue: number, tm: mat4) {
     let pitchAxis = vec3.fromValues(1, 0, 0);
     let pitchMatrix = mat4.fromRotation(mat4.create(), yValue, pitchAxis);
      return mat4.multiply(tm, tm, pitchMatrix);
   }
-
   render(gl: WebGLRenderingContext | WebGL2RenderingContext, shaderInfo: ShaderInfoInterface, frameBufferObjs: FrameBufferObject[]) {
     let tm = this.getTransformMatrix();
     let rm = this.getRotationMatrix();
@@ -85,14 +86,19 @@ export default class Sphere extends Renderable {
       let positions: Array<number> = [];
       let normals: Array<number> = [];
       let textureCoordinates: Array<number> = [];
-      
+
+      let innerRadius = this.innerRadius;
+      let outerRadius = (this.radius - innerRadius) / 2; // thickness of circle
+      let rotateRadius = (innerRadius / 2) + (this.radius / 2);
+
       this.coordinates = [];
-      let angleOffset = (180 / (this.density));
-      let origin = vec3.fromValues(0.0, 0.0, 0.0);
-      let rotateVec3 = vec3.fromValues(0.0, 0.0, this.radius);
+      let angleOffset = (360 / (this.density));
+      let origin = vec3.fromValues(0.0, 0.0, this.radius);
+      let rotateOrigin = vec3.fromValues(0.0, rotateRadius, 0.0);
+      let rotateVec3 = vec3.fromValues(0.0, rotateRadius, outerRadius);
       for (let i = 0; i <= this.density; i++) {
         let angle = Math.radian(i * angleOffset);
-        let rotated = vec3.rotateX(vec3.create(), rotateVec3, origin, angle);
+        let rotated = vec3.rotateX(vec3.create(), rotateVec3, rotateOrigin, angle);
         this.coordinates.push(rotated);
       }
 
@@ -107,7 +113,7 @@ export default class Sphere extends Renderable {
 
       let testTriangles: Triangle[] = [];
       angleOffset = (360 / this.density);
-      for (let i = 0; i < this.density; i++) {
+      for (let i = 1; i <= this.density; i++) {
         let angle = Math.radian(i * angleOffset);
         let nextAngle = Math.radian((i + 1) * angleOffset);
         topPositions.forEach((position, index) => {
@@ -116,10 +122,12 @@ export default class Sphere extends Renderable {
           let startNextPosition = vec3.rotateZ(vec3.create(), nextPosition, origin, angle);
           let rotatedPosition = vec3.rotateZ(vec3.create(), position, origin, nextAngle);
           let rotatedNextPosition = vec3.rotateZ(vec3.create(), nextPosition, origin, nextAngle);
-          testTriangles.push(new Triangle(startPosition, startNextPosition, rotatedNextPosition));
-          testTriangles.push(new Triangle(startPosition, rotatedNextPosition, rotatedPosition));
+          
+          testTriangles.push(new Triangle(startPosition, rotatedNextPosition, startNextPosition));
+          testTriangles.push(new Triangle(startPosition, rotatedPosition, rotatedNextPosition));
         });
       }
+
       let triangles: Triangle[] = [];
       triangles = triangles.concat(testTriangles);
       this.triangles = triangles;

@@ -21,7 +21,7 @@
 </template>
 <script>
 import {mat2, mat3, mat4, vec2, vec3, vec4} from 'gl-matrix';
-import {WebGL, Cube, Polygon, Rectangle, Point, Line, Cylinder, Sphere, Obj} from "@/assets/crispy-waffle";
+import {WebGL, Cube, Polygon, Rectangle, Cone, Point, Line, Cylinder, Sphere, Obj, Ring, Tube} from "@/assets/crispy-waffle";
 
 export default {
   name: "PropComponent",
@@ -42,7 +42,8 @@ export default {
   },
   methods: {
     init() {
-      const primitiveProps = [Cube, Cylinder, Point, Sphere, Obj];
+      const primitiveProps = [Cube, Cylinder, Cone, Sphere, Ring, Tube];
+      //const primitiveProps = [Cube, Cylinder, Cone, Sphere, Rectangle, Point, Line, Polygon, Obj];
       this.propList = primitiveProps;
     },
     initEvent() {
@@ -76,7 +77,8 @@ export default {
           name: "DIRT",
           position: { x: pos[0], y: pos[1], z: pos[2]},
           color: { r: 0.5, g: 0.5, b: 0.5, a: 1.0 },
-          height: 128,
+          height: 256,
+          innerRadius: 75.0,
           radius: 100.0,
           scale: 5.0,
           texture : textures[1],
@@ -100,6 +102,7 @@ export default {
           let prop = new this.propList[this.selectedProp](options);
           webGl.renderableObjectList.push(prop);
         }
+        this.selectedProp = undefined;
       }
     },
     readObj(e) {

@@ -81,6 +81,7 @@
       </div>
       <h2>RENDER OPTIONS</h2>
       <select v-model="localOptions.blockSize" class="mini-btn">
+        <option value="2">2X2</option>
         <option value="4">4X4</option>
         <option value="8">8X8</option>
         <option value="16">16X16</option>

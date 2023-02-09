@@ -10,7 +10,10 @@ import Rectangle from "./renderable/primitive/Rectangle";
 import Point from "./renderable/primitive/Point";
 import Line from "./renderable/primitive/Line";
 import Cylinder from "./renderable/primitive/Cylinder";
-import Sphere from "./renderable/primitive/Sphere"
+import Sphere from "./renderable/primitive/Sphere";
+import Cone from "./renderable/primitive/Cone";
+import Ring from "./renderable/primitive/Ring";
+import Tube from "./renderable/primitive/Tube";
 
 import Obj from "./renderable/Obj";
 import BufferBatch from "./functional/BufferBatch";
@@ -20,5 +23,5 @@ import GeometryLine from "./geometry/GeometryLine";
 
 export { WebGL, Sun, Shader, Buffer, Camera, BufferBatch, BatchObject};
 export { Obj, Polygon } // renderable
-export { Cube, Rectangle, Point, Line, Cylinder, Sphere }; // primitive
+export { Cube, Rectangle, Point, Line, Cylinder, Sphere, Cone, Ring, Tube }; // primitive
 export { GeometryLine, GeometryPlane } // geometries

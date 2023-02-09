@@ -2,8 +2,8 @@ import Buffer from '../../Buffer.js';
 import Renderable from '../../abstract/Renderable.js';
 import Triangle from '../../geometry/Triangle.js';
 import Tessellator from '../../functional/Tessellator.js';
-import { mat4, vec3, vec4 } from 'gl-matrix'; // eslint-disable-line no-unused-vars
-export default class Sphere extends Renderable {
+import { mat4, vec2, vec3, vec4 } from 'gl-matrix'; // eslint-disable-line no-unused-vars
+export default class Tube extends Renderable {
     constructor(options) {
         super();
         this.init(options);
@@ -11,8 +11,11 @@ export default class Sphere extends Renderable {
     init(options) {
         this.triangles = [];
         this.radius = 1.0;
+        this.innerRadius = 0.5;
+        if (options === null || options === void 0 ? void 0 : options.innerRadius)
+            this.innerRadius = options.innerRadius;
         this.height = 3.0;
-        this.density = 32;
+        this.density = 36;
         this.name = "Untitled Cylinder";
         if (options === null || options === void 0 ? void 0 : options.radius)
             this.radius = options.radius;
@@ -21,7 +24,7 @@ export default class Sphere extends Renderable {
         if (options === null || options === void 0 ? void 0 : options.density)
             this.density = options.density;
         if (options === null || options === void 0 ? void 0 : options.position)
-            this.position = vec3.set(this.position, options.position.x, options.position.y, options.position.z + this.radius);
+            this.position = vec3.set(this.position, options.position.x, options.position.y, options.position.z);
         if (options === null || options === void 0 ? void 0 : options.rotation)
             this.rotation = vec3.set(this.rotation, options.rotation.pitch, options.rotation.roll, options.rotation.heading);
         if (options === null || options === void 0 ? void 0 : options.color)
@@ -76,39 +79,55 @@ export default class Sphere extends Renderable {
             let positions = [];
             let normals = [];
             let textureCoordinates = [];
-            this.coordinates = [];
-            let angleOffset = (180 / (this.density));
-            let origin = vec3.fromValues(0.0, 0.0, 0.0);
-            let rotateVec3 = vec3.fromValues(0.0, 0.0, this.radius);
-            for (let i = 0; i <= this.density; i++) {
-                let angle = Math.radian(i * angleOffset);
-                let rotated = vec3.rotateX(vec3.create(), rotateVec3, origin, angle);
-                this.coordinates.push(rotated);
-            }
-            let topPositions = this.coordinates.map((coordinate) => vec3.fromValues(coordinate[0], coordinate[1], coordinate[2]));
-            let bbox = this.getMinMax(topPositions);
-            bbox.minz = this.position[2];
-            bbox.maxz = this.position[2] + this.height;
-            if (Tessellator.validateCCW(topPositions) < 0) {
-                topPositions.reverse();
-            }
-            let testTriangles = [];
-            angleOffset = (360 / this.density);
+            let innerCoordinates = [];
+            let outerCoordinates = [];
+            let angleOffset = (360 / this.density);
+            let origin = vec2.fromValues(0.0, 0.0);
+            let innerRotateVec2 = vec2.fromValues(0.0, 0.0 + this.innerRadius);
+            let outerRotateVec2 = vec2.fromValues(0.0, 0.0 + this.radius);
             for (let i = 0; i < this.density; i++) {
                 let angle = Math.radian(i * angleOffset);
-                let nextAngle = Math.radian((i + 1) * angleOffset);
-                topPositions.forEach((position, index) => {
-                    let nextPosition = topPositions.getNext(index);
-                    let startPosition = vec3.rotateZ(vec3.create(), position, origin, angle);
-                    let startNextPosition = vec3.rotateZ(vec3.create(), nextPosition, origin, angle);
-                    let rotatedPosition = vec3.rotateZ(vec3.create(), position, origin, nextAngle);
-                    let rotatedNextPosition = vec3.rotateZ(vec3.create(), nextPosition, origin, nextAngle);
-                    testTriangles.push(new Triangle(startPosition, startNextPosition, rotatedNextPosition));
-                    testTriangles.push(new Triangle(startPosition, rotatedNextPosition, rotatedPosition));
-                });
+                let innerRotated = vec2.rotate(vec2.create(), innerRotateVec2, origin, angle);
+                let outerRotated = vec2.rotate(vec2.create(), outerRotateVec2, origin, angle);
+                innerCoordinates.push(innerRotated);
+                outerCoordinates.push(outerRotated);
             }
+            let topInnerPositions = innerCoordinates.map((coordinate) => vec3.fromValues(coordinate[0], coordinate[1], this.height));
+            let topOuterPositions = outerCoordinates.map((coordinate) => vec3.fromValues(coordinate[0], coordinate[1], this.height));
+            let bottomInnerPositions = innerCoordinates.map((coordinate) => vec3.fromValues(coordinate[0], coordinate[1], 0.0));
+            let bottomOuterPositions = outerCoordinates.map((coordinate) => vec3.fromValues(coordinate[0], coordinate[1], 0.0));
+            let bbox = this.getMinMax(topOuterPositions);
+            bbox.minz = this.position[2];
+            bbox.maxz = this.position[2] + this.height;
+            if (Tessellator.validateCCW(topOuterPositions) < 0) {
+                topInnerPositions.reverse();
+                topOuterPositions.reverse();
+                bottomInnerPositions.reverse();
+                bottomOuterPositions.reverse();
+            }
+            let topTriangles = [];
+            topOuterPositions.forEach((topOuterPosition, index) => {
+                let innerPosition = topInnerPositions.get(index);
+                let nextInnerPosition = topInnerPositions.getNext(index);
+                let nextOuterPosition = topOuterPositions.getNext(index);
+                topTriangles.push(new Triangle(innerPosition, topOuterPosition, nextOuterPosition));
+                topTriangles.push(new Triangle(innerPosition, nextOuterPosition, nextInnerPosition));
+            });
+            let bottomTriangles = [];
+            bottomOuterPositions.forEach((bottomOuterPosition, index) => {
+                let innerPosition = bottomInnerPositions.get(index);
+                let nextInnerPosition = bottomInnerPositions.getNext(index);
+                let nextOuterPosition = bottomOuterPositions.getNext(index);
+                bottomTriangles.push(new Triangle(innerPosition, nextOuterPosition, bottomOuterPosition));
+                bottomTriangles.push(new Triangle(innerPosition, nextInnerPosition, nextOuterPosition));
+            });
+            let sideInnerTriangles = this.createSideTriangle(topOuterPositions, bottomOuterPositions, true);
+            let sideOuterTriangles = this.createSideTriangle(topInnerPositions, bottomInnerPositions, false);
             let triangles = [];
-            triangles = triangles.concat(testTriangles);
+            triangles = triangles.concat(topTriangles);
+            triangles = triangles.concat(bottomTriangles);
+            triangles = triangles.concat(sideOuterTriangles);
+            triangles = triangles.concat(sideInnerTriangles);
             this.triangles = triangles;
             triangles.forEach((triangle) => {
                 let trianglePositions = triangle.positions;
@@ -135,7 +154,7 @@ export default class Sphere extends Renderable {
                     }
                 });
             });
-            let indices = new Uint16Array(positions.length / 3);
+            let indices = new Uint16Array(positions.length);
             this.buffer.indicesVBO = indices.map((obj, index) => index);
             this.buffer.positionsVBO = new Float32Array(positions);
             this.buffer.normalVBO = new Float32Array(normals);
@@ -157,6 +176,28 @@ export default class Sphere extends Renderable {
             this.dirty = false;
         }
         return this.buffer;
+    }
+    createSideTriangle(topPositions, bottomPositions, isCCW = true) {
+        let triangles = [];
+        if (topPositions.length != bottomPositions.length) {
+            throw new Error("plane length is not matched.");
+        }
+        let length = topPositions.length;
+        for (let i = 0; i < length; i++) {
+            let topA = topPositions.getPrev(i);
+            let topB = topPositions.get(i);
+            let bottomA = bottomPositions.getPrev(i);
+            let bottomB = bottomPositions.get(i);
+            if (isCCW) {
+                triangles.push(new Triangle(topB, topA, bottomA));
+                triangles.push(new Triangle(topB, bottomA, bottomB));
+            }
+            else {
+                triangles.push(new Triangle(topB, bottomA, topA));
+                triangles.push(new Triangle(topB, bottomB, bottomA));
+            }
+        }
+        return triangles;
     }
     createRandomColor() {
         let r = Math.round(Math.random() * 10) / 10;

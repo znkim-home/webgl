@@ -1,6 +1,6 @@
 import Buffer from '../Buffer.js';
 import Renderable from '../abstract/Renderable.js';
-import Triangle from '../geometry/Triangle.js';
+import Triangle from '../geometry/Triangle';
 import Tessellator from '../functional/Tessellator.js';
 import { vec3, vec4 } from 'gl-matrix'; // eslint-disable-line no-unused-vars
 export default class Polygon extends Renderable {

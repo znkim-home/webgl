@@ -70,6 +70,8 @@ export default class BatchObject extends Renderable {
     if (this.buffer === undefined || this.dirty === true) {
       this.buffer = new Buffer(gl);
 
+      let selectionColor = this.selectionColor;
+
       let colors = this.colors;
       let selectionColors = this.selectionColors;
       let positions = this.positions;
@@ -83,8 +85,15 @@ export default class BatchObject extends Renderable {
       this.buffer.indicesVBO = indices.map((obj, index) => index);
       this.buffer.positionsVBO = new Float32Array(positions);
       this.buffer.normalVBO = new Float32Array(normals);
+
+
+      let oneSelectionColor: number[] = [];
+      positions.forEach((obj, index) => {
+        selectionColor.forEach((value) => oneSelectionColor.push(value));
+      });
       this.buffer.colorVBO = new Float32Array(colors);
-      this.buffer.selectionColorVBO = new Float32Array(selectionColors);
+      //this.buffer.selectionColorVBO = new Float32Array(selectionColors);
+      this.buffer.selectionColorVBO = new Float32Array(oneSelectionColor);
       this.buffer.textureVBO = new Float32Array(textureCoordinates);
       this.buffer.positionsGlBuffer = this.buffer.createBuffer(this.buffer.positionsVBO);
       this.buffer.colorGlBuffer = this.buffer.createBuffer(this.buffer.colorVBO);

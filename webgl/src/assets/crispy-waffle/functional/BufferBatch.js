@@ -30,7 +30,7 @@ Float32Array.prototype.concat = function () {
 export default class BufferBatch {
     static batch100(gl, renderableObjs) {
         let results = [];
-        let unit = 500;
+        let unit = 1000;
         for (let loop = 0; loop < renderableObjs.length; loop += unit) {
             let result = this.batch(gl, renderableObjs.slice(loop, loop + unit));
             results.push(result);
