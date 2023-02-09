@@ -107,6 +107,7 @@ const fragmentShaderSource = `
     float occlusionA = 0.0;
     float occlusionB = 0.0;
     float occlusionC = 0.0;
+    float occlusionD = 0.0;
 
     float linearDepth = unpackDepth(getDepth(screenPos));
     float originDepth = linearDepth * uNearFar.y;
@@ -119,19 +120,18 @@ const fragmentShaderSource = `
 		mat3 tbn = mat3(tangent, bitangent, normal);   
 		for (int i = 0; i < kernelSize; i++) {    	
       vec3 rotatedKernel = tbn * vec3(uSsaoKernel[i].x, uSsaoKernel[i].y, uSsaoKernel[i].z);
-      occlusionA += getOcclusion(origin, rotatedKernel, 8.5);
-      occlusionB += getOcclusion(origin, rotatedKernel, 16.0);
-      occlusionC += getOcclusion(origin, rotatedKernel, 32.0);
+      occlusionA += getOcclusion(origin, rotatedKernel, 3.0);
+      occlusionB += getOcclusion(origin, rotatedKernel, 10.0);
+      occlusionC += getOcclusion(origin, rotatedKernel, 20.0);
+      occlusionD += getOcclusion(origin, rotatedKernel, 50.0);
     }
 
     float tolerance = 0.80;
-    float result = (occlusionA + occlusionB + occlusionC) / (fKernelSize * 3.0);
+    float result = (occlusionA + occlusionB + occlusionC + occlusionD) / (fKernelSize * 3.0);
     if (result > tolerance) {
       result = 1.0;
     }
-    //return result;
-
-    return vec4(occlusionA / fKernelSize, occlusionB / fKernelSize, occlusionC / fKernelSize, 1.0);
+    return vec4(occlusionA / fKernelSize, occlusionB / fKernelSize, occlusionC / fKernelSize, occlusionD / fKernelSize);
   }
 
   float compareNormalOffset(in vec4 normalA, in vec4 normalB) {
@@ -200,10 +200,36 @@ const fragmentShaderSource = `
     return result;
   }
 
+  float isShadowAA(vec2 screenPos) {
+    // AntiAlias
+    float width = 1.0 / uScreenSize.x;
+	  float height = 1.0 / uScreenSize.y;
+    const int range = 3;
+    const float value = 0.02;
+    float result = 1.0;
+
+    for (int x = -range; x <= range; x++) {
+      for (int y = -range; y <= range; y++) {
+        float xOffset = width * float(x);
+        float yOffset = height * float(y);
+        vec2 pos = vec2(screenPos.x + xOffset, screenPos.y + yOffset);
+        bool theShadow = isShadow(pos);
+        if (theShadow) {
+          result -= (value);
+        }
+      }
+    }
+
+    if (result < 0.3) {
+      result = 0.3;
+    }
+    return result;
+  }
+
   float isGlow(vec2 screenPos) {
     float width = 1.0 / uScreenSize.x;
 	  float height = 1.0 / uScreenSize.y;
-    const int range = 7;
+    const int range = 5;
     const float value = float(range) * 0.05;
     const float intensity = 0.5;
 
@@ -241,6 +267,7 @@ const fragmentShaderSource = `
     vec3 vLighting = ambientLight + (directionalLightColor * directional);
 
     if (uIsMain == 1) {
+      //vec3 result = albedo.xyz;
       vec3 result = albedo.xyz;
       
       if (uEnableSsao == 1) {
@@ -249,7 +276,7 @@ const fragmentShaderSource = `
         vec4 ssaoResult = getSSAO(screenPos);
 
         if (ssaoResult.x < tolerance) {
-          result = result * ssaoResult.x;
+          result = result * (ssaoResult.x + 0.1);
         }
         if (ssaoResult.y < tolerance) {
           result = result * (ssaoResult.y + 0.1);
@@ -257,12 +284,15 @@ const fragmentShaderSource = `
         if (ssaoResult.z < tolerance) {
           result = result * (ssaoResult.z + 0.2);
         }
-        //result = result * ssaoResult;
+        if (ssaoResult.w < tolerance) {
+          result = result * (ssaoResult.w + 0.2);
+        }
       }
 
       //result = result * vLighting;
-      if (uEnableGlobalLight == 1 && isShadow(screenPos)) {
-        result = result * 0.5;
+      float shadow = isShadowAA(screenPos);
+      if (uEnableGlobalLight == 1 && shadow <= 1.0) {
+        result = result * shadow;
       }
 
       float glow = isGlow(screenPos);

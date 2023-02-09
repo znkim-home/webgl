@@ -42,7 +42,7 @@ export default {
   },
   methods: {
     init() {
-      const primitiveProps = [Cube, Cylinder, Cone, Sphere, Ring, Tube];
+      const primitiveProps = [Cube, Cylinder, Cone, Sphere, Ring, Tube, Obj];
       //const primitiveProps = [Cube, Cylinder, Cone, Sphere, Rectangle, Point, Line, Polygon, Obj];
       this.propList = primitiveProps;
     },
