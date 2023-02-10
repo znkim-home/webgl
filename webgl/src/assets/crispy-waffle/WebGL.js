@@ -100,8 +100,12 @@ export default class WebGL {
         this.lightMapShader.init(LightMapShader);
         this.lightMapShaderInfo = this.lightMapShader.shaderInfo;
         this.camera = new Camera({ fovyDegree: this.globalOptions.fovyDegree });
-        this.sun = new Sun({ position: { x: 0, y: 0, z: 8192 / 2 } });
-        this.sun.rotationOrbit(0.5, 0.8, vec3.fromValues(0, 0, 0));
+        let radius = 2048 * 2;
+        this.sun = new Sun({
+            position: { x: 0, y: 0, z: radius },
+            radius: radius,
+        });
+        this.sun.rotationOrbit(0.7853, 0.7853, vec3.fromValues(0, 0, 0));
         this.frameBufferObjs.push(this.getMainFbo());
         this.frameBufferObjs.push(this.getAlbedoFbo());
         this.frameBufferObjs.push(this.getSelectionFbo());
@@ -212,8 +216,8 @@ export default class WebGL {
             this.lightMapFbo = new FrameBufferObject(this.gl, this.canvas, this.defaultShaderInfo, {
                 name: "light",
                 textureType: textureType,
-                width: 8182,
-                height: 8182,
+                width: 2048,
+                height: 2048,
             }, this.globalOptions);
         }
         return this.lightMapFbo;

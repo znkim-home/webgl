@@ -47,8 +47,9 @@ class ScreenShaderProcess extends ShaderProcess {
         gl.lineWidth(globalOptions.lineWidth);
         const fovy = Math.radian(this.camera.fovyDegree);
         let tangentOfHalfFovy = Math.tan(fovy / 2);
+        let ortRange = this.sun.getRadius();
         let orthographicMatrix = mat4.create();
-        mat4.ortho(orthographicMatrix, -8192, 8192, -8192, 8192, 0, 8192);
+        mat4.ortho(orthographicMatrix, -ortRange, ortRange, -ortRange, ortRange, 0, ortRange * 2);
         gl.uniformMatrix4fv(shaderInfo.uniformLocations.orthographicMatrix, false, orthographicMatrix);
         let projectionMatrix = mat4.create();
         mat4.perspective(projectionMatrix, fovy, globalOptions.aspect, globalOptions.near, globalOptions.far);

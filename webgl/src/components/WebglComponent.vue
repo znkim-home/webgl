@@ -67,6 +67,11 @@
         <label>FAR</label>
         <input type="range" v-model="globalOptions.far" min="0.1" max="200000.0" step="1" />
       </div>
+      <h2>SUN OPTIONS</h2>
+      <div class="block-group">
+        <label>RADIUS</label>
+        <input type="range" v-model="globalOptions.sunRadius" min="0" max="8192" step="1" />
+      </div>
       <h2>WEBGL OPTIONS</h2>
       <div class="block-group">
         <input type="checkbox" v-model="globalOptions.cullFace"><label>CULL-FACE</label>
@@ -174,10 +179,11 @@ export default {
         far : 20000.0,
         pointSize : 5.0,
         lineWidth : 3.0,
-        debugMode : false,
+        debugMode : true,
         enableSsao : true,
         enableGlobalLight : true,
         enableEdge : true,
+        sunRadius : 2048,
       }
     };
   },

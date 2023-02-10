@@ -13,6 +13,8 @@ export default class Sun {
   fovyRadian: number;
   dirty: boolean;
 
+  radius: number;
+
   constructor(options: any) {
     this.init(options);
     this.getTransformMatrix();
@@ -27,11 +29,15 @@ export default class Sun {
     return this.getRotationMatrix();
   }
   init(options: any) {
+    this.radius = 0;
     this.position = vec3.fromValues(0, 0, 0); // [x, y ,z]
     this.rotation = vec3.fromValues(0, 0, 0); // [heading, pitch, roll]
     this.direction = vec3.fromValues(0, 0, -1); // direction of camera
     this.up = vec3.fromValues(0, 1, 0); // up of direction
     this.right = vec3.fromValues(1, 0, 0); // right of direction
+    if (options?.radius) {
+      this.radius = options.radius;
+    }
     if (options?.fovyDegree) {
       this.fovyDegree = options.fovyDegree;
       this.fovyRadian = Math.radian(options.fovyDegree);
@@ -155,6 +161,13 @@ export default class Sun {
     this.position[1] += y;
     this.position[2] += z;
     this.dirty = true;
+  }
+  setRadius(radius: number): void {
+    this.radius = radius;
+    this.dirty = true;
+  }
+  getRadius(): number {
+    return this.radius;
   }
   setPosition(x: number, y: number, z: number): void {
     this.position[0] = x;

@@ -172,6 +172,10 @@ const fragmentShaderSource = `
     return isEdgeByNormalCompare || isEdgeBySelection;
   }
 
+  vec4 getSunPosition() {
+    return (uCameraTransformMatrix * uSunModelViewMatrix) * vec4(1.0);
+  }
+
   bool isShadow(vec2 screenPos) {
     bool result = false;
 
@@ -260,12 +264,6 @@ const fragmentShaderSource = `
     vec4 selectionColor = getSelection(screenPos);
     float selection = convertColorToId(getSelection(screenPos));
 
-    vec3 ambientLight = vec3(0.3, 0.3, 0.3);
-    vec3 directionalLightColor = vec3(0.9, 0.9, 0.9);
-    vec3 directionalVector = normalize(vec3(0.6, 0.6, 0.9));
-    float directional = max(dot(normal.xyz, directionalVector), 0.0);
-    vec3 vLighting = ambientLight + (directionalLightColor * directional);
-
     if (uIsMain == 1) {
       //vec3 result = albedo.xyz;
       vec3 result = albedo.xyz;
@@ -289,7 +287,6 @@ const fragmentShaderSource = `
         }
       }
 
-      //result = result * vLighting;
       float shadow = isShadowAA(screenPos);
       if (uEnableGlobalLight == 1 && shadow <= 1.0) {
         result = result * shadow;
@@ -307,6 +304,11 @@ const fragmentShaderSource = `
         result = result * 0.5;
       }
       gl_FragColor = vec4(result, 1.0);
+
+      if (selection == 4294967295.0) {
+        gl_FragColor = vec4(0.4, 0.4, 0.4, 1.0);
+      }
+
     } else {
       vec4 textureColor = texture2D(uMainTexture, vTextureCoordinate);
       gl_FragColor = vec4(textureColor.rgb, textureColor.a);
