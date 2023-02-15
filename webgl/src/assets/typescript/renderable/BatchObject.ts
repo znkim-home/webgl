@@ -60,7 +60,7 @@ export default class BatchObject extends Renderable {
     frameBufferObjs.forEach((frameBufferObj) => {
       frameBufferObj.bind();
       if (buffer.indicesLength) {
-        gl.drawElements(gl.TRIANGLES, buffer.indicesLength, gl.UNSIGNED_SHORT, 0);
+        gl.drawElements(Renderable.globalOptions.drawElementsType, buffer.indicesLength, gl.UNSIGNED_SHORT, 0);
       }
       frameBufferObj.unbind();
     });

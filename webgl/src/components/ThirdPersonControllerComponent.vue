@@ -21,6 +21,7 @@ export default {
         moveObjectOffset : undefined,
         movePlane : undefined,
         moveCameraPosition : undefined,
+        rotateAxisX : false,
         rotateStatus : false,
         rotateObject : false,
         pivotPosition : undefined,
@@ -115,6 +116,7 @@ export default {
         this.controllerStatus.moveStatus = false;
         this.controllerStatus.movePlane = undefined;
         this.controllerStatus.moveCameraPosition = undefined;
+        this.controllerStatus.rotateAxisX = false;
         this.controllerStatus.rotateStatus = false;
         this.controllerStatus.pivotPosition = undefined;
         this.controllerStatus.rotateObject = false;
@@ -230,7 +232,14 @@ export default {
             let polygon = this.$parent.createDirt(origin);
             blocks.pos[blockX + OFFSET][blockY + OFFSET][blockZ] = polygon;
           } else if (this.controllerStatus.ctrlStatus) {
-            console.log("rotate2");
+            if (this.$parent.getSelectedObject()) {
+              depth = webGl.depthFbo.getDepth(mouseX, mouseY);
+              let pos = this.getScreenPosition(ratioX, ratioY, canvas.width, canvas.height, depth);
+              this.controllerStatus.pivotPosition = pos;
+              this.controllerStatus.rotateAxisX = true;
+              this.controllerStatus.rotateStatus = true;
+              this.controllerStatus.rotateObject = true;
+            }
           } else {
             this.controllerStatus.zoomStatus = true;
             this.controllerStatus.zoomCameraPosition = camera.position;
@@ -240,7 +249,9 @@ export default {
           depth = webGl.depthFbo.getDepth(mouseX, mouseY);
           let pos = this.getScreenPosition(ratioX, ratioY, canvas.width, canvas.height, depth);
           this.controllerStatus.pivotPosition = pos;
+          this.controllerStatus.rotateAxisX = false;
           this.controllerStatus.rotateStatus = true;
+          this.controllerStatus.rotateObject =false;
         } else if (e.button == 0) {
           depth = webGl.depthFbo.getDepth(mouseX, mouseY) + 5;
           let pos = this.getScreenPosition(ratioX, ratioY, canvas.width, canvas.height, depth);
@@ -273,6 +284,7 @@ export default {
               let pos = this.getScreenPosition(ratioX, ratioY, canvas.width, canvas.height, depth);
               this.controllerStatus.pivotPosition = pos;
               this.controllerStatus.rotateStatus = true;
+              this.controllerStatus.rotateAxisX = false;
               this.controllerStatus.rotateObject = true;
             }
           } else {
@@ -311,8 +323,14 @@ export default {
           }
         } else if (this.controllerStatus.rotateStatus) {
           if (this.controllerStatus.rotateObject) {
-            this.$parent.getSelectedObject().rotation[2] += Math.degree(xValue - yValue);
-            this.$parent.getSelectedObject().dirty = true;
+            if (this.controllerStatus.rotateAxisX) {
+              this.$parent.getSelectedObject().rotation[0] += Math.degree(yValue);
+              this.$parent.getSelectedObject().rotation[1] += Math.degree(xValue);
+              this.$parent.getSelectedObject().dirty = true;
+            } else {
+              this.$parent.getSelectedObject().rotation[2] += Math.degree(xValue - yValue);
+              this.$parent.getSelectedObject().dirty = true;
+            }
           } else {
             camera.rotationOrbit(-xValue, -yValue, this.controllerStatus.pivotPosition);
           }
@@ -332,8 +350,9 @@ export default {
         this.controllerStatus.movePlane = undefined;
         this.controllerStatus.moveCameraPosition = undefined;
         this.controllerStatus.rotateStatus = false;
-        this.controllerStatus.pivotPosition = undefined;
         this.controllerStatus.rotateObject = false;
+        this.controllerStatus.rotateAxisX = false;
+        this.controllerStatus.pivotPosition = undefined;
         this.controllerStatus.zoomStatus = false;
         this.controllerStatus.zoomCameraPosition = undefined;
       }

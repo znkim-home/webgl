@@ -1,12 +1,15 @@
 import Buffer from '../Buffer.js';
 import Renderable from '../abstract/Renderable.js';
-import Triangle from '../geometry/Triangle';
+import Triangle from '../geometry/Triangle.js';
 import Tessellator from '../functional/Tessellator.js';
+import Indices from '../topology/Indices.js';
 
 import { mat2, mat3, mat4, vec2, vec3, vec4 } from 'gl-matrix'; // eslint-disable-line no-unused-vars
-import FrameBufferObject from '../functional/FrameBufferObject';
+import FrameBufferObject from '../functional/FrameBufferObject.js';
+import Extruder from '../functional/Extruder.js';
 
 export default class Polygon extends Renderable {
+  static objectName: string = "Polygon";
   height: number;
   length: number;
   coordinates: Array<Array<number>>;
@@ -14,16 +17,16 @@ export default class Polygon extends Renderable {
   image: HTMLImageElement;
   texture: WebGLTexture;
 
-  constructor(coordinates: Array<Array<number>>, options: any) {
+  constructor(options: any) {
     super();
-    this.init(coordinates, options);
+    this.init(options);
   }
 
-  init(coordinates: Array<Array<number>>, options: any) {
+  init(options: any) {
     this.triangles = [];
     this.height = 3.0;
     this.name = "Untitled Polygon";
-    if (coordinates) this.coordinates = coordinates;
+    if (options?.coordinates) this.coordinates = options.coordinates;
     if (options?.name) this.name = options.name;
     if (options?.height) this.height = options.height;
     if (options?.position) this.position = vec3.set(this.position, options.position.x, options.position.y, options.position.z);
@@ -57,7 +60,7 @@ export default class Polygon extends Renderable {
         gl.enableVertexAttribArray(shaderInfo.attributeLocations.textureCoordinate);
         buffer.bindBuffer(buffer.textureGlBuffer, 2, shaderInfo.attributeLocations.textureCoordinate);
       }
-      gl.drawElements(gl.TRIANGLES, buffer.indicesLength, gl.UNSIGNED_SHORT, 0);
+      gl.drawElements(Renderable.globalOptions.drawElementsType, buffer.indicesLength, gl.UNSIGNED_SHORT, 0);
       frameBufferObj.unbind();
     });
   }
@@ -73,61 +76,45 @@ export default class Polygon extends Renderable {
       let normals: Array<number> = [];
       let textureCoordinates: Array<number> = [];
 
-      let topPositions: vec3[] = this.coordinates.map((coordinate) => vec3.fromValues(coordinate[0], coordinate[1], this.height));
       let bottomPositions: vec3[] = this.coordinates.map((coordinate) => vec3.fromValues(coordinate[0], coordinate[1], 0));
-      let bbox = this.getMinMax(topPositions);
-      bbox.minz = 0;
-      bbox.maxz = this.height;
-
-      if (Tessellator.validateCCW(topPositions) < 0) {
-        topPositions.reverse();
-        bottomPositions.reverse();
-      }
       
-      let topTriangles = Tessellator.tessellate(topPositions);
-      let bottomTriangles = Tessellator.tessellate(bottomPositions, false);
-      let sideTriangles = this.createSideTriangle(topPositions, bottomPositions, true);
-
-      let triangles: Triangle[] = [];
-      triangles = triangles.concat(topTriangles);
-      triangles = triangles.concat(bottomTriangles);
-      triangles = triangles.concat(sideTriangles);
-      this.triangles = triangles;
+      let indicesObject = new Indices();
+      let verticesList = Extruder.extrude(bottomPositions, indicesObject, this.height);
+      
+      let indices: Array<number> = [];
+      let triangles = Extruder.convertTriangles(verticesList);
       triangles.forEach((triangle) => {
-        let trianglePositions = triangle.positions;
-        let normal = triangle.getNormal();
-        trianglePositions.forEach((position) => {
-          position.forEach((value) => positions.push(value));
-          normal.forEach((value) => normals.push(value));
-          color.forEach((value) => colors.push(value));
-          selectionColor.forEach((value) => selectionColors.push(value));
-          let xoffset = bbox.maxx - bbox.minx;
-          let yoffset = bbox.maxy - bbox.miny;
-          let zoffset = bbox.maxz - bbox.minz;
-          if (normal[0] == 1 || normal[0] == -1) {
-            textureCoordinates.push((position[1] - bbox.miny) / yoffset);
-            textureCoordinates.push((position[2] - bbox.minz) / zoffset);
-          } else if (normal[1] == 1 || normal[1] == -1) {
-            textureCoordinates.push((position[0] - bbox.minx) / xoffset);
-            textureCoordinates.push((position[2] - bbox.minz) / zoffset);
-          } else if (normal[2] == 1 || normal[2] == -1) {
-            textureCoordinates.push((position[0] - bbox.minx) / xoffset);
-            textureCoordinates.push((position[1] - bbox.miny) / yoffset);
+        let validation = triangle.validate();
+        triangle.vertices.forEach(vertex => {
+          if (validation) {
+            indices.push(vertex.index);
           }
         });
-      });
+      })
 
-      let indices = new Uint16Array(positions.length/3);
-      this.buffer.indicesVBO = indices.map((obj, index) => index);
+      verticesList.forEach((vertices) => {
+        vertices.forEach((vertex, index) => {
+          let position = vertex.position;
+          let normal = vertex.normal;
+          let color = vertex.color;
+          let textureCoordinate = vertex.textureCoordinate;
+          position.forEach((value) => positions.push(value));
+          normal.forEach((value) => normals.push(value));
+          this.color.forEach((value) => colors.push(value));
+          selectionColor.forEach((value) => selectionColors.push(value));
+          textureCoordinate.forEach((value) => textureCoordinates.push(value));
+        });
+      });
+      this.buffer.indicesVBO = new Uint16Array(indices);
       this.buffer.positionsVBO = new Float32Array(positions);
       this.buffer.normalVBO = new Float32Array(normals);
       this.buffer.colorVBO = new Float32Array(colors);
       this.buffer.selectionColorVBO = new Float32Array(selectionColors);
       this.buffer.textureVBO = new Float32Array(textureCoordinates);
-      if (this.texture) {
-        this.buffer.texture = this.texture;
-      } else if (this.image) {
-        this.buffer.texture = this.buffer.createTexture(this.image);
+      if (this.image) {
+        let texture = this.buffer.createTexture(this.image);
+        this.buffer.texture = texture;
+        this.texture = texture;
       }
       this.buffer.positionsGlBuffer = this.buffer.createBuffer(this.buffer.positionsVBO);
       this.buffer.colorGlBuffer = this.buffer.createBuffer(this.buffer.colorVBO);
@@ -139,32 +126,5 @@ export default class Polygon extends Renderable {
       this.dirty = false;
     }
     return this.buffer;
-  }
-  createSideTriangle(topPositions: Array<vec3>, bottomPositions: Array<vec3>, isCCW = true) {
-    let triangles = [];
-    if (topPositions.length != bottomPositions.length) {
-      throw new Error("plane length is not matched.");
-    }
-    let length = topPositions.length;
-    for (let i = 0; i < length; i++) {
-      let topA: vec3 = topPositions.getPrev(i);
-      let topB: vec3 = topPositions.get(i);
-      let bottomA: vec3 = bottomPositions.getPrev(i);
-      let bottomB: vec3 = bottomPositions.get(i);
-      if (isCCW) {
-        triangles.push(new Triangle(topB, topA, bottomA));
-        triangles.push(new Triangle(topB, bottomA, bottomB));
-      } else {
-        triangles.push(new Triangle(topB, bottomA, topA));
-        triangles.push(new Triangle(topB, bottomB, bottomA));
-      }
-    }
-    return triangles;
-  }
-  createRandomColor() {
-    let r = Math.round(Math.random() * 10) / 10;
-    let g = Math.round(Math.random() * 10) / 10;
-    let b = Math.round(Math.random() * 10) / 10;
-    return vec4.fromValues(r, g, b, 1.0);
   }
 }

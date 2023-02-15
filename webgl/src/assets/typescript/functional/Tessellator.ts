@@ -1,36 +1,63 @@
 import { mat2, mat3, mat4, vec2, vec3, vec4 } from 'gl-matrix'; // eslint-disable-line no-unused-vars
-import Triangle from '../geometry/Triangle.js';
+
+import Triangle from '../topology/Triangle.js';
+import Vertex from '../topology/Vertex.js';
+import Vertices from '../topology/Vertices.js';
+import VerticesList from '../topology/VerticesList.js';
+import Indices from '../topology/Indices.js';
 
 /**
  * Tessellator
  */
 export default class Tessellator {
-    static tessellate(positions: Array<vec3>, isCCW = true) {
-        let result: Array<Triangle>= [];
-        let plane = this.validateConvex(positions);
+    static tessellate(vertices: Vertices, indices: Indices): VerticesList {
+        let bbox: vec4 = this.getBbox(vertices);
+        let result: VerticesList = new VerticesList();
+        let plane = this.validateConvex(vertices);
         plane.forEach((ConvexPolygon) => {
-            let triangles = this.toTriangles(ConvexPolygon, isCCW);
-            result = result.concat(triangles);
+            let vertices = ConvexPolygon;
+            vertices.forEach((vertex) => {
+                let position = vertex.position;
+                let relPosition = vec2.fromValues(bbox[2] - position[0], bbox[3] - position[1]);
+                let relMaxPosition = vec2.fromValues(bbox[2] - bbox[0], bbox[3] - bbox[1]);
+                vertex.textureCoordinate = vec2.fromValues(relPosition[0] / relMaxPosition[0], relPosition[1] / relMaxPosition[1]);
+            })
+            result.push(vertices);
         })
         return result;
     }
-    static validateConvex(positions: Array<vec3>, convexs: Array<Array<vec3>> = []): Array<Array<vec3>> {
-        if (this.isConvex(positions)) {
-            convexs.push(positions);
+    static getBbox(vertices: Vertices): vec4 {
+        let minX = Number.MAX_SAFE_INTEGER;
+        let maxX = Number.MIN_SAFE_INTEGER;
+        let minY = Number.MAX_SAFE_INTEGER;
+        let maxY = Number.MIN_SAFE_INTEGER;
+        vertices.forEach((vertex) => {
+            let x = vertex.position[0];
+            let y = vertex.position[1];
+            minX = minX > x ? x : minX;
+            maxX = maxX < x ? x : maxX;
+            minY = minY > y ? y : minY;
+            maxY = maxY < y ? y : maxY;
+        });
+        return vec4.fromValues(minX, minY, maxX, maxY);
+    }
+    static validateConvex(vertices: Vertices, convexs: Array<Vertices> = []): Array<Vertices> {
+        if (this.isConvex(vertices)) {
+            convexs.push(vertices);
         } else {
-            let clockwisePosition: vec3 | undefined = positions.find((position, index) => this.getPositionNormal(positions, index) < 0);
+            let clockwisePosition: Vertex | undefined = vertices.vertices.find((vertex, index) => this.getPositionNormal(vertices, index) < 0);
             if (clockwisePosition === undefined) {
                 return convexs;
             }
-            let clockwiseIndex = positions.indexOf(clockwisePosition);
-            let nearestPositions = this.sortedNearest(positions, clockwiseIndex);
+            let clockwiseIndex = vertices.vertices.indexOf(clockwisePosition);
+            let nearestPositions = this.sortedNearest(vertices, clockwiseIndex);
             nearestPositions.some((nearestPosition) => {
                 if (clockwisePosition === undefined) {
                     return convexs;
                 }
-                let splits = this.split(positions, clockwisePosition, nearestPosition);
+                let splits: Array<Vertices> = this.split(vertices, clockwisePosition, nearestPosition);
 
-                let isIntersection = this.validateIntersection(positions, clockwisePosition, nearestPosition);
+                let isIntersection = this.validateIntersection(vertices, clockwisePosition, nearestPosition);
                 if (isIntersection) {
                     return false;
                 }
@@ -46,98 +73,89 @@ export default class Tessellator {
         }
         return convexs;
     }
-    static validateIntersection(positions: Array<vec3>, startPosition: vec3, endPosition: vec3) {
-        let intersection = positions.find((position, index) => {
-            let crnt = positions.get(index);
-            let next = positions.getNext(index);
-            if (this.intersection(startPosition, endPosition, crnt, next)) {
+    static validateIntersection(vertices: Vertices, startVertex: Vertex, endVertex: Vertex): boolean {
+        let intersection = vertices.vertices.find((vertex, index) => {
+            let crnt = vertices.get(index);
+            let next = vertices.getNext(index);
+            if (this.intersection(startVertex.position, endVertex.position, crnt.position, next.position)) {
                 return true;
             }
         });
         return intersection !== undefined;
     }
-    static isConvex(positions: Array<vec3>) {
-        let cw = positions.find((position, index) => {
-            return (this.getPositionNormal(positions, index) < 0);
+    static isConvex(vertices: Vertices) {
+        let cw = vertices.vertices.find((vertex, index) => {
+            return (this.getPositionNormal(vertices, index) < 0);
         });
         return cw === undefined;
     }
-    static toTriangles(positions: Array<vec3>, isCCW = true) {
-        let length = positions.length;
-        var result = [];
-        for (let i = 1; i < length - 1; i++) {
-            if (isCCW) result.push(new Triangle(positions[0], positions[i], positions[i + 1]));
-            else result.push(new Triangle(positions[0], positions[i + 1], positions[i]));
-        }
-        return result;
+    static split(vertices: Vertices, vertexA: Vertex, vertexB: Vertex): Array<Vertices> {
+        let verticesA: Vertices = this.createSplits(vertices, vertexA, vertexB);
+        let verticesB: Vertices = this.createSplits(vertices, vertexB, vertexA);
+        return [verticesA, verticesB];
     }
-    static split(positions: Array<vec3>, positionA: vec3, positionB: vec3) {
-        let positionsA = this.createSplits(positions, positionA, positionB);
-        let positionsB = this.createSplits(positions, positionB, positionA);
-        return [positionsA, positionsB];
-    }
-    static createSplits(positions: Array<vec3>, startPosition: vec3, endPosition: vec3) {
-        let list = [];
+    static createSplits(vertices: Vertices, startPosition: Vertex, endPosition: Vertex): Vertices {
+        let list = new Vertices();
         list.push(startPosition);
         list.push(endPosition);
-        let index = positions.indexOf(endPosition);
-        for (let i = 0; i < positions.length - 1; i++) {
-            let crnt = positions.get(index);
-            let next = positions.getNext(index);
+        let index = vertices.vertices.indexOf(endPosition);
+        for (let i = 0; i < vertices.length - 1; i++) {
+            let crnt = vertices.get(index);
+            let next = vertices.getNext(index);
             if (next == startPosition || next == endPosition) {
                 break;
-            } else if (!this.compare(crnt, next)) {
+            } else if (!this.compare(crnt.position, next.position)) {
                 list.push(next);
             }
             index++;
         }
         return list;
     }
-    static validateCCW(positions: Array<vec3>) {
+    static validateCCW(vertices: Vertices): number {
         let sum = 0;
-        positions.forEach((position: vec3, index: number) => {
-            let normal = this.getPositionNormal(positions, index);
-            let angle = Math.degree(this.getAngle(positions, index));
+        vertices.forEach((vertex, index) => {
+            let normal = this.getPositionNormal(vertices, index);
+            let angle = Math.degree(this.getAngle(vertices, index));
             if (normal >= 0) sum += angle;
             else sum -= angle;
         });
         return sum;
     }
-    static validateAngle(positions: Array<vec3>) {
+    static validateAngle(vertices: Vertices): boolean {
         let angleSum = 0;
         let reverseAngleSum = 0;
-        positions.forEach((position: vec3, index: number) => {
-            let normal = this.getPositionNormal(positions, index);
-            let angle = Math.degree(this.getAngle(positions, index));
+        vertices.forEach((vertex: Vertex, index) => {
+            let normal = this.getPositionNormal(vertices, index);
+            let angle = Math.degree(this.getAngle(vertices, index));
             if (normal > 0) angleSum += angle;
             else reverseAngleSum += angle;
         });
         return angleSum > reverseAngleSum;
     }
-    static getPositionNormal(positions: Array<vec3>, index: number) {
-        let prev = positions.getPrev(index);
-        let crnt = positions.get(index);
-        let next = positions.getNext(index);
-        return this.normal(prev, crnt, next)[2];
+    static getPositionNormal(vertices: Vertices, index: number): number{
+        let prev: Vertex = vertices.getPrev(index);
+        let crnt: Vertex = vertices.get(index);
+        let next: Vertex = vertices.getNext(index);
+        return this.normal(prev.position, crnt.position, next.position)[2];
     }
-    static getAngle(positions: Array<vec3>, index: number) {
-        let prev = positions.getPrev(index);
-        let crnt = positions.get(index);
-        let next = positions.getNext(index);
-        let d0 = vec3.subtract(vec3.create(), crnt, prev);
-        let d1 = vec3.subtract(vec3.create(), next, crnt);
+    static getAngle(vertices: Vertices, index: number) {
+        let prev = vertices.getPrev(index);
+        let crnt = vertices.get(index);
+        let next = vertices.getNext(index);
+        let d0 = vec3.subtract(vec3.create(), crnt.position, prev.position);
+        let d1 = vec3.subtract(vec3.create(), next.position, crnt.position);
         return vec3.angle(d0, d1);
     }
-    static sortedNearest(positions: Array<vec3>, index: number) {
-        let prev = positions.getPrev(index);
-        let crnt = positions.get(index);
-        let next = positions.getNext(index);
-        let filtedPositions = positions.filter((position) => {
-            return !(position == prev || position == crnt || position == next);
+    static sortedNearest(vertices: Vertices, index: number) {
+        let prev = vertices.getPrev(index);
+        let crnt = vertices.get(index);
+        let next = vertices.getNext(index);
+        let filtedPositions = vertices.vertices.filter((vertex) => {
+            return !(vertex == prev || vertex == crnt || vertex == next);
         });
         let nearestPositions = filtedPositions.sort((a, b) => {
-            let distanceA = vec3.squaredDistance(crnt, a);
-            let distanceB = vec3.squaredDistance(crnt, b);
+            let distanceA = vec3.squaredDistance(crnt.position, a.position);
+            let distanceB = vec3.squaredDistance(crnt.position, b.position);
             if (distanceA < distanceB) return -1;
             else if (distanceA > distanceB) return 1;
             else return 0;
@@ -160,7 +178,7 @@ export default class Tessellator {
         let d1 = vec3.subtract(vec3.create(), c, b);
         return vec3.cross(vec3.create(), d0, d1);
     }
-    static normal(a: vec3, b: vec3, c: vec3) {
+    static normal(a: vec3, b: vec3, c: vec3) : vec3{
         let crossed = this.cross(a, b, c);
         return vec3.normalize(crossed, crossed);
     }

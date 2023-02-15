@@ -1,12 +1,20 @@
 import Buffer from '../../Buffer.js';
 import Renderable from '../../abstract/Renderable.js';
-import Triangle from '../../geometry/Triangle.js';
 import Tessellator from '../../functional/Tessellator.js';
+
+import Triangle from '../../topology/Triangle.js';
+import Vertex from '../../topology/Vertex.js'
+import Vertices from '../../topology/Vertices.js'
+import VerticesMatrix from '../../topology/VerticesMatrix.js'
+import Indices from '../../topology/Indices.js'
+
+import Revolutor from '../../functional/Revolutor.js'
 
 import { mat2, mat3, mat4, vec2, vec3, vec4 } from 'gl-matrix'; // eslint-disable-line no-unused-vars
 import FrameBufferObject from '../../functional/FrameBufferObject.js';
 
 export default class Sphere extends Renderable {
+  static objectName: string = "Sphere";
   height: number;
   triangles: Array<Triangle>;
   radius: number;
@@ -20,7 +28,6 @@ export default class Sphere extends Renderable {
     super();
     this.init(options);
   }
-
   init(options: any) {
     this.triangles = [];
     this.radius = 1.0;
@@ -36,13 +43,11 @@ export default class Sphere extends Renderable {
     if (options?.texture) this.texture = options.texture;
     if (options?.image) this.image = options.image;
   }
-
   rotate(xValue: number, yValue: number, tm: mat4) {
     let pitchAxis = vec3.fromValues(1, 0, 0);
     let pitchMatrix = mat4.fromRotation(mat4.create(), yValue, pitchAxis);
      return mat4.multiply(tm, tm, pitchMatrix);
   }
-
   render(gl: WebGLRenderingContext | WebGL2RenderingContext, shaderInfo: ShaderInfoInterface, frameBufferObjs: FrameBufferObject[]) {
     let tm = this.getTransformMatrix();
     let rm = this.getRotationMatrix();
@@ -67,7 +72,7 @@ export default class Sphere extends Renderable {
         gl.enableVertexAttribArray(shaderInfo.attributeLocations.textureCoordinate);
         buffer.bindBuffer(buffer.textureGlBuffer, 2, shaderInfo.attributeLocations.textureCoordinate);
       }
-      gl.drawElements(gl.TRIANGLES, buffer.indicesLength, gl.UNSIGNED_SHORT, 0);
+      gl.drawElements(Renderable.globalOptions.drawElementsType, buffer.indicesLength, gl.UNSIGNED_SHORT, 0);
       frameBufferObj.unbind();
     });
   }
@@ -87,7 +92,7 @@ export default class Sphere extends Renderable {
       let textureCoordinates: Array<number> = [];
       
       this.coordinates = [];
-      let angleOffset = (180 / (this.density));
+      let angleOffset = (180 / this.density);
       let origin = vec3.fromValues(0.0, 0.0, 0.0);
       let rotateVec3 = vec3.fromValues(0.0, 0.0, this.radius);
       for (let i = 0; i <= this.density; i++) {
@@ -96,59 +101,36 @@ export default class Sphere extends Renderable {
         this.coordinates.push(rotated);
       }
 
-      let topPositions = this.coordinates.map((coordinate) => vec3.fromValues(coordinate[0], coordinate[1], coordinate[2]));
-      let bbox = this.getMinMax(topPositions);
-      bbox.minz = this.position[2];
-      bbox.maxz = this.position[2] + this.height;
-
-      if (Tessellator.validateCCW(topPositions) < 0) {
-        topPositions.reverse();
-      }
-
-      let testTriangles: Triangle[] = [];
-      angleOffset = (360 / this.density);
-      for (let i = 0; i < this.density; i++) {
-        let angle = Math.radian(i * angleOffset);
-        let nextAngle = Math.radian((i + 1) * angleOffset);
-        topPositions.forEach((position, index) => {
-          let nextPosition = topPositions.getNext(index);
-          let startPosition = vec3.rotateZ(vec3.create(), position, origin, angle);
-          let startNextPosition = vec3.rotateZ(vec3.create(), nextPosition, origin, angle);
-          let rotatedPosition = vec3.rotateZ(vec3.create(), position, origin, nextAngle);
-          let rotatedNextPosition = vec3.rotateZ(vec3.create(), nextPosition, origin, nextAngle);
-          testTriangles.push(new Triangle(startPosition, startNextPosition, rotatedNextPosition));
-          testTriangles.push(new Triangle(startPosition, rotatedNextPosition, rotatedPosition));
-        });
-      }
-      let triangles: Triangle[] = [];
-      triangles = triangles.concat(testTriangles);
-      this.triangles = triangles;
+      let outerPositions = this.coordinates.map((coordinate) => vec3.fromValues(coordinate[0], coordinate[1], coordinate[2]));
+      let indicesObject = new Indices();
+      let verticesMatrix: VerticesMatrix = Revolutor.revolute(outerPositions, indicesObject, this.density);
+      let triangles: Array<Triangle> = Revolutor.convertTriangles(verticesMatrix);
+      let indices: Array<number> = [];
       triangles.forEach((triangle) => {
-        let trianglePositions = triangle.positions;
-        let normal = triangle.getNormal();
-        trianglePositions.forEach((position) => { // vec3
-          position.forEach((value) => positions.push(value));
-          normal.forEach((value) => normals.push(value));
-          color.forEach((value) => colors.push(value));
-          selectionColor.forEach((value) => selectionColors.push(value));
-          let xoffset = bbox.maxx - bbox.minx;
-          let yoffset = bbox.maxy - bbox.miny;
-          let zoffset = bbox.maxz - bbox.minz;
-          if (normal[0] == 1 || normal[0] == -1) {
-            textureCoordinates.push((position[1] - bbox.miny) / yoffset);
-            textureCoordinates.push((position[2] - bbox.minz) / zoffset);
-          } else if (normal[1] == 1 || normal[1] == -1) {
-            textureCoordinates.push((position[0] - bbox.minx) / xoffset);
-            textureCoordinates.push((position[2] - bbox.minz) / zoffset);
-          } else if (normal[2] == 1 || normal[2] == -1) {
-            textureCoordinates.push((position[0] - bbox.minx) / xoffset);
-            textureCoordinates.push((position[1] - bbox.miny) / yoffset);
+        let validation = triangle.validate();
+        triangle.vertices.forEach(vertex => {
+          if (vertex.color === undefined) {
+            vertex.color = this.color;
+          }
+          if (validation) {
+            indices.push(vertex.index);
           }
         });
+      })
+      verticesMatrix.forEach((vertices) => {
+        vertices.forEach((vertex, index) => {
+          let position = vertex.position;
+          let normal = vertex.normal;
+          let color = vertex.color;
+          let textureCoordinate = vertex.textureCoordinate;
+          position.forEach((value) => positions.push(value));
+          normal.forEach((value) => normals.push(value));
+          this.color.forEach((value) => colors.push(value));
+          selectionColor.forEach((value) => selectionColors.push(value));
+          textureCoordinate.forEach((value) => textureCoordinates.push(value));
+        });
       });
-
-      let indices = new Uint16Array(positions.length / 3);
-      this.buffer.indicesVBO = indices.map((obj, index) => index);
+      this.buffer.indicesVBO = new Uint16Array(indices);
       this.buffer.positionsVBO = new Float32Array(positions);
       this.buffer.normalVBO = new Float32Array(normals);
       this.buffer.colorVBO = new Float32Array(colors);

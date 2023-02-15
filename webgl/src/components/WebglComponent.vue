@@ -77,6 +77,7 @@
         <input type="checkbox" v-model="globalOptions.cullFace"><label>CULL-FACE</label>
         <input type="checkbox" v-model="globalOptions.depthTest"><label>DEPTH-TEST</label>
         <input type="checkbox" v-model="globalOptions.debugMode"><label>DEBUG-MODE</label>
+        <input type="checkbox" v-model="globalOptions.wireFrame"><label>WIRE-FRAME</label>
       </div>
       <h2>RENDER OPTIONS</h2>
       <div class="block-group">
@@ -84,7 +85,6 @@
         <input type="checkbox" v-model="globalOptions.enableGlobalLight"><label>ENABLE-SHADOW</label>
         <input type="checkbox" v-model="globalOptions.enableEdge"><label>ENABLE-EDGE</label>
       </div>
-      <h2>RENDER OPTIONS</h2>
       <select v-model="localOptions.blockSize" class="mini-btn">
         <option value="2">2X2</option>
         <option value="4">4X4</option>
@@ -97,6 +97,7 @@
       </select>
       <button class="mini-btn" v-on:click="reload(false)">ReloadBlocks</button>
       <button class="mini-btn" v-on:click="reload(true)">ReloadBatchedBlocks</button>
+      <button class="mini-btn" v-on:click="batchAll(true)">BatchAll</button>
     </div>
   </div>
   <div
@@ -162,6 +163,7 @@ export default {
       blocks: undefined,
       loadedObjs: [],
       textures: [],
+      images: [],
       localOptions: {
         scale: 5.0,
         rotationX: 0.0,
@@ -184,6 +186,7 @@ export default {
         enableGlobalLight : true,
         enableEdge : true,
         sunRadius : 2048,
+        wireFrame : false,
       }
     };
   },
@@ -385,7 +388,16 @@ export default {
     initImage() {
       this.images = [];
       this.textures = [];
-      let imagePaths = ["/image/cube/dirt.png", "/image/cube/stone.png", "/image/cube/cobblestone.png", "/image/cube/minecraft-texture.png"];
+      let imagePaths = [
+        "/image/cube/dirt.png", 
+        "/image/cube/stone.png", 
+        "/image/cube/cobblestone.png", 
+        "/image/cube/minecraft-texture.png", 
+        "/image/cube/wood.jpg", 
+        "/image/cube/globe.jpg", 
+        "/image/cube/grid.jpg",
+        "/image/cube/earth.jpg",
+      ];
       let imageLength = imagePaths.length;
       let glBuffer = new Buffer(this.webGl.gl);
       let loadedCount = 0;
@@ -396,7 +408,6 @@ export default {
           console.log("loaded : ", imagePath);
           this.images[index] = image;
           this.textures[index] = glBuffer.createTexture(image);
-
           loadedCount++;
           if (imageLength == loadedCount) {
             console.log("inited!");
@@ -474,6 +485,13 @@ export default {
           });
         });
     },
+    batchAll() {
+      let results = BufferBatch.batch100(this.webGl.gl, this.webGl.renderableObjectList.renderableObjects);
+      this.webGl.renderableObjectList.removeAll();
+      results.forEach((result) => {
+        this.webGl.renderableObjectList.push(result);
+      })
+    },
     reload(isBatch = false) {
       this.initBlocks();
       if (isBatch) {
@@ -507,6 +525,8 @@ export default {
     },
     removeAll() {
       this.webGl.renderableObjectList.removeAll();
+      const dist = 2048;
+      this.base(dist, dist);
     },
     createObject(options) {
       options.image = this.images[2];

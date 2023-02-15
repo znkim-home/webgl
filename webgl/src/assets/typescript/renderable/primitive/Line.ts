@@ -5,6 +5,7 @@ import { mat2, mat3, mat4, vec2, vec3, vec4 } from 'gl-matrix'; // eslint-disabl
 import FrameBufferObject from '../../functional/FrameBufferObject.js';
 
 export default class Line extends Renderable {
+  static objectName: string = "Line";
   coordinates: Array<Array<number>>;
   length: number;
   height: number;

@@ -1,16 +1,23 @@
 import Buffer from '../../Buffer.js';
 import Renderable from '../../abstract/Renderable.js';
-import Triangle from '../../geometry/Triangle.js';
 import Tessellator from '../../functional/Tessellator.js';
+
+import Triangle from '../../topology/Triangle.js';
+import Vertex from '../../topology/Vertex.js'
+import Vertices from '../../topology/Vertices.js'
+import VerticesMatrix from '../../topology/VerticesMatrix.js'
+import Indices from '../../topology/Indices.js';
+import Revolutor from '../../functional/Revolutor.js'
 
 import { mat2, mat3, mat4, vec2, vec3, vec4 } from 'gl-matrix'; // eslint-disable-line no-unused-vars
 import FrameBufferObject from '../../functional/FrameBufferObject.js';
 
 export default class Tube extends Renderable {
+  static objectName: string = "Tube";
+  indicesCount: number;
   height: number;
   triangles: Array<Triangle>;
   radius: number;
-  innerRadius: number;
   density: number;
   coordinates: Array<vec2>;
 
@@ -25,11 +32,10 @@ export default class Tube extends Renderable {
   init(options: any) {
     this.triangles = [];
     this.radius = 1.0;
-    this.innerRadius = 0.5;
-    if (options?.innerRadius) this.innerRadius = options.innerRadius;
     this.height = 3.0;
     this.density = 36;
     this.name = "Untitled Cylinder";
+    this.indicesCount = 0;
     if (options?.radius) this.radius = options.radius;
     if (options?.height) this.height = options.height;
     if (options?.density) this.density = options.density;
@@ -71,7 +77,7 @@ export default class Tube extends Renderable {
         gl.enableVertexAttribArray(shaderInfo.attributeLocations.textureCoordinate);
         buffer.bindBuffer(buffer.textureGlBuffer, 2, shaderInfo.attributeLocations.textureCoordinate);
       }
-      gl.drawElements(gl.TRIANGLES, buffer.indicesLength, gl.UNSIGNED_SHORT, 0);
+      gl.drawElements(Renderable.globalOptions.drawElementsType, buffer.indicesLength, gl.UNSIGNED_SHORT, 0);
       frameBufferObj.unbind();
     });
   }
@@ -82,6 +88,7 @@ export default class Tube extends Renderable {
       if (this.texture) {
         this.buffer.texture = this.texture;
       }
+      this.indicesCount = 0;
       let color = this.color;
       let selectionColor = this.selectionColor;
       let colors: Array<number> = [];
@@ -90,90 +97,63 @@ export default class Tube extends Renderable {
       let normals: Array<number> = [];
       let textureCoordinates: Array<number> = [];
 
-      let innerCoordinates: vec2[] = [];
-      let outerCoordinates: vec2[] = [];
-      let angleOffset = (360 / this.density);
-      let origin = vec2.fromValues(0.0, 0.0);
-      
-      let innerRotateVec2 = vec2.fromValues(0.0, 0.0 + this.innerRadius);
-      let outerRotateVec2 = vec2.fromValues(0.0, 0.0 + this.radius);
-      for (let i = 0; i < this.density; i++) {
-        let angle = Math.radian(i * angleOffset);
-        let innerRotated = vec2.rotate(vec2.create(), innerRotateVec2, origin, angle);
-        let outerRotated = vec2.rotate(vec2.create(), outerRotateVec2, origin, angle);
-        innerCoordinates.push(innerRotated);
-        outerCoordinates.push(outerRotated);
-      }
+      let topPositions: Array<vec3> = [];
+      topPositions.push(vec3.fromValues(this.radius / 4, 0.0, this.height));
+      topPositions.push(vec3.fromValues(this.radius / 2, 0.0, this.height));
+      let innerPositions: Array<vec3> = [];
+      innerPositions.push(vec3.fromValues(this.radius / 4, 0.0, 0));
+      innerPositions.push(vec3.fromValues(this.radius / 4, 0.0, this.height));
+      let outerPositions: Array<vec3> = [];
+      outerPositions.push(vec3.fromValues(this.radius / 2, 0.0, this.height));
+      outerPositions.push(vec3.fromValues(this.radius / 2, 0.0, 0));
+      let bottomPositions: Array<vec3> = [];
+      bottomPositions.push(vec3.fromValues(this.radius / 2, 0.0, 0));
+      bottomPositions.push(vec3.fromValues(this.radius / 4, 0.0, 0.0));
 
-      let topInnerPositions = innerCoordinates.map((coordinate) => vec3.fromValues(coordinate[0], coordinate[1], this.height));
-      let topOuterPositions = outerCoordinates.map((coordinate) => vec3.fromValues(coordinate[0], coordinate[1], this.height));
-      let bottomInnerPositions = innerCoordinates.map((coordinate) => vec3.fromValues(coordinate[0], coordinate[1], 0.0));
-      let bottomOuterPositions = outerCoordinates.map((coordinate) => vec3.fromValues(coordinate[0], coordinate[1], 0.0));
+      let indicesObject = new Indices();
 
-      let bbox = this.getMinMax(topOuterPositions);
-      bbox.minz = this.position[2];
-      bbox.maxz = this.position[2] + this.height;
+      let topVerticesMatrix = Revolutor.revolute(topPositions, indicesObject, this.density);
+      let innerVerticesMatrix = Revolutor.revolute(innerPositions, indicesObject, this.density);
+      let outerVerticesMatrix = Revolutor.revolute(outerPositions, indicesObject, this.density);
+      let bottomVerticesMatrix = Revolutor.revolute(bottomPositions, indicesObject, this.density);
 
-      if (Tessellator.validateCCW(topOuterPositions) < 0) {
-        topInnerPositions.reverse();
-        topOuterPositions.reverse();
-        bottomInnerPositions.reverse();
-        bottomOuterPositions.reverse();
-      }
-      
-      let topTriangles: Triangle[] = [];
-      topOuterPositions.forEach((topOuterPosition, index) => {
-        let innerPosition = topInnerPositions.get(index);
-        let nextInnerPosition = topInnerPositions.getNext(index);
-        let nextOuterPosition = topOuterPositions.getNext(index);
-        topTriangles.push(new Triangle(innerPosition, topOuterPosition, nextOuterPosition));
-        topTriangles.push(new Triangle(innerPosition, nextOuterPosition, nextInnerPosition));
-      });
+      let indices: Array<number> = [];
+      let topTriangles = Revolutor.convertTriangles(topVerticesMatrix);
+      let innerTriangles = Revolutor.convertTriangles(innerVerticesMatrix);
+      let outerTriangles = Revolutor.convertTriangles(outerVerticesMatrix);
+      let bottomTriangles = Revolutor.convertTriangles(bottomVerticesMatrix);
 
-      let bottomTriangles: Triangle[] = [];
-      bottomOuterPositions.forEach((bottomOuterPosition, index) => {
-        let innerPosition = bottomInnerPositions.get(index);
-        let nextInnerPosition = bottomInnerPositions.getNext(index);
-        let nextOuterPosition = bottomOuterPositions.getNext(index);
-        bottomTriangles.push(new Triangle(innerPosition, nextOuterPosition, bottomOuterPosition));
-        bottomTriangles.push(new Triangle(innerPosition, nextInnerPosition, nextOuterPosition));
-      });
-      
-      let sideInnerTriangles = this.createSideTriangle(topOuterPositions, bottomOuterPositions, true);
-      let sideOuterTriangles = this.createSideTriangle(topInnerPositions, bottomInnerPositions, false);
-
-      let triangles: Triangle[] = [];
-      triangles = triangles.concat(topTriangles);
-      triangles = triangles.concat(bottomTriangles);
-      triangles = triangles.concat(sideOuterTriangles);
-      triangles = triangles.concat(sideInnerTriangles);
-      this.triangles = triangles;
-      triangles.forEach((triangle) => {
-        let trianglePositions = triangle.positions;
-        let normal = triangle.getNormal();
-        trianglePositions.forEach((position) => { // vec3
-          position.forEach((value) => positions.push(value));
-          normal.forEach((value) => normals.push(value));
-          color.forEach((value) => colors.push(value));
-          selectionColor.forEach((value) => selectionColors.push(value));
-          let xoffset = bbox.maxx - bbox.minx;
-          let yoffset = bbox.maxy - bbox.miny;
-          let zoffset = bbox.maxz - bbox.minz;
-          if (normal[0] == 1 || normal[0] == -1) {
-            textureCoordinates.push((position[1] - bbox.miny) / yoffset);
-            textureCoordinates.push((position[2] - bbox.minz) / zoffset);
-          } else if (normal[1] == 1 || normal[1] == -1) {
-            textureCoordinates.push((position[0] - bbox.minx) / xoffset);
-            textureCoordinates.push((position[2] - bbox.minz) / zoffset);
-          } else if (normal[2] == 1 || normal[2] == -1) {
-            textureCoordinates.push((position[0] - bbox.minx) / xoffset);
-            textureCoordinates.push((position[1] - bbox.miny) / yoffset);
+      topTriangles = topTriangles.concat(innerTriangles);
+      topTriangles = topTriangles.concat(outerTriangles);
+      topTriangles = topTriangles.concat(bottomTriangles);
+      topTriangles.forEach((triangle) => {
+        let validation = triangle.validate();
+        triangle.vertices.forEach(vertex => {
+          if (validation) {
+            indices.push(vertex.index);
           }
         });
-      });
+      })
 
-      let indices = new Uint16Array(positions.length);
-      this.buffer.indicesVBO = indices.map((obj, index) => index);
+      let verticesMatrix = new VerticesMatrix();
+      verticesMatrix.concat(topVerticesMatrix);
+      verticesMatrix.concat(innerVerticesMatrix);
+      verticesMatrix.concat(outerVerticesMatrix);
+      verticesMatrix.concat(bottomVerticesMatrix);
+      verticesMatrix.forEach((vertices) => {
+        vertices.forEach((vertex, index) => {
+          let position = vertex.position;
+          let normal = vertex.normal;
+          let color = vertex.color;
+          let textureCoordinate = vertex.textureCoordinate;
+          position.forEach((value) => positions.push(value));
+          normal.forEach((value) => normals.push(value));
+          this.color.forEach((value) => colors.push(value));
+          selectionColor.forEach((value) => selectionColors.push(value));
+          textureCoordinate.forEach((value) => textureCoordinates.push(value));
+        });
+      });
+      this.buffer.indicesVBO = new Uint16Array(indices);
       this.buffer.positionsVBO = new Float32Array(positions);
       this.buffer.normalVBO = new Float32Array(normals);
       this.buffer.colorVBO = new Float32Array(colors);
@@ -194,32 +174,5 @@ export default class Tube extends Renderable {
       this.dirty = false;
     }
     return this.buffer;
-  }
-  createSideTriangle(topPositions: vec3[], bottomPositions: vec3[], isCCW: boolean = true) {
-    let triangles = [];
-    if (topPositions.length != bottomPositions.length) {
-      throw new Error("plane length is not matched.");
-    }
-    let length = topPositions.length;
-    for (let i = 0; i < length; i++) {
-      let topA = topPositions.getPrev(i);
-      let topB = topPositions.get(i);
-      let bottomA = bottomPositions.getPrev(i);
-      let bottomB = bottomPositions.get(i);
-      if (isCCW) {
-        triangles.push(new Triangle(topB, topA, bottomA));
-        triangles.push(new Triangle(topB, bottomA, bottomB));
-      } else {
-        triangles.push(new Triangle(topB, bottomA, topA));
-        triangles.push(new Triangle(topB, bottomB, bottomA));
-      }
-    }
-    return triangles;
-  }
-  createRandomColor() {
-    let r = Math.round(Math.random() * 10) / 10;
-    let g = Math.round(Math.random() * 10) / 10;
-    let b = Math.round(Math.random() * 10) / 10;
-    return vec4.fromValues(r, g, b, 1.0);
   }
 }

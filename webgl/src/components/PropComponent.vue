@@ -10,12 +10,34 @@
       <div class="show-hide" v-on:click="isShow = !isShow">show/hide</div>
     </div>
     <div v-show="isShow">
+      <h2>TEXTURES</h2>
+      <ul class="small">
+        <li v-on:click="selectTexture(undefined)" :class="{selected : (selectedTexture === undefined)}">NONE</li>
+        <li v-for="(prop, index) in this.$parent.$data.textures" 
+          :key="index" v-on:click="selectTexture(index)" 
+          :class="{selected : (selectedTexture === index)}" 
+          :title="this.$parent.$data.images[index].src"
+          :style="{'background-image' : 'url(' + this.$parent.$data.images[index].src + ')'}">{{index}}</li>
+      </ul>
+      <h2>PROPS</h2>
       <ul>
         <li v-on:click="selectProp(undefined)" :class="{selected : (selectedProp === undefined)}">NONE</li>
-        <li v-for="(prop, index) in propList" :key="index" v-on:click="selectProp(index)" :class="{selected : (selectedProp === index)}">{{prop.name}}</li>
+        <li v-for="(prop, index) in propList" :key="index" v-on:click="selectProp(index)" :class="{selected : (selectedProp === index)}">{{prop.objectName}}</li>
       </ul>
       <h2>OBJECT OPTIONS</h2>
-      <input type="file" class="mini-btn" id="fileUpload" accept=".obj" v-on:change="readObj"/>
+      <div class="block-group">
+        <label>HEIGHT</label>
+        <input type="range" v-model="localOptions.height" min="0" max="1000" step="1" v-on:input="rotateSelectedObject"/>
+      </div>
+      <div class="block-group">
+        <label>INNER-RADIUS</label>
+        <input type="range" v-model="localOptions.innerRadius" min="0" max="1000" step="1" v-on:input="rotateSelectedObject"/>
+      </div>
+      <div class="block-group">
+        <label>OUTER-RADIUS</label>
+        <input type="range" v-model="localOptions.outerRadius" min="0" max="1000" step="1" v-on:input="rotateSelectedObject"/>
+      </div>
+      <input type="file" class="mini-btn" id="fileUpload" accept=".obj,.jpg" v-on:change="readObj"/>
     </div>
   </div>
 </template>
@@ -32,6 +54,12 @@ export default {
     return {
       isShow : true,
       propList : [],
+      localOptions: {
+        height: 200.0,
+        innerRadius: 50.0,
+        outerRadius: 100.0,
+      },
+      selectedTexture : 0,
       selectedProp : undefined,
       loadedProp : undefined
     };
@@ -42,7 +70,7 @@ export default {
   },
   methods: {
     init() {
-      const primitiveProps = [Cube, Cylinder, Cone, Sphere, Ring, Tube, Obj];
+      const primitiveProps = [Cube, Cylinder, Cone, Sphere, Ring, Tube, Polygon, Obj];
       //const primitiveProps = [Cube, Cylinder, Cone, Sphere, Rectangle, Point, Line, Polygon, Obj];
       this.propList = primitiveProps;
     },
@@ -62,6 +90,13 @@ export default {
         }
       });
     },
+    selectTexture(index) {
+      if (index === undefined) {
+        this.selectedTexture = undefined;
+      } else {
+        this.selectedTexture = index;
+      }
+    },
     selectProp(index) {
       if (index === undefined) {
         this.selectedProp = undefined;
@@ -73,17 +108,19 @@ export default {
       if (this.selectedProp !== undefined) {
         let webGl = this.webGl;
         let textures = this.$parent.$data.textures;
+        let images = this.$parent.$data.images;
         const options = {
           name: "DIRT",
           position: { x: pos[0], y: pos[1], z: pos[2]},
           color: { r: 0.5, g: 0.5, b: 0.5, a: 1.0 },
-          height: 256,
-          innerRadius: 75.0,
-          radius: 100.0,
+          height: this.localOptions.height,
+          innerRadius: this.localOptions.innerRadius,
+          radius: this.localOptions.outerRadius,
           scale: 5.0,
-          texture : textures[1],
+          texture : textures[this.selectedTexture],
           texturePosition : [0, 0],
           rotation: { heading : 0.0, pitch : 0.0, roll : 0.0},
+          coordinates: [[this.localOptions.height, 0], [this.localOptions.height, this.localOptions.height], [0, this.localOptions.height], [0, 0]],
         };
 
         let selected = this.propList[this.selectedProp];
@@ -190,6 +227,17 @@ export default {
   text-align: center;
   line-height: 50px;
   cursor: pointer;
+  background-repeat: no-repeat;
+  background-size: cover;
+  image-rendering: pixelated;
+}
+.dev-tool ul.small {
+  height: 50px !important;
+}
+.dev-tool ul.small > li {
+  min-width: 30px;
+  min-height: 30px;
+  line-height: 30px;
 }
 .dev-tool ul > li:hover {
   color: rgb(199, 199, 199);

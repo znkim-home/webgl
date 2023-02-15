@@ -24,6 +24,8 @@ declare global {
     get(a: number): T;
     getPrev(a: number): T;
     getNext(a: number): T;
+    getPrevIndex(a: number): number;
+    getNextIndex(a: number): number;
     loopIndex(a: number): T;
   }
   interface CustomScreen {

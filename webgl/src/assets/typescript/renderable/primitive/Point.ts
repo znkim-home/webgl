@@ -5,6 +5,7 @@ import { mat2, mat3, mat4, vec2, vec3, vec4 } from 'gl-matrix'; // eslint-disabl
 import FrameBufferObject from '../../functional/FrameBufferObject.js';
 
 export default class Point extends Renderable {
+  static objectName: string = "Point";
   height: number;
 
   constructor(options: any) {

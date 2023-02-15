@@ -4,6 +4,7 @@ import Shader from './Shader.js';
 import Camera from './Camera.js';
 import Sun from './Sun.js';
 import FrameBufferObject from './functional/FrameBufferObject.js';
+import Renderable from './abstract/Renderable.js';
 import RenderableObjectList from './functional/RenderableObjectList.js';
 
 import { DefaultShader } from './shader/DefaultShader.js';
@@ -19,6 +20,8 @@ Math.randomInt = () => Math.round(Math.random() * 10);
 Array.prototype.get = function(index) {return this[this.loopIndex(index)]};
 Array.prototype.getPrev = function(index) {return this[this.loopIndex(index - 1)]};
 Array.prototype.getNext = function(index) {return this[this.loopIndex(index + 1)]};
+Array.prototype.getPrevIndex = function(index) {return this.loopIndex(index - 1)};
+Array.prototype.getNextIndex = function(index) {return this.loopIndex(index + 1)};
 Array.prototype.loopIndex = function(index) {
   if (index < 0) return index % this.length + this.length;
   else return index % this.length;
@@ -132,6 +135,7 @@ export default class WebGL {
     this.lightMapShaderInfo = this.lightMapShader.shaderInfo;
     
     this.camera = new Camera({fovyDegree : this.globalOptions.fovyDegree});
+    if (!Renderable.globalOptions) Renderable.globalOptions = this.globalOptions;
 
     let radius = 2048 * 2;
     this.sun = new Sun({
@@ -175,6 +179,11 @@ export default class WebGL {
       this.gl.enable(this.gl.DEPTH_TEST);
     } else {
       this.gl.disable(this.gl.DEPTH_TEST);
+    }
+    if (this.globalOptions.wireFrame) {
+      this.globalOptions.drawElementsType = this.gl.LINES;
+    } else {
+      this.globalOptions.drawElementsType = this.gl.TRIANGLES;
     }
   }
   render(now: number) {

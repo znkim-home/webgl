@@ -9,7 +9,8 @@ declare global {
   }
 }
 
-export default class Renderable implements RenderableInterface{
+export default class Renderable implements RenderableInterface {
+  static objectName: string = "Renderable";
   id: number;
   name: string;
   buffer: any;
@@ -20,6 +21,7 @@ export default class Renderable implements RenderableInterface{
   transformMatrix: mat4;
   rotationMatrix: mat4;
   dirty: boolean;
+  static globalOptions : any;
   constructor() {
     if (this.constructor === Renderable) {
       throw new Error("Renderable is abstract class. Created an instance of an abstract class.");

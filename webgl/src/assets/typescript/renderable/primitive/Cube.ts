@@ -5,6 +5,7 @@ import { mat2, mat3, mat4, vec2, vec3, vec4 } from 'gl-matrix'; // eslint-disabl
 import FrameBufferObject from '../../functional/FrameBufferObject.js';
 
 export default class Cube extends Renderable {
+  static objectName: string = "Cube";
   texturePosition: vec2;
   textureSize: vec2;
   size: vec3;
@@ -56,13 +57,13 @@ export default class Cube extends Renderable {
         gl.enableVertexAttribArray(shaderInfo.attributeLocations.textureCoordinate);
         buffer.bindBuffer(buffer.textureGlBuffer, 2, shaderInfo.attributeLocations.textureCoordinate);
       }
-      gl.drawElements(gl.TRIANGLES, buffer.indicesLength, gl.UNSIGNED_SHORT, 0);
+      gl.drawElements(Renderable.globalOptions.drawElementsType, buffer.indicesLength, gl.UNSIGNED_SHORT, 0);
       frameBufferObj.unbind();
     });
   }
   // overriding
   getBuffer(gl: WebGLRenderingContext | WebGL2RenderingContext) {
-    if (this.buffer === undefined) {
+    if (this.buffer === undefined || this.dirty === true) {
       this.buffer = new Buffer(gl);
       if (this.texture) {
         this.buffer.texture = this.texture;
@@ -279,6 +280,7 @@ export default class Cube extends Renderable {
       this.buffer.textureGlBuffer = this.buffer.createBuffer(this.buffer.textureVBO);
       this.buffer.indicesGlBuffer = this.buffer.createIndexBuffer(this.buffer.indicesVBO);
       this.buffer.indicesLength = this.buffer.indicesVBO.length;
+      this.dirty = false;
     }
     return this.buffer;
   }

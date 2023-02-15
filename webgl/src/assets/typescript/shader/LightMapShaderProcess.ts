@@ -34,6 +34,7 @@ class LightMapShaderProcess extends ShaderProcess {
 
     let ortRange = this.sun.getRadius();
     gl.viewport(0, 0, width, height);
+    gl.lineWidth(globalOptions.lineWidth);
 
     let projectionMatrix = mat4.create();
     mat4.perspective(projectionMatrix, this.camera.fovyRadian, globalOptions.aspect, globalOptions.near, globalOptions.far);

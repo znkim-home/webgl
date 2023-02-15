@@ -4,7 +4,7 @@ import ShaderProcess from '../abstract/ShaderProcess';
 import FrameBufferObject from '../functional/FrameBufferObject';
 import Renderable from '../abstract/Renderable';
 
-class DefaultShaderProcess extends ShaderProcess {
+class SkyBoxShaderProcess extends ShaderProcess {
   renderableList: RenderableListInterface;
   frameBufferObjs: any;
   camera: any;
