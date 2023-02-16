@@ -120,7 +120,7 @@ export default {
           texture : textures[this.selectedTexture],
           texturePosition : [0, 0],
           rotation: { heading : 0.0, pitch : 0.0, roll : 0.0},
-          coordinates: [[this.localOptions.height, 0], [this.localOptions.height, this.localOptions.height], [0, this.localOptions.height], [0, 0]],
+          coordinates: [[0, this.localOptions.height], [-this.localOptions.height, 0], [0, -this.localOptions.height], [this.localOptions.height, 0]],
         };
 
         let selected = this.propList[this.selectedProp];
@@ -232,7 +232,7 @@ export default {
   image-rendering: pixelated;
 }
 .dev-tool ul.small {
-  height: 50px !important;
+  height: 70px !important;
 }
 .dev-tool ul.small > li {
   min-width: 30px;

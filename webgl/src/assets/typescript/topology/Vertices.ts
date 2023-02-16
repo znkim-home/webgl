@@ -3,7 +3,9 @@ import Vertex from './Vertex';
 
 export default class Vertices {
   vertices: Array<Vertex>;
-  constructor(vertices?: Array<Vertex>) {
+  isCW: boolean;
+  constructor(vertices?: Array<Vertex>, isCW?: boolean) {
+    this.isCW = isCW ? true : false;
     this.vertices = [];
     if (vertices) {
       vertices.forEach((vertex) => {

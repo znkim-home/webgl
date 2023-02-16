@@ -68,6 +68,9 @@ export default class Polygon extends Renderable {
   getBuffer(gl: WebGLRenderingContext | WebGL2RenderingContext) {
     if (this.buffer === undefined || this.dirty === true) {
       this.buffer = new Buffer(gl);
+      if (this.texture) {
+        this.buffer.texture = this.texture;
+      }
       let color = this.color;
       let selectionColor = this.selectionColor;
       let colors: Array<number> = [];
@@ -81,9 +84,15 @@ export default class Polygon extends Renderable {
       let indicesObject = new Indices();
       let verticesList = Extruder.extrude(bottomPositions, indicesObject, this.height);
       
+
       let indices: Array<number> = [];
-      let triangles = Extruder.convertTriangles(verticesList);
-      triangles.forEach((triangle) => {
+      let topTriangles = Extruder.convertTriangles(verticesList.up);
+      let sideTriangles = Extruder.convertTriangles(verticesList.side);
+      let bottomTriangles = Extruder.convertTriangles(verticesList.down);
+
+      topTriangles = topTriangles.concat(bottomTriangles);
+      topTriangles = topTriangles.concat(sideTriangles);
+      topTriangles.forEach((triangle) => {
         let validation = triangle.validate();
         triangle.vertices.forEach(vertex => {
           if (validation) {
@@ -92,12 +101,12 @@ export default class Polygon extends Renderable {
         });
       })
 
-      verticesList.forEach((vertices) => {
+      verticesList.all.forEach((vertices) => {
         vertices.forEach((vertex, index) => {
           let position = vertex.position;
           let normal = vertex.normal;
-          let color = vertex.color;
           let textureCoordinate = vertex.textureCoordinate;
+          //let color = vertex.color;
           position.forEach((value) => positions.push(value));
           normal.forEach((value) => normals.push(value));
           this.color.forEach((value) => colors.push(value));

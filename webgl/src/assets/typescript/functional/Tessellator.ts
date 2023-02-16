@@ -10,7 +10,7 @@ import Indices from '../topology/Indices.js';
  * Tessellator
  */
 export default class Tessellator {
-    static tessellate(vertices: Vertices, indices: Indices): VerticesList {
+    static tessellate(vertices: Vertices): VerticesList {
         let bbox: vec4 = this.getBbox(vertices);
         let result: VerticesList = new VerticesList();
         let plane = this.validateConvex(vertices);
@@ -18,9 +18,9 @@ export default class Tessellator {
             let vertices = ConvexPolygon;
             vertices.forEach((vertex) => {
                 let position = vertex.position;
-                let relPosition = vec2.fromValues(bbox[2] - position[0], bbox[3] - position[1]);
-                let relMaxPosition = vec2.fromValues(bbox[2] - bbox[0], bbox[3] - bbox[1]);
-                vertex.textureCoordinate = vec2.fromValues(relPosition[0] / relMaxPosition[0], relPosition[1] / relMaxPosition[1]);
+                let relPosition = vec2.fromValues((bbox[2] - position[0]), (bbox[3] - position[1]));
+                let relMaxPosition = vec2.fromValues((bbox[2] - bbox[0]), (bbox[3] - bbox[1]));
+                vertex.textureCoordinate = vec2.fromValues((relPosition[0] / relMaxPosition[0]), (relPosition[1] / relMaxPosition[1]));
             })
             result.push(vertices);
         })
@@ -84,8 +84,9 @@ export default class Tessellator {
         return intersection !== undefined;
     }
     static isConvex(vertices: Vertices) {
+        let originNormal = this.getPositionNormal(vertices, 0);
         let cw = vertices.vertices.find((vertex, index) => {
-            return (this.getPositionNormal(vertices, index) < 0);
+            return (originNormal != this.getPositionNormal(vertices, index));
         });
         return cw === undefined;
     }
@@ -109,6 +110,7 @@ export default class Tessellator {
             }
             index++;
         }
+        list.isCW = vertices.isCW;
         return list;
     }
     static validateCCW(vertices: Vertices): number {

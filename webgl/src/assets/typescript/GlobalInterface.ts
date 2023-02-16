@@ -1,4 +1,19 @@
 declare global {
+  interface LocalOptions {
+    fovyDegree: number;
+    aspect: number;
+    near: number;
+    far: number;
+    pointSize: number;
+    lineWidth: number;
+    debugMode: boolean;
+    cullFace: boolean;
+    depthTest: boolean;
+    enableSsao: boolean;
+    enableEdge: boolean;
+    enableGlobalLight: boolean;
+    selectedObjectId: number;
+  }
   interface GlobalOptions {
     fovyDegree: number;
     aspect: number;
@@ -12,7 +27,6 @@ declare global {
     enableSsao: boolean;
     enableEdge: boolean;
     enableGlobalLight: boolean;
-
     selectedObjectId: number;
   }
   interface Math {

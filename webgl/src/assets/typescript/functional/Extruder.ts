@@ -14,34 +14,61 @@ import Indices from '../topology/Indices.js';
  */
 export default class Extruder {
   static extrude(positions: Array<vec3>, indices: Indices, height: number) {
-    let topPositions: Array<vec3> = positions;
-    let bottomPositions: Array<vec3> = positions.map((position) => vec3.fromValues(position[0], position[1], position[2] + height));
-    let topVertices = new Vertices(topPositions.map((position) => {
+    let topVertices: Vertices = new Vertices(positions.map((position) => {
+      let positionVec3 = vec3.fromValues(position[0], position[1], position[2] + height);
       return new Vertex.Builder()
       .index(indices.getAndNext())
-      .position(position)
+      .position(positionVec3)
       .build();
     }));
-    let bottomVertices = new Vertices(bottomPositions.map((position) => {
+    let bottomVertices: Vertices = new Vertices(positions.map((position) => {
+      let positionVec3 = vec3.fromValues(position[0], position[1], position[2]);
       return new Vertex.Builder()
       .index(indices.getAndNext())
-      .position(position)
+      .position(positionVec3)
       .build();
-    }));
-    //let topVerticesList = Tessellator.tessellate(topVertices, indices);
-    let bottomVerticesList = Tessellator.tessellate(bottomVertices, indices);
-    //let sideVerticeList = this.createSideVerticeList(topVertices, bottomVertices, indices);
-    //topVerticesList.concat(bottomVerticesList);
-    //topVerticesList.concat(sideVerticeList);
-    return bottomVerticesList;
+    }).reverse(), true);
+    let allVerticesList = new VerticesList();
+    let topVerticesList = Tessellator.tessellate(topVertices);
+    let bottomVerticesList = Tessellator.tessellate(bottomVertices);
+    let sideVerticeList = this.createSideVerticeList(topVertices, bottomVertices, indices);
+    allVerticesList.concat(topVerticesList);
+    allVerticesList.concat(bottomVerticesList);
+    allVerticesList.concat(sideVerticeList);
+    return {
+      up : topVerticesList,
+      side : sideVerticeList,
+      down : bottomVerticesList,
+      all : allVerticesList
+    };
   }
   static convertTriangles(verticesList: VerticesList): Array<Triangle> {
     let triangles: Array<Triangle> = []; 
     for (let loop = 0; loop < verticesList.length; loop++) {
       let crntVertices = verticesList.get(loop);
+      for (let verticeLoop = 1; verticeLoop < crntVertices.length - 1; verticeLoop++) {
+        let originVertex = crntVertices.get(0);
+        let crntVertex = crntVertices.get(verticeLoop);
+        let nextVertex = crntVertices.getNext(verticeLoop);
+        let triangleTop;
+        if (crntVertices.isCW) {
+          triangleTop = new Triangle(originVertex, nextVertex, crntVertex);
+        } else {
+          triangleTop = new Triangle(originVertex, crntVertex, nextVertex);
+        }
+        triangleTop.calcNormal();
+        triangles.push(triangleTop);
+      }
+    }
+    return triangles;
+  }
+  static convertSideTriangles(verticesList: VerticesList): Array<Triangle> {
+    let triangles: Array<Triangle> = []; 
+    for (let loop = 0; loop < verticesList.length; loop++) {
+      let crntVertices = verticesList.get(loop);
       let nextVertices = verticesList.getNext(loop);
       for (let verticeLoop = 0; verticeLoop < crntVertices.length; verticeLoop++) {
-        let crntCrntVertex = crntVertices.get(verticeLoop);
+        let crntCrntVertex = crntVertices.get(0);
         let crntNextVertex = crntVertices.getNext(verticeLoop);
         let nextCrntVertex = nextVertices.get(verticeLoop);
         let nextNextVertex = nextVertices.getNext(verticeLoop);
@@ -56,11 +83,9 @@ export default class Extruder {
     return triangles;
   }
   static createSideVerticeList(topVertices: Vertices, bottomVertices: Vertices, indices: Indices): VerticesList {
+    bottomVertices.vertices.reverse();
     let verticesList = new VerticesList();
     topVertices.forEach((vertex, index) => {
-      if (!index) {
-        return;
-      }
       let topCrntVertex: Vertex = topVertices.get(index);
       let topNextVertex: Vertex = topVertices.getNext(index);
       let bottomCrntVertex: Vertex = bottomVertices.get(index);
@@ -70,27 +95,27 @@ export default class Extruder {
         .Builder()
         .index(indices.getAndNext())
         .position(topCrntVertex.position)
-        .textureCoordinate(vec2.fromValues(0,0))
-        .build()
-      );
-      vertice.push(new Vertex
-        .Builder()
-        .index(indices.getAndNext())
-        .position(topNextVertex.position)
-        .textureCoordinate(vec2.fromValues(1,0))
-        .build()
-      );
-      vertice.push(new Vertex
-        .Builder()
-        .index(indices.getAndNext())
-        .position(bottomCrntVertex.position)
         .textureCoordinate(vec2.fromValues(0,1))
         .build()
       );
       vertice.push(new Vertex
         .Builder()
         .index(indices.getAndNext())
+        .position(bottomCrntVertex.position)
+        .textureCoordinate(vec2.fromValues(0,0))
+        .build()
+      );
+      vertice.push(new Vertex
+        .Builder()
+        .index(indices.getAndNext())
         .position(bottomNextVertex.position)
+        .textureCoordinate(vec2.fromValues(1,0))
+        .build()
+      );
+      vertice.push(new Vertex
+        .Builder()
+        .index(indices.getAndNext())
+        .position(topNextVertex.position)
         .textureCoordinate(vec2.fromValues(1,1))
         .build()
       );

@@ -185,6 +185,8 @@ export default class WebGL {
     } else {
       this.globalOptions.drawElementsType = this.gl.TRIANGLES;
     }
+    this.globalOptions.far = parseFloat(this.globalOptions.far);
+    this.globalOptions.near = parseFloat(this.globalOptions.near);
   }
   render(now: number) {
     now *= 0.001
