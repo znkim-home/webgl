@@ -55,7 +55,7 @@ export default {
         const target = e.changedTouches [0];
         this.touchStartPosition = [target.clientX, target.clientY];
 
-        const mouseX = target.clientX;Plane
+        const mouseX = target.clientX;
         const mouseY = canvas.height -target.clientY;
         const ratioX = mouseX / canvas.width;
         const ratioY = mouseY / canvas.height;

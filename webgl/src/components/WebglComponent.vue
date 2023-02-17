@@ -1,5 +1,5 @@
 <template>
-  <div class="dev-info" style="right: 0px; bottom: 0px">{{`${fps} FPS`}}</div>
+  <div class="dev-info fps" style="right: 0px; bottom: 0px">{{`${fps} FPS`}}</div>
   <div
     v-show="consoleTools"
     class="dev-tool"
@@ -8,9 +8,9 @@
     ondragstart="return false"
     onselectstart="return false"
   >
-    <div class="header">
+    <div class="header" v-on:click="showConsole = !showConsole">
       <h3>Dev Console</h3>
-      <div class="show-hide" v-on:click="showConsole = !showConsole">show/hide</div>
+      <div class="show-hide">show/hide</div>
     </div>
     <div v-show="showConsole">
       <pre class="console"></pre>
@@ -24,17 +24,17 @@
     ondragstart="return false"
     onselectstart="return false"
   >
-    <div class="header">
+    <div class="header" v-on:click="showDraw = !showDraw">
       <h3>Options</h3>
-      <div class="show-hide" v-on:click="showDraw = !showDraw">show/hide</div>
+      <div class="show-hide">show/hide</div>
     </div>
     <div v-show="showDraw">
       <div class="block-group">
-        <button class="mini-btn" v-on:click="initPosition()">InitPosition</button>
-        <button class="mini-btn" v-on:click="getExtrusion()">Extrusion</button>
-        <button class="mini-btn" v-on:click="removeObj(selectedObject)">remove</button>
+        <button class="mini-btn" v-on:click="initPosition()">InitPos</button>
+        <!--<button class="mini-btn" v-on:click="getExtrusion()">Extrusion</button>-->
+        <button class="mini-btn" v-on:click="removeObj(selectedObject)">Remove</button>
         <button class="mini-btn" v-on:click="removeAll()">RemoveAll</button>
-        <button class="mini-btn" v-on:click="consoleTools = !consoleTools">Console/Render</button>
+        <button class="mini-btn" v-on:click="consoleTools = !consoleTools">Console</button>
       </div>
       <div class="block-group">
         <label>SCALE</label>
@@ -109,9 +109,9 @@
     ondragstart="return false"
     onselectstart="return false"
   >
-    <div class="header">
+    <div class="header" v-on:click="showRender = !showRender">
       <h3>Renders</h3>
-      <div class="show-hide" v-on:click="showRender = !showRender">show/hide</div>
+      <div class="show-hide">show/hide</div>
     </div>
     <div v-show="showRender">
       <h2>OBJECT INFO</h2>
@@ -158,10 +158,10 @@ export default {
       cameraMode: 0,
       drawTools: true,
       renderTools: true,
-      showDraw: true,
-      showRender: true,
-      consoleTools: false,
+      showDraw: false,
+      showRender: false,
       showConsole : false,
+      consoleTools: false,
       webGl: undefined,
       blocks: undefined,
       loadedObjs: [],
@@ -184,7 +184,7 @@ export default {
         far : 50000.0,
         pointSize : 5.0,
         lineWidth : 3.0,
-        debugMode : true,
+        debugMode : false,
         enableSsao : true,
         enableGlobalLight : true,
         enableEdge : true,
@@ -228,8 +228,8 @@ export default {
       this.webGl = webGl;
       webGl.startRender();
       this.initImage();
-      const dist = 1024;
-      this.initPosition(dist);
+      const dist = 2048;
+      this.initPosition(dist * 2);
       //this.base(dist, dist);
       this.baseGlobe(dist);
       this.initBlocks();
@@ -430,18 +430,19 @@ export default {
       let image = new Image(); 
       image.onload = () => {
         let options = {
-          id : 8612,
+          id : 0,
           position: { x: 0, y: 0, z: -radius/2 },
           color: { r: 1.0, g: 1.0, b: 0.0, a: 1.0 },
           image : image,
           radius: radius / 2,
+          rotation: {pitch: 0, roll: 0, heading: 0}
         }
         let globe = new Sphere(options);
         this.webGl.renderableObjectList.push(globe);
         options.color = {r : 0.0, g : 1.0, b : 0.0, a : 1.0};
         options.image = image;
       }
-      image.src = "/image/cube/earth.jpg";
+      image.src = "/image/cube/globe.jpg";
     },
     base(width = 500, height = 500) {
       let halfWidth = width / 2;
@@ -660,12 +661,12 @@ export default {
 </script>
 <style>
 @media ( max-width: 769px ) {
-  .dev-tool {
+  /*.dev-tool {
     width : calc(100% - 40px) !important;
-  }
+  }*/
 }
 .dev-info {
-  width: 100px;
+      min-width: 150px;
   position: absolute;
   display: block;
   color: #000;
@@ -674,13 +675,13 @@ export default {
   font-size: 11px;
 }
 .dev-tool {
-  width: 340px;
+  min-width: 150px;
   max-height: 600px;
   position: absolute;
   display: block;
   z-index: 10;
-  background-color: #161618;
-  opacity: 0.90;
+  background-color: #101011;
+  opacity: 0.80;
   border-radius: 5px;
   margin: 10px 10px 10px 10px;
   padding: 10px;
@@ -724,14 +725,14 @@ export default {
   border: 1px solid #1f1f1f;
 }
 .dev-tool h2 {
-  font-size: 12px;
+  font-size: 11px;
   padding: 5px 5px;
   padding-bottom: 3px;
   font-weight: bold;
   color: #acacac;
 }
 .dev-tool h3 {
-  font-size: 15px;
+  font-size: 12px;
   margin: 5px;
   font-weight: bold;
   color: #72afe3;
@@ -739,7 +740,7 @@ export default {
 }
 .dev-tool div.show-hide {
   float: right;
-  font-size: 11px;
+  font-size: 10px;
   color: #656565;
   margin: 5px;
   cursor: pointer;
@@ -781,6 +782,7 @@ button.mini-btn:hover, input.mini-btn:hover {
 <style scoped>
 .dev-tool ul {
   height: 100px;
+  min-width: 320px;
   overflow-y: scroll;
   background-color: #222222;
   margin: 5px 0px;
@@ -797,5 +799,10 @@ button.mini-btn:hover, input.mini-btn:hover {
   color: red;
   background-color: #ffff64;
   font-weight: bold;
+}
+
+div.fps {
+  opacity: 0.75;
+  text-shadow: -1px 0 #fff, 0 1px #fff, 1px 0 #fff, 0 -1px #fff;
 }
 </style>

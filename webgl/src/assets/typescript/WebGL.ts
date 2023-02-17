@@ -161,22 +161,13 @@ export default class WebGL {
     });
     this.sun.rotationOrbit(0.7853, 0.7853, vec3.fromValues(0,0,0));
 
-    /*let skyBoxImageList: Array<any> = [
-      { index : 0, path : "/image/skybox/top.jpg", loadedImage : undefined},
-      { index : 1, path : "/image/skybox/bottom.jpg", loadedImage : undefined},
-      { index : 2, path : "/image/skybox/left.jpg", loadedImage : undefined},
-      { index : 3, path : "/image/skybox/right.jpg", loadedImage : undefined},
-      { index : 4, path : "/image/skybox/front.jpg", loadedImage : undefined},
-      { index : 5, path : "/image/skybox/back.jpg", loadedImage : undefined},
-    ];*/
-
     let skyBoxImageList: Array<any> = [
-      { index : 0, path : "/image/space_skybox/right.png", loadedImage : undefined},
-      { index : 1, path : "/image/space_skybox/left.png", loadedImage : undefined},
-      { index : 2, path : "/image/space_skybox/front.png", loadedImage : undefined},
-      { index : 3, path : "/image/space_skybox/back.png", loadedImage : undefined},
-      { index : 4, path : "/image/space_skybox/bottom.png", loadedImage : undefined},
-      { index : 5, path : "/image/space_skybox/top.png", loadedImage : undefined},
+      { index : 0, path : "/image/skyboxes/lightblue/right.png", loadedImage : undefined},
+      { index : 1, path : "/image/skyboxes/lightblue/left.png", loadedImage : undefined},
+      { index : 2, path : "/image/skyboxes/lightblue/front.png", loadedImage : undefined},
+      { index : 3, path : "/image/skyboxes/lightblue/back.png", loadedImage : undefined},
+      { index : 4, path : "/image/skyboxes/lightblue/bottom.png", loadedImage : undefined},
+      { index : 5, path : "/image/skyboxes/lightblue/top.png", loadedImage : undefined},
     ];
     let loadedCount = 0;
     skyBoxImageList.forEach((texture, index) => {
@@ -187,13 +178,11 @@ export default class WebGL {
         if (skyBoxImageList.length == loadedCount) {
           let skybox = new SkyBox({
             id : 8613,
-            position: { x: 0, y: 0, z: -7500 },
+            position: { x: 0, y: 0, z: -15000 },
             color: { r: 0.5, g: 0.5, b: 0.5, a: 1.0 },
             images : skyBoxImageList,
-            size: { width: 15000, height:15000, length:15000 }
+            size: { width: 30000, height:30000, length:30000 }
           });
-          console.log(skybox);
-          console.log(skyBoxImageList);
           this.skyBoxObjectList.push(skybox);
         }
       }

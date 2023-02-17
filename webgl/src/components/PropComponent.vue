@@ -5,9 +5,9 @@
     ondragstart="return false"
     onselectstart="return false"
   >
-    <div class="header">
+    <div class="header" v-on:click="isShow = !isShow">
       <h3>Props</h3>
-      <div class="show-hide" v-on:click="isShow = !isShow">show/hide</div>
+      <div class="show-hide">show/hide</div>
     </div>
     <div v-show="isShow">
       <h2>TEXTURES</h2>
@@ -52,7 +52,7 @@ export default {
   },
   data() {
     return {
-      isShow : true,
+      isShow : false,
       propList : [],
       localOptions: {
         height: 200.0,
@@ -210,7 +210,8 @@ export default {
 <style scoped>
 
 .dev-tool ul {
-  height: 150px;
+  max-width: 300px;
+  min-height: 120px;
   overflow-y: scroll;
   background-color: #222222;
   margin: 5px 0px;
@@ -219,21 +220,21 @@ export default {
   font-size: 10px;
   padding: 5px;
   display: inline-block;
-  min-width: 50px;
-  min-height: 50px;
+  min-width: 40px;
+  min-height: 40px;
   margin-left: 4px;
   margin-top: 4px;
   border-radius: 5px;
   background-color: #525252;
   text-align: center;
-  line-height: 50px;
+  line-height: 40px;
   cursor: pointer;
   background-repeat: no-repeat;
   background-size: cover;
   image-rendering: pixelated;
 }
 .dev-tool ul.small {
-  height: 70px !important;
+  min-height: 70px !important;
 }
 .dev-tool ul.small > li {
   min-width: 30px;

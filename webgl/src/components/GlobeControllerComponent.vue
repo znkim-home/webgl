@@ -36,7 +36,8 @@ export default {
         BLOCK_SIZE : 16,
         MOVE_FACTOR : 15,
         ROTATE_FACTOR : 0.004,
-      }
+      },
+      recentTouch : undefined,
     };
   },
   mounted() {
@@ -54,24 +55,45 @@ export default {
         const camera = webGl.camera;
         const target = e.changedTouches [0];
         this.touchStartPosition = [target.clientX, target.clientY];
+        
+        let nowTouch = new Date().getTime();
+        var timesince = nowTouch - this.recentTouch;
 
-        const mouseX = target.clientX;Plane
-        const mouseY = canvas.height -target.clientY;
-        const ratioX = mouseX / canvas.width;
-        const ratioY = mouseY / canvas.height;
-
-        let depth = webGl.depthFbo.getDepth(mouseX, mouseY);
-        let pos = this.getScreenPosition(ratioX, ratioY, canvas.width, canvas.height, depth);
-        if (e.changedTouches .length >= 2) {
-          console.log(e.changedTouches);
+        if ((timesince < 300) && (timesince > 0)) {
+          console.log("doubleTouch");
           this.controllerStatus.zoomStatus = true;
           this.controllerStatus.zoomCameraPosition = camera.position;
-          this.controllerStatus.zoomCameraRay = this.getRay(ratioX, ratioY, canvas.width, canvas.height);
-        } else if (e.changedTouches .length == 1) {
-          this.controllerStatus.moveStatus = true;
-          this.controllerStatus.movePlane = new GeometryPlane(pos, vec3.fromValues(0, 0, 1));
-          this.controllerStatus.moveCameraPosition = camera.position;
+          this.controllerStatus.zoomCameraRay = this.getRay(0.5, 0.5, canvas.width, canvas.height);
+
+          let depth = webGl.depthFbo.getDepth(canvas.width/2, canvas.height/2);
+          console.log(depth);
+          if (depth < 1000) {
+            depth = -2000;
+          }
+          let scaledRay = vec3.scale(vec3.create(), this.controllerStatus.zoomCameraRay, depth * 0.25);
+          let position = vec3.add(vec3.create(), camera.position, scaledRay);
+          camera.setPosition(position[0], position[1], position[2]);
         }
+
+        //const mouseX = target.clientX;
+        //const mouseY = canvas.height -target.clientY;
+        //const ratioX = mouseX / canvas.width;
+        //const ratioY = mouseY / canvas.height;
+        //let depth = webGl.depthFbo.getDepth(mouseX, mouseY);
+        //let pos = this.getScreenPosition(ratioX, ratioY, canvas.width, canvas.height, depth);
+        if (e.changedTouches.length >= 2) {
+          //this.controllerStatus.zoomStatus = true;
+          //this.controllerStatus.zoomCameraPosition = camera.position;
+          //this.controllerStatus.zoomCameraRay = this.getRay(0.5, 0.5, canvas.width, canvas.height);
+        } else if (e.changedTouches.length == 1) {
+          let pos = vec3.fromValues(0, 0, 0);
+          this.controllerStatus.pivotPosition = pos;
+          this.controllerStatus.rotateAxisX = true;
+          this.controllerStatus.rotateStatus = true;
+          this.controllerStatus.rotateObject = true;
+        }
+
+        this.recentTouch = new Date().getTime();
         e.preventDefault();
       }
       canvas.ontouchmove = (e) => {
@@ -80,12 +102,13 @@ export default {
         const target = e.targetTouches[0];
         const startPosition = this.touchStartPosition;
         let touchMovedPosition = [startPosition[0] - target.clientX, startPosition[1] - target.clientY];
+        this.touchStartPosition = [startPosition[0] - touchMovedPosition[0], startPosition[1] - touchMovedPosition[1]];
         const mouseX = target.clientX;
         const mouseY = canvas.height -target.clientY;
         const ratioX = mouseX / canvas.width;
         const ratioY = mouseY / canvas.height;
-        const xValue = touchMovedPosition[0] * this.globalOptions.ROTATE_FACTOR;
-        const yValue = touchMovedPosition[1] * this.globalOptions.ROTATE_FACTOR;
+        let xValue = touchMovedPosition[0] * this.globalOptions.ROTATE_FACTOR;
+        let yValue = touchMovedPosition[1] * this.globalOptions.ROTATE_FACTOR;
 
         if (this.controllerStatus.moveStatus) {
           let ray = this.getRay(ratioX, ratioY, canvas.width, canvas.height);
@@ -100,17 +123,18 @@ export default {
           } else {
             camera.moveCamera(this.controllerStatus.moveCameraPosition, this.controllerStatus.movePlane.position, movedPosition);
           }
+        } else if (this.controllerStatus.rotateStatus) {
+          camera.rotationOrbit(xValue, yValue, this.controllerStatus.pivotPosition);
         } else if (this.controllerStatus.zoomStatus) {
           let depth = webGl.depthFbo.getDepth(mouseX, mouseY);
           let ray = this.controllerStatus.zoomCameraRay;
-          let scaledRay = vec3.scale(vec3.create(), ray, (xValue + yValue) * depth);
+          let scaledRay = vec3.scale(vec3.create(), ray, 10 * depth);
           let position = vec3.add(vec3.create(), camera.position, scaledRay);
           camera.setPosition(position[0], position[1], position[2]);
         }
         e.preventDefault();
       }
       canvas.ontouchend = (e) => {
-        console.log("touch end", e);
         this.controllerStatus.moveObject = false;
         this.controllerStatus.moveObjectOffset = undefined;
         this.controllerStatus.moveStatus = false;
@@ -124,7 +148,6 @@ export default {
         this.controllerStatus.zoomCameraPosition = undefined;
         e.preventDefault();
       }
-
       canvas.onwheel = (e) => {
         const webGl = this.webGl;
         const camera = webGl.camera;

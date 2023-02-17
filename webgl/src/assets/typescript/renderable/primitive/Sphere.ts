@@ -32,7 +32,7 @@ export default class Sphere extends Renderable {
     this.triangles = [];
     this.radius = 1.0;
     this.height = 3.0;
-    this.density = 32;
+    this.density = 64;
     this.name = "Untitled Cylinder";
     if (options?.radius) this.radius = options.radius;
     if (options?.height) this.height = options.height;
