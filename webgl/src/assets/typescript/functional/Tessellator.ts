@@ -20,7 +20,7 @@ export default class Tessellator {
                 let position = vertex.position;
                 let relPosition = vec2.fromValues((bbox[2] - position[0]), (bbox[3] - position[1]));
                 let relMaxPosition = vec2.fromValues((bbox[2] - bbox[0]), (bbox[3] - bbox[1]));
-                vertex.textureCoordinate = vec2.fromValues((relPosition[0] / relMaxPosition[0]), (relPosition[1] / relMaxPosition[1]));
+                vertex.textureCoordinate = vec2.fromValues((relPosition[0] / relMaxPosition[0]), 1 - (relPosition[1] / relMaxPosition[1]));
             })
             result.push(vertices);
         })

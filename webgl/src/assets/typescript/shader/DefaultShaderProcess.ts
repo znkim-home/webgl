@@ -3,12 +3,14 @@ import { mat2, mat3, mat4, vec2, vec3, vec4 } from 'gl-matrix'; // eslint-disabl
 import ShaderProcess from '../abstract/ShaderProcess';
 import FrameBufferObject from '../functional/FrameBufferObject';
 import Renderable from '../abstract/Renderable';
+import RenderableObjectList from '@/functional/RenderableObjectList';
+import { Camera, Shader } from '..';
 
 class DefaultShaderProcess extends ShaderProcess {
-  renderableList: RenderableListInterface;
-  frameBufferObjs: any;
-  camera: any;
-  constructor(gl: WebGL2RenderingContext | WebGLRenderingContext, shader: any, globalOptions: GlobalOptions, camera: any, frameBufferObjs: any, renderableList: RenderableListInterface) {
+  renderableList: RenderableObjectList;
+  frameBufferObjs: Array<FrameBufferObject>;
+  camera: Camera;
+  constructor(gl: WebGL2RenderingContext | WebGLRenderingContext, shader: Shader, globalOptions: GlobalOptions, camera: Camera, frameBufferObjs: Array<FrameBufferObject>, renderableList: RenderableObjectList) {
     super(gl, shader, globalOptions);
     this.camera = camera;
     this.frameBufferObjs = frameBufferObjs;
@@ -21,7 +23,6 @@ class DefaultShaderProcess extends ShaderProcess {
     const globalOptions = this.globalOptions;
     this.shader.useProgram();
 
-    gl.lineWidth(globalOptions.lineWidth);
     let projectionMatrix = mat4.create();
     mat4.perspective(projectionMatrix, this.camera.fovyRadian, globalOptions.aspect, globalOptions.near, globalOptions.far);
     let modelViewMatrix = this.camera.getModelViewMatrix();

@@ -3,12 +3,14 @@ import { mat2, mat3, mat4, vec2, vec3, vec4 } from 'gl-matrix'; // eslint-disabl
 import ShaderProcess from '../abstract/ShaderProcess';
 import FrameBufferObject from '../functional/FrameBufferObject';
 import Renderable from '../abstract/Renderable';
+import RenderableObjectList from '@/functional/RenderableObjectList';
+import { Camera, Shader } from '..';
 
 class SkyBoxShaderProcess extends ShaderProcess {
-  renderableList: RenderableListInterface;
-  frameBufferObjs: any;
-  camera: any;
-  constructor(gl: WebGL2RenderingContext | WebGLRenderingContext, shader: any, globalOptions: GlobalOptions, camera: any, frameBufferObjs: any, renderableList: RenderableListInterface) {
+  renderableList: RenderableObjectList;
+  frameBufferObjs: Array<FrameBufferObject>;
+  camera: Camera;
+  constructor(gl: WebGL2RenderingContext | WebGLRenderingContext, shader: Shader, globalOptions: GlobalOptions, camera: Camera, frameBufferObjs: Array<FrameBufferObject>, renderableList: RenderableObjectList) {
     super(gl, shader, globalOptions);
     this.camera = camera;
     this.frameBufferObjs = frameBufferObjs;
@@ -21,17 +23,11 @@ class SkyBoxShaderProcess extends ShaderProcess {
     const globalOptions = this.globalOptions;
     this.shader.useProgram();
 
-    gl.lineWidth(globalOptions.lineWidth);
     let projectionMatrix = mat4.create();
     mat4.perspective(projectionMatrix, this.camera.fovyRadian, globalOptions.aspect, globalOptions.near, globalOptions.far);
     let modelViewMatrix = this.camera.getModelViewMatrix();
-    let normalMatrix = this.camera.getNormalMatrix();
-
     gl.uniformMatrix4fv(shaderInfo.uniformLocations.projectionMatrix, false, projectionMatrix);
     gl.uniformMatrix4fv(shaderInfo.uniformLocations.modelViewMatrix, false, modelViewMatrix);
-    gl.uniformMatrix4fv(shaderInfo.uniformLocations.normalMatrix, false, normalMatrix);
-    gl.uniform2fv(shaderInfo.uniformLocations.nearFar, vec2.fromValues(globalOptions.near, globalOptions.far));
-    gl.uniform1f(shaderInfo.uniformLocations.pointSize, globalOptions.pointSize);
     gl.uniform1i(shaderInfo.uniformLocations.textureType, 0);
     
     this.frameBufferObjs.forEach((frameBufferObj: FrameBufferObject) => {
@@ -45,4 +41,4 @@ class SkyBoxShaderProcess extends ShaderProcess {
   postprocess() {}
 }
 
-export default DefaultShaderProcess;
+export default SkyBoxShaderProcess;

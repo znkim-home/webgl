@@ -28,6 +28,8 @@ declare global {
     enableEdge: boolean;
     enableGlobalLight: boolean;
     selectedObjectId: number;
+    wireFrame: boolean;
+    drawElementsType: number;
   }
   interface Math {
     radian(a: number): number;

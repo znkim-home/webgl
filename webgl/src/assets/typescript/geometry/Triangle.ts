@@ -12,13 +12,6 @@ export default class Triangle {
     this.textureCoorinates = [];
     this.positions = [position1, position2, position3];
     this.getNormal();
-    let vertex = new Vertex.Builder()
-      .color(vec4.fromValues(0, 0, 0, 0))
-      .normal(vec3.fromValues(1, 1, 1))
-      .position(position1)
-      .textureCoordinate(vec2.fromValues(0, 0))
-      .build();
-    console.log(vertex);
   }
   get(index: number): vec3{
     return this.positions[index];

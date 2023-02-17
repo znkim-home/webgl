@@ -2,7 +2,7 @@ const attributes = ["aVertexPosition", "aTextureCoordinate"];
 const uniforms = ["uIsMain", "uSsaoKernel", "uScreenSize", "uNoiseScale", 
 "uAspectRatio", "uProjectionMatrix", "uTangentOfHalfFovy", "uNearFar", 
 "uMainTexture", "uAlbedoTexture", "uSelectionTexture", "uNormalTexture", 
-"uDepthTexture", "uNoiseTexture", "uLightMapTexture", "uCameraTransformMatrix", "uSunModelViewMatrix", "uOrthographicMatrix", "uSunNormalMatrix",
+"uDepthTexture", "uNoiseTexture", "uSkyBoxTexture", "uLightMapTexture", "uCameraTransformMatrix", "uSunModelViewMatrix", "uOrthographicMatrix", "uSunNormalMatrix",
 "uEnableGlobalLight", "uEnableEdge", "uEnableSsao", "uSelectedObjectId"];
 
 const vertexShaderSource = `
@@ -39,6 +39,7 @@ const fragmentShaderSource = `
   uniform sampler2D uSelectionTexture;
   uniform sampler2D uNormalTexture;
   uniform sampler2D uDepthTexture;
+  uniform sampler2D uSkyBoxTexture;
   uniform sampler2D uLightMapTexture;
   uniform sampler2D uNoiseTexture;
   uniform vec3 uSsaoKernel[16];
@@ -78,8 +79,10 @@ const fragmentShaderSource = `
     return texture2D(uNormalTexture, screenPos);
   }
   vec4 getDepth(vec2 screenPos) {
-    //return texture2D(uLightMapTexture, screenPos);
     return texture2D(uDepthTexture, screenPos);
+  }
+  vec4 getSkyBox(vec2 screenPos) {
+    return texture2D(uSkyBoxTexture, screenPos);
   }
 
   float getOcclusion(vec3 origin, vec3 rotatedKernel, float radius) {
@@ -268,7 +271,11 @@ const fragmentShaderSource = `
 
     if (uIsMain == 1) {
       //vec3 result = albedo.xyz;
-      vec3 result = albedo.xyz;
+
+      vec3 result = getSkyBox(screenPos).xyz;
+      if (selection != 4294967295.0) { 
+        result = albedo.xyz;
+      }
       
       if (uEnableSsao == 1) {
         //float ssaoResult = getSSAO(screenPos);
@@ -306,10 +313,6 @@ const fragmentShaderSource = `
         result = result * 0.5;
       }
       gl_FragColor = vec4(result, 1.0);
-
-      if (selection == 4294967295.0) {
-        gl_FragColor = vec4(0.4, 0.4, 0.4, 1.0);
-      }
 
     } else {
       vec4 textureColor = texture2D(uMainTexture, vTextureCoordinate);

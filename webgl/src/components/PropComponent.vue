@@ -120,7 +120,8 @@ export default {
           texture : textures[this.selectedTexture],
           texturePosition : [0, 0],
           rotation: { heading : 0.0, pitch : 0.0, roll : 0.0},
-          coordinates: [[0, this.localOptions.height], [-this.localOptions.height, 0], [0, -this.localOptions.height], [this.localOptions.height, 0]],
+          //coordinates: [[0, this.localOptions.height], [-this.localOptions.height, 0], [0, -this.localOptions.height], [this.localOptions.height, 0]],
+          coordinates: [[-100, -100], [100, -100], [100, 100], [-100, 100]],
         };
 
         let selected = this.propList[this.selectedProp];

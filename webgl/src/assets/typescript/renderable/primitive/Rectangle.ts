@@ -37,10 +37,10 @@ export default class Rectangle extends Renderable {
 
     let buffer = this.getBuffer(gl);
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffer.indicesGlBuffer);
-    gl.enableVertexAttribArray(shaderInfo.attributeLocations.vertexPosition);
-    buffer.bindBuffer(buffer.postionsGlBuffer, 3, shaderInfo.attributeLocations.vertexPosition);
     gl.enableVertexAttribArray(shaderInfo.attributeLocations.vertexNormal);
     buffer.bindBuffer(buffer.normalGlBuffer, 3, shaderInfo.attributeLocations.vertexNormal);
+    gl.enableVertexAttribArray(shaderInfo.attributeLocations.vertexPosition);
+    buffer.bindBuffer(buffer.positionsGlBuffer, 3, shaderInfo.attributeLocations.vertexPosition);
     gl.enableVertexAttribArray(shaderInfo.attributeLocations.vertexColor);
     buffer.bindBuffer(buffer.colorGlBuffer, 4, shaderInfo.attributeLocations.vertexColor);
     gl.enableVertexAttribArray(shaderInfo.attributeLocations.vertexSelectionColor);
@@ -48,7 +48,8 @@ export default class Rectangle extends Renderable {
 
     frameBufferObjs.forEach((frameBufferObj) => {
       frameBufferObj.bind(shaderInfo);
-      if (this.image || this.texture) {
+      const textureType = frameBufferObj.textureType;
+      if (textureType ==  1) {
         gl.bindTexture(gl.TEXTURE_2D, buffer.texture);
         gl.enableVertexAttribArray(shaderInfo.attributeLocations.textureCoordinate);
         buffer.bindBuffer(buffer.textureGlBuffer, 2, shaderInfo.attributeLocations.textureCoordinate);
@@ -69,9 +70,9 @@ export default class Rectangle extends Renderable {
       let normals: Array<number> = [];
       let textureCoordinates: Array<number> = [];
 
+        
       let rectanglePositions = this.coordinates.map((coordinate) => vec3.fromValues(coordinate[0], coordinate[1], this.position[2]));
       let bbox = this.getMinMax(rectanglePositions);
-
       let leftTriangle = new Triangle(rectanglePositions[0], rectanglePositions[1], rectanglePositions[2]);
       let rightTriangle = new Triangle(rectanglePositions[0], rectanglePositions[2], rectanglePositions[3]);
 
@@ -91,8 +92,8 @@ export default class Rectangle extends Renderable {
         });
       });
 
-      this.length = this.coordinates.length;
-      let indices = new Uint16Array(positions.length/3);
+      this.length = this.coordinates.length / 3;
+      let indices = new Uint16Array(positions.length);
       this.buffer.indicesVBO = indices.map((obj, index) => index);
       this.buffer.positionsVBO = new Float32Array(positions);
       this.buffer.colorVBO = new Float32Array(colors);
@@ -101,17 +102,17 @@ export default class Rectangle extends Renderable {
       this.buffer.textureVBO = new Float32Array(textureCoordinates);
       if (this.texture) {
         this.buffer.texture = this.texture;
-      } else if (!this.texture && this.image) {
+      } else if (this.image) {
         let texture = this.buffer.createTexture(this.image);
         this.buffer.texture = texture;
         this.texture = texture;
       }
-      this.buffer.postionsGlBuffer = this.buffer.createBuffer(this.buffer.positionsVBO);
+      this.buffer.positionsGlBuffer = this.buffer.createBuffer(this.buffer.positionsVBO);
       this.buffer.colorGlBuffer = this.buffer.createBuffer(this.buffer.colorVBO);
       this.buffer.selectionColorGlBuffer = this.buffer.createBuffer(this.buffer.selectionColorVBO);
       this.buffer.normalGlBuffer = this.buffer.createBuffer(this.buffer.normalVBO);
-      this.buffer.indicesGlBuffer = this.buffer.createIndexBuffer(this.buffer.indicesVBO);
       this.buffer.textureGlBuffer = this.buffer.createBuffer(this.buffer.textureVBO);
+      this.buffer.indicesGlBuffer = this.buffer.createIndexBuffer(this.buffer.indicesVBO);
       this.buffer.indicesLength = this.buffer.indicesVBO.length;
       this.dirty = false;
     }

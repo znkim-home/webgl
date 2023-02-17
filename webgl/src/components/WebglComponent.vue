@@ -53,8 +53,9 @@
         <input type="range" v-model="localOptions.rotationY" min="0" max="360" step="1" v-on:input="rotateSelectedObject"/>
       </div>
       <h2>CAMERA OPTIONS</h2>
-      <button class="mini-btn" v-on:click="thirdMode = false">FirstPerson</button>
-      <button class="mini-btn" v-on:click="thirdMode = true">ThirdPerson</button>
+      <button class="mini-btn" v-on:click="cameraMode = 0">Orbit</button>
+      <button class="mini-btn" v-on:click="cameraMode = 1">FirstPerson</button>
+      <button class="mini-btn" v-on:click="cameraMode = 2">ThirdPerson</button>
       <div class="block-group">
         <label>FOVY</label>
         <input type="range" v-model="globalOptions.fovyDegree" min="15" max="180" step="1" />
@@ -129,21 +130,23 @@
     <canvas id="glcanvas" width="1024" height="800">SAMPLE</canvas>
   </div>
   <prop-component :web-gl="webGl"></prop-component>
-  <first-person-controller-component v-if="!thirdMode" :web-gl="webGl" :blocks="blocks"></first-person-controller-component>
-  <third-person-controller-component v-if="thirdMode" :web-gl="webGl" :blocks="blocks"></third-person-controller-component>
+  <globe-controller-component v-if="cameraMode == 0" :web-gl="webGl" :blocks="blocks"></globe-controller-component>
+  <first-person-controller-component v-if="cameraMode == 1" :web-gl="webGl" :blocks="blocks"></first-person-controller-component>
+  <third-person-controller-component v-if="cameraMode == 2" :web-gl="webGl" :blocks="blocks"></third-person-controller-component>
 </template>
 <script>
 //import {WebGL, Cube, Polygon, Rectangle, Point, Line, Cylinder, Obj, Buffer, BufferBatch} from "crispy-waffle";
-import {WebGL, Cube, Polygon, Rectangle, Point, Line, Cylinder, Obj, Buffer, BufferBatch} from "@/assets/crispy-waffle";
-
+import {WebGL, Cube, Polygon, Rectangle, Point, Line, Cylinder, Obj, Buffer, BufferBatch, Sphere} from "@/assets/crispy-waffle";
+  
 import FirstPersonControllerComponent from "./FirstPersonControllerComponent.vue";
 import ThirdPersonControllerComponent from "./ThirdPersonControllerComponent.vue";
+import GlobeControllerComponent from "./GlobeControllerComponent.vue";
 import PropComponent from "./PropComponent.vue";
-
 
 export default {
   name: "WebglComponent",
   components: {
+    GlobeControllerComponent,
     FirstPersonControllerComponent,
     ThirdPersonControllerComponent,
     PropComponent,
@@ -152,7 +155,7 @@ export default {
     return {
       fps : 0,
       selectedObject: undefined,
-      thirdMode: true,
+      cameraMode: 0,
       drawTools: true,
       renderTools: true,
       showDraw: true,
@@ -178,7 +181,7 @@ export default {
         fovyDegree : 70,
         aspect : undefined,
         near : 0.1,
-        far : 20000.0,
+        far : 50000.0,
         pointSize : 5.0,
         lineWidth : 3.0,
         debugMode : true,
@@ -225,9 +228,10 @@ export default {
       this.webGl = webGl;
       webGl.startRender();
       this.initImage();
-      const dist = 2048;
+      const dist = 1024;
       this.initPosition(dist);
-      this.base(dist, dist);
+      //this.base(dist, dist);
+      this.baseGlobe(dist);
       this.initBlocks();
       this.getFps();
     },
@@ -411,7 +415,7 @@ export default {
           loadedCount++;
           if (imageLength == loadedCount) {
             console.log("inited!");
-            this.initGround();
+            //this.initGround();
           }
         }
         image.src = imagePath;
@@ -421,6 +425,23 @@ export default {
       let x = coordinate[0] - Math.floor(coordinate[0]);
       let y = coordinate[1] - Math.floor(coordinate[1]);
       return [x * unit, y * unit];
+    },
+    baseGlobe(radius = 500) {
+      let image = new Image(); 
+      image.onload = () => {
+        let options = {
+          id : 8612,
+          position: { x: 0, y: 0, z: -radius/2 },
+          color: { r: 1.0, g: 1.0, b: 0.0, a: 1.0 },
+          image : image,
+          radius: radius / 2,
+        }
+        let globe = new Sphere(options);
+        this.webGl.renderableObjectList.push(globe);
+        options.color = {r : 0.0, g : 1.0, b : 0.0, a : 1.0};
+        options.image = image;
+      }
+      image.src = "/image/cube/earth.jpg";
     },
     base(width = 500, height = 500) {
       let halfWidth = width / 2;
@@ -559,6 +580,7 @@ export default {
       let cube = new Cube(options);
       if (isAdd) {
         this.webGl.renderableObjectList.push(cube);
+        //this.webGl.skyBoxObjectList.push(cube);
       } else {
         cube.createRenderableObjectId(this.webGl.renderableObjectList);
       }
