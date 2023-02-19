@@ -53,7 +53,7 @@ export default {
       canvas.ontouchstart = (e) => {
         const webGl = this.webGl;
         const camera = webGl.camera;
-        const target = e.changedTouches [0];
+        const target = e.targetTouches[0];
         this.touchStartPosition = [target.clientX, target.clientY];
         
         let nowTouch = new Date().getTime();
@@ -81,18 +81,17 @@ export default {
         //const ratioY = mouseY / canvas.height;
         //let depth = webGl.depthFbo.getDepth(mouseX, mouseY);
         //let pos = this.getScreenPosition(ratioX, ratioY, canvas.width, canvas.height, depth);
-        if (e.changedTouches.length >= 2) {
-          //this.controllerStatus.zoomStatus = true;
-          //this.controllerStatus.zoomCameraPosition = camera.position;
-          //this.controllerStatus.zoomCameraRay = this.getRay(0.5, 0.5, canvas.width, canvas.height);
-        } else if (e.changedTouches.length == 1) {
+        if (e.targetTouches.length >= 2) {
+          this.controllerStatus.zoomStatus = true;
+          this.controllerStatus.zoomCameraPosition = camera.position;
+          this.controllerStatus.zoomCameraRay = this.getRay(0.5, 0.5, canvas.width, canvas.height);
+        } else if (e.targetTouches.length == 1) {
           let pos = vec3.fromValues(0, 0, 0);
           this.controllerStatus.pivotPosition = pos;
           this.controllerStatus.rotateAxisX = true;
           this.controllerStatus.rotateStatus = true;
           this.controllerStatus.rotateObject = true;
         }
-
         this.recentTouch = new Date().getTime();
         e.preventDefault();
       }
