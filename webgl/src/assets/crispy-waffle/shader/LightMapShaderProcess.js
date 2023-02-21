@@ -19,15 +19,21 @@ class LightMapShaderProcess extends ShaderProcess {
         let height = lightMapBuffer.heights[0];
         let ortRange = this.sun.getRadius();
         gl.viewport(0, 0, width, height);
-        let projectionMatrix = mat4.create();
-        mat4.perspective(projectionMatrix, this.camera.fovyRadian, globalOptions.aspect, globalOptions.near, globalOptions.far);
+        gl.lineWidth(globalOptions.lineWidth);
         let orthographicMatrix = mat4.create();
         mat4.ortho(orthographicMatrix, -ortRange, ortRange, -ortRange, ortRange, 0, ortRange * 2);
-        gl.uniform2fv(shaderInfo.uniformLocations.nearFar, vec2.fromValues(0, ortRange * 2));
-        let modelViewMatrix = this.sun.getModelViewMatrix();
-        gl.uniformMatrix4fv(shaderInfo.uniformLocations.projectionMatrix, false, projectionMatrix);
-        gl.uniformMatrix4fv(shaderInfo.uniformLocations.modelViewMatrix, false, modelViewMatrix);
+        let modelRotationMatrix = this.camera.getRotationMatrix();
+        let normalMatrix = this.camera.getNormalMatrix();
+        let positionHighLow = this.camera.getPositionHighLow();
         gl.uniformMatrix4fv(shaderInfo.uniformLocations.orthographicMatrix, false, orthographicMatrix);
+        gl.uniformMatrix4fv(shaderInfo.uniformLocations.modelRotationMatrix, false, modelRotationMatrix);
+        gl.uniform3fv(shaderInfo.uniformLocations.modelPositionHigh, positionHighLow[0]);
+        gl.uniform3fv(shaderInfo.uniformLocations.modelPositionLow, positionHighLow[1]);
+        gl.uniformMatrix4fv(shaderInfo.uniformLocations.normalMatrix, false, normalMatrix);
+        //gl.uniform2fv(shaderInfo.uniformLocations.nearFar, vec2.fromValues(globalOptions.near, globalOptions.far));
+        gl.uniform2fv(shaderInfo.uniformLocations.nearFar, vec2.fromValues(0, ortRange * 2));
+        gl.uniform1f(shaderInfo.uniformLocations.pointSize, globalOptions.pointSize);
+        gl.uniform1i(shaderInfo.uniformLocations.textureType, 0);
         this.frameBufferObjs.forEach((frameBufferObj) => {
             frameBufferObj.clear();
         });

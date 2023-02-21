@@ -14,7 +14,10 @@ import Sphere from "./renderable/primitive/Sphere";
 import Cone from "./renderable/primitive/Cone";
 import Ring from "./renderable/primitive/Ring";
 import Tube from "./renderable/primitive/Tube";
+import Ellipsoid from "./renderable/primitive/Ellipsoid";
+import Globe from "./renderable/Globe";
 import SkyBox from "./renderable/SkyBox";
+import MapTile from "./renderable/MapTile";
 
 import Obj from "./renderable/Obj";
 import BufferBatch from "./functional/BufferBatch";
@@ -23,6 +26,6 @@ import GeometryPlane from "./geometry/GeometryPlane";
 import GeometryLine from "./geometry/GeometryLine";
 
 export { WebGL, Sun, Shader, Buffer, Camera, BufferBatch, BatchObject};
-export { Obj, Polygon, SkyBox } // renderable
-export { Cube, Rectangle, Point, Line, Cylinder, Sphere, Cone, Ring, Tube }; // primitive
+export { Obj, Polygon, SkyBox, MapTile } // renderable
+export { Cube, Rectangle, Point, Line, Cylinder, Sphere, Ellipsoid, Globe, Cone, Ring, Tube }; // primitive
 export { GeometryLine, GeometryPlane } // geometries

@@ -1,5 +1,6 @@
 <template>
-  <div class="dev-tool" 
+  <div 
+    class="dev-tool" 
     style="right: 0px; top: 0px"
     oncontextmenu="return false"
     ondragstart="return false"
@@ -27,15 +28,15 @@
       <h2>OBJECT OPTIONS</h2>
       <div class="block-group">
         <label>HEIGHT</label>
-        <input type="range" v-model="localOptions.height" min="0" max="1000" step="1" v-on:input="rotateSelectedObject"/>
+        <input type="range" v-model="localOptions.height" min="0" max="5000" step="1" v-on:input="rotateSelectedObject"/>
       </div>
       <div class="block-group">
         <label>INNER-RADIUS</label>
-        <input type="range" v-model="localOptions.innerRadius" min="0" max="1000" step="1" v-on:input="rotateSelectedObject"/>
+        <input type="range" v-model="localOptions.innerRadius" min="0" max="500" step="1" v-on:input="rotateSelectedObject"/>
       </div>
       <div class="block-group">
         <label>OUTER-RADIUS</label>
-        <input type="range" v-model="localOptions.outerRadius" min="0" max="1000" step="1" v-on:input="rotateSelectedObject"/>
+        <input type="range" v-model="localOptions.outerRadius" min="0" max="500" step="1" v-on:input="rotateSelectedObject"/>
       </div>
       <input type="file" class="mini-btn" id="fileUpload" accept=".obj,.jpg" v-on:change="readObj"/>
     </div>
@@ -43,7 +44,7 @@
 </template>
 <script>
 import {mat2, mat3, mat4, vec2, vec3, vec4} from 'gl-matrix';
-import {WebGL, Cube, Polygon, Rectangle, Cone, Point, Line, Cylinder, Sphere, Obj, Ring, Tube} from "@/assets/crispy-waffle";
+import {WebGL, Cube, Polygon, Rectangle, Cone, Point, Line, Cylinder, Sphere, Ellipsoid, Globe, Obj, Ring, Tube} from "@/assets/crispy-waffle";
 
 export default {
   name: "PropComponent",
@@ -52,7 +53,7 @@ export default {
   },
   data() {
     return {
-      isShow : false,
+      isShow : true,
       propList : [],
       localOptions: {
         height: 200.0,
@@ -70,7 +71,7 @@ export default {
   },
   methods: {
     init() {
-      const primitiveProps = [Cube, Cylinder, Cone, Sphere, Ring, Tube, Polygon, Obj];
+      const primitiveProps = [Cube, Cylinder, Cone, Sphere, Ellipsoid, Globe, Ring, Tube, Polygon, Obj];
       //const primitiveProps = [Cube, Cylinder, Cone, Sphere, Rectangle, Point, Line, Polygon, Obj];
       this.propList = primitiveProps;
     },
@@ -84,9 +85,19 @@ export default {
         let ratioX = mouseX / canvas.width;
         let ratioY = mouseY / canvas.height;
         if (this.selectedProp !== undefined) {
-          let depth = webGl.depthFbo.getDepth(mouseX, mouseY) + 5;
-          let pos = this.getScreenPosition(ratioX, ratioY, canvas.width, canvas.height, depth);
-          this.createProp(pos);
+          let depth = webGl.depthFbo.getDepth(mouseX, mouseY);
+          let normal = webGl.normalFbo.getNormal(mouseX, mouseY);
+          let position = this.getScreenPosition(ratioX, ratioY, canvas.width, canvas.height, depth);
+          let rm = camera.getRotationMatrix();
+          let normalVec4 = vec4.fromValues(normal[0], normal[1], normal[2], 1.0);
+          let rotatedNormal = vec4.transformMat4(vec4.create(), normalVec4, rm);
+          let heading = Math.atan2(rotatedNormal[0], rotatedNormal[2]);
+          let pitch = -Math.asin(rotatedNormal[1]);
+          heading = Math.degree(heading);
+          pitch = Math.degree(pitch);
+          
+          let rotation = { heading : 0.0, pitch : pitch, roll : heading };
+          this.createProp(position, rotation);
         }
       });
     },
@@ -104,23 +115,23 @@ export default {
         this.selectedProp = index;
       }
     },
-    createProp(pos) {
+    createProp(position, rotation) {
       if (this.selectedProp !== undefined) {
         let webGl = this.webGl;
         let textures = this.$parent.$data.textures;
-        let images = this.$parent.$data.images;
         const options = {
           name: "DIRT",
-          position: { x: pos[0], y: pos[1], z: pos[2]},
+          position: { x: position[0], y: position[1], z: position[2]},
           color: { r: 0.5, g: 0.5, b: 0.5, a: 1.0 },
           height: this.localOptions.height,
           innerRadius: this.localOptions.innerRadius,
           radius: this.localOptions.outerRadius,
+          verticalRadius: this.localOptions.innerRadius,
+          horizontalRadius: this.localOptions.outerRadius,
           scale: 5.0,
           texture : textures[this.selectedTexture],
           texturePosition : [0, 0],
-          rotation: { heading : 0.0, pitch : 0.0, roll : 0.0},
-          //coordinates: [[0, this.localOptions.height], [-this.localOptions.height, 0], [0, -this.localOptions.height], [this.localOptions.height, 0]],
+          rotation: rotation,
           coordinates: [[-100, -100], [100, -100], [100, 100], [-100, 100]],
         };
 

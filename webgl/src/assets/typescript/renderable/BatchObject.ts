@@ -29,10 +29,11 @@ export default class BatchObject extends Renderable {
     this.textureCoordinates = options.textureCoordinates;
   }
   render(gl: WebGLRenderingContext | WebGL2RenderingContext, shaderInfo: ShaderInfoInterface, frameBufferObjs: FrameBufferObject[]): void {
-    let tm = this.getTransformMatrix();
-    let rm = this.getRotationMatrix();
-    gl.uniformMatrix4fv(shaderInfo.uniformLocations.objectMatrix, false, tm);
-    gl.uniformMatrix4fv(shaderInfo.uniformLocations.rotationMatrix, false, rm);
+    let objectRotationMatrix: mat4 = this.getRotationMatrix();
+    let objectPositionHighLow: vec3[] = this.getPositionHighLow();
+    gl.uniformMatrix4fv(shaderInfo.uniformLocations.objectRotationMatrix, false, objectRotationMatrix);
+    gl.uniform3fv(shaderInfo.uniformLocations.objectPositionHigh, objectPositionHighLow[0]);
+    gl.uniform3fv(shaderInfo.uniformLocations.objectPositionLow, objectPositionHighLow[1]);
 
     let buffer = this.getBuffer(gl);
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, <WebGLBuffer> buffer.indicesGlBuffer);

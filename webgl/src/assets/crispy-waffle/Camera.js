@@ -1,4 +1,4 @@
-import { mat3, mat4, vec3, vec4 } from 'gl-matrix'; // eslint-disable-line no-unused-vars
+import { mat3, mat4, vec2, vec3, vec4 } from 'gl-matrix'; // eslint-disable-line no-unused-vars
 export default class Camera {
     constructor(options) {
         this.init(options);
@@ -141,6 +141,7 @@ export default class Camera {
         this.position[1] = y;
         this.position[2] = z;
         this.dirty = true;
+        this.getPositionHighLow();
     }
     calcRight() {
         this.right = vec3.cross(this.right, this.direction, this.up);
@@ -189,5 +190,30 @@ export default class Camera {
         let wfar = hfar * aspectRatio;
         let ray = vec3.fromValues(wfar * (tc.x - 0.5), hfar * (tc.y - 0.5), -relFar);
         return ray;
+    }
+    getPositionHighLow() {
+        let doublePosition = this.position;
+        let xHighLow = this.getDoubleToHighLow(doublePosition[0]);
+        let yHighLow = this.getDoubleToHighLow(doublePosition[1]);
+        let zHighLow = this.getDoubleToHighLow(doublePosition[2]);
+        let positionHigh = vec3.fromValues(xHighLow[0], yHighLow[0], zHighLow[0]);
+        let positionLow = vec3.fromValues(xHighLow[1], yHighLow[1], zHighLow[1]);
+        return [positionHigh, positionLow];
+    }
+    getDoubleToHighLow(value) {
+        let floatHigh = 0.0;
+        let floatLow = 0.0;
+        let double = 0.0;
+        if (value >= 0.0) {
+            double = Math.floor(value / 65536.0) * 65536.0;
+            floatHigh = double;
+            floatLow = value - double;
+        }
+        else {
+            double = Math.floor(-value / 65536.0) * 65536.0;
+            floatHigh = -double;
+            floatLow = value + double;
+        }
+        return vec2.fromValues(floatHigh, floatLow);
     }
 }

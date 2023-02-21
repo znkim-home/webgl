@@ -35,6 +35,10 @@ class SkyBoxShaderProcess extends ShaderProcess {
     });
     this.renderableList.get().forEach((renderableObj: Renderable) => {
       (renderableObj.getId() === undefined) ? renderableObj.createRenderableObjectId(this.renderableList) : undefined;
+      let cameraPosition = this.camera.position;
+      let zOffset = 1000000000 / 2;
+      renderableObj.position = vec3.fromValues(cameraPosition[0], cameraPosition[1], cameraPosition[2] - zOffset);
+      renderableObj.dirty = true;
       renderableObj.render(gl, shaderInfo, this.frameBufferObjs);
     });
   }

@@ -2,6 +2,7 @@ import { vec3 } from 'gl-matrix';
 import GeometryPlane from './GeometryPlane.js';
 export default class Triangle {
     constructor(position1, position2, position3) {
+        this.textureCoorinates = [];
         this.positions = [position1, position2, position3];
         this.getNormal();
     }

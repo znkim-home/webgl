@@ -26,28 +26,30 @@ export default class Rectangle extends Renderable {
             this.image = options.image;
     }
     render(gl, shaderInfo, frameBufferObjs) {
-        let tm = this.getTransformMatrix();
-        let rm = this.getRotationMatrix();
-        gl.uniformMatrix4fv(shaderInfo.uniformLocations.objectMatrix, false, tm);
-        gl.uniformMatrix4fv(shaderInfo.uniformLocations.rotationMatrix, false, rm);
+        let objectRotationMatrix = this.getRotationMatrix();
+        let objectPositionHighLow = this.getPositionHighLow();
+        gl.uniformMatrix4fv(shaderInfo.uniformLocations.objectRotationMatrix, false, objectRotationMatrix);
+        gl.uniform3fv(shaderInfo.uniformLocations.objectPositionHigh, objectPositionHighLow[0]);
+        gl.uniform3fv(shaderInfo.uniformLocations.objectPositionLow, objectPositionHighLow[1]);
         let buffer = this.getBuffer(gl);
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffer.indicesGlBuffer);
-        gl.enableVertexAttribArray(shaderInfo.attributeLocations.vertexPosition);
-        buffer.bindBuffer(buffer.postionsGlBuffer, 3, shaderInfo.attributeLocations.vertexPosition);
         gl.enableVertexAttribArray(shaderInfo.attributeLocations.vertexNormal);
         buffer.bindBuffer(buffer.normalGlBuffer, 3, shaderInfo.attributeLocations.vertexNormal);
+        gl.enableVertexAttribArray(shaderInfo.attributeLocations.vertexPosition);
+        buffer.bindBuffer(buffer.positionsGlBuffer, 3, shaderInfo.attributeLocations.vertexPosition);
         gl.enableVertexAttribArray(shaderInfo.attributeLocations.vertexColor);
         buffer.bindBuffer(buffer.colorGlBuffer, 4, shaderInfo.attributeLocations.vertexColor);
         gl.enableVertexAttribArray(shaderInfo.attributeLocations.vertexSelectionColor);
         buffer.bindBuffer(buffer.selectionColorGlBuffer, 4, shaderInfo.attributeLocations.vertexSelectionColor);
         frameBufferObjs.forEach((frameBufferObj) => {
             frameBufferObj.bind(shaderInfo);
-            if (this.image || this.texture) {
+            const textureType = frameBufferObj.textureType;
+            if (textureType == 1) {
                 gl.bindTexture(gl.TEXTURE_2D, buffer.texture);
                 gl.enableVertexAttribArray(shaderInfo.attributeLocations.textureCoordinate);
                 buffer.bindBuffer(buffer.textureGlBuffer, 2, shaderInfo.attributeLocations.textureCoordinate);
             }
-            gl.drawElements(gl.TRIANGLES, buffer.indicesLength, gl.UNSIGNED_SHORT, 0);
+            gl.drawElements(Renderable.globalOptions.drawElementsType, buffer.indicesLength, gl.UNSIGNED_SHORT, 0);
             frameBufferObj.unbind();
         });
     }
@@ -81,8 +83,8 @@ export default class Rectangle extends Renderable {
                     textureCoordinates.push((position[1] - bbox.miny) / rangeY);
                 });
             });
-            this.length = this.coordinates.length;
-            let indices = new Uint16Array(positions.length / 3);
+            this.length = this.coordinates.length / 3;
+            let indices = new Uint16Array(positions.length);
             this.buffer.indicesVBO = indices.map((obj, index) => index);
             this.buffer.positionsVBO = new Float32Array(positions);
             this.buffer.colorVBO = new Float32Array(colors);
@@ -92,20 +94,21 @@ export default class Rectangle extends Renderable {
             if (this.texture) {
                 this.buffer.texture = this.texture;
             }
-            else if (!this.texture && this.image) {
+            else if (this.image) {
                 let texture = this.buffer.createTexture(this.image);
                 this.buffer.texture = texture;
                 this.texture = texture;
             }
-            this.buffer.postionsGlBuffer = this.buffer.createBuffer(this.buffer.positionsVBO);
+            this.buffer.positionsGlBuffer = this.buffer.createBuffer(this.buffer.positionsVBO);
             this.buffer.colorGlBuffer = this.buffer.createBuffer(this.buffer.colorVBO);
             this.buffer.selectionColorGlBuffer = this.buffer.createBuffer(this.buffer.selectionColorVBO);
             this.buffer.normalGlBuffer = this.buffer.createBuffer(this.buffer.normalVBO);
-            this.buffer.indicesGlBuffer = this.buffer.createIndexBuffer(this.buffer.indicesVBO);
             this.buffer.textureGlBuffer = this.buffer.createBuffer(this.buffer.textureVBO);
+            this.buffer.indicesGlBuffer = this.buffer.createIndexBuffer(this.buffer.indicesVBO);
             this.buffer.indicesLength = this.buffer.indicesVBO.length;
             this.dirty = false;
         }
         return this.buffer;
     }
 }
+Rectangle.objectName = "Rectangle";

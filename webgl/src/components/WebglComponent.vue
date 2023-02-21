@@ -1,127 +1,6 @@
 <template>
   <div class="dev-info fps" style="right: 0px; bottom: 0px">{{`${fps} FPS`}}</div>
   <div
-    v-show="consoleTools"
-    class="dev-tool"
-    style="right: 0px; bottom: 0px"
-    oncontextmenu="return false"
-    ondragstart="return false"
-    onselectstart="return false"
-  >
-    <div class="header" v-on:click="showConsole = !showConsole">
-      <h3>Dev Console</h3>
-      <div class="show-hide">show/hide</div>
-    </div>
-    <div v-show="showConsole">
-      <pre class="console"></pre>
-    </div>
-  </div>
-  <div
-    v-if="drawTools"
-    class="dev-tool"
-    style="left: 0px; top: 0px"
-    oncontextmenu="return false"
-    ondragstart="return false"
-    onselectstart="return false"
-  >
-    <div class="header" v-on:click="showDraw = !showDraw">
-      <h3>Options</h3>
-      <div class="show-hide">show/hide</div>
-    </div>
-    <div v-show="showDraw">
-      <div class="block-group">
-        <button class="mini-btn" v-on:click="initPosition()">InitPos</button>
-        <!--<button class="mini-btn" v-on:click="getExtrusion()">Extrusion</button>-->
-        <button class="mini-btn" v-on:click="removeObj(selectedObject)">Remove</button>
-        <button class="mini-btn" v-on:click="removeAll()">RemoveAll</button>
-        <button class="mini-btn" v-on:click="consoleTools = !consoleTools">Console</button>
-      </div>
-      <div class="block-group">
-        <label>SCALE</label>
-        <input type="range" v-model="localOptions.scale" min="1" max="20" step="1" />
-      </div>
-      <div class="block-group">
-        <label>HEADING</label>
-        <input type="range" v-model="localOptions.rotationZ" min="0" max="360" step="1" v-on:input="rotateSelectedObject"/>
-      </div>
-      <div class="block-group">
-        <label>PITCH</label>
-        <input type="range" v-model="localOptions.rotationX" min="0" max="360" step="1" v-on:input="rotateSelectedObject"/>
-      </div>
-      <div class="block-group">
-        <label>ROLL</label>
-        <input type="range" v-model="localOptions.rotationY" min="0" max="360" step="1" v-on:input="rotateSelectedObject"/>
-      </div>
-      <h2>CAMERA OPTIONS</h2>
-      <button class="mini-btn" v-on:click="cameraMode = 0">Orbit</button>
-      <button class="mini-btn" v-on:click="cameraMode = 1">FirstPerson</button>
-      <button class="mini-btn" v-on:click="cameraMode = 2">ThirdPerson</button>
-      <div class="block-group">
-        <label>FOVY</label>
-        <input type="range" v-model="globalOptions.fovyDegree" min="15" max="180" step="1" />
-      </div>
-      <div class="block-group">
-        <label>NEAR</label>
-        <input type="range" v-model="globalOptions.near" min="0.1" max="10000.0" step="1" />
-      </div>
-      <div class="block-group">
-        <label>FAR</label>
-        <input type="range" v-model="globalOptions.far" min="0.1" max="200000.0" step="1" />
-      </div>
-      <h2>SUN OPTIONS</h2>
-      <div class="block-group">
-        <label>RADIUS</label>
-        <input type="range" v-model="globalOptions.sunRadius" min="0" max="8192" step="1" />
-      </div>
-      <h2>WEBGL OPTIONS</h2>
-      <div class="block-group">
-        <input type="checkbox" v-model="globalOptions.cullFace"><label>CULL-FACE</label>
-        <input type="checkbox" v-model="globalOptions.depthTest"><label>DEPTH-TEST</label>
-        <input type="checkbox" v-model="globalOptions.debugMode"><label>DEBUG-MODE</label>
-        <input type="checkbox" v-model="globalOptions.wireFrame"><label>WIRE-FRAME</label>
-      </div>
-      <h2>RENDER OPTIONS</h2>
-      <div class="block-group">
-        <input type="checkbox" v-model="globalOptions.enableSsao"><label>ENABLE-SSAO</label>
-        <input type="checkbox" v-model="globalOptions.enableGlobalLight"><label>ENABLE-SHADOW</label>
-        <input type="checkbox" v-model="globalOptions.enableEdge"><label>ENABLE-EDGE</label>
-      </div>
-      <select v-model="localOptions.blockSize" class="mini-btn">
-        <option value="2">2X2</option>
-        <option value="4">4X4</option>
-        <option value="8">8X8</option>
-        <option value="16">16X16</option>
-        <option value="32">32X32</option>
-        <option value="64">64X64</option>
-        <option value="128">128X128</option>
-        <option value="256">256X256</option>
-      </select>
-      <button class="mini-btn" v-on:click="reload(false)">ReloadBlocks</button>
-      <button class="mini-btn" v-on:click="reload(true)">ReloadBatchedBlocks</button>
-      <button class="mini-btn" v-on:click="batchAll(true)">BatchAll</button>
-    </div>
-  </div>
-  <div
-    v-show="!consoleTools"
-    class="dev-tool"
-    style="left: 0px; bottom: 0px"
-    oncontextmenu="return false"
-    ondragstart="return false"
-    onselectstart="return false"
-  >
-    <div class="header" v-on:click="showRender = !showRender">
-      <h3>Renders</h3>
-      <div class="show-hide">show/hide</div>
-    </div>
-    <div v-show="showRender">
-      <h2>OBJECT INFO</h2>
-      <input type="number" class="mini-btn" v-model="renderableObject.length" :change="uploadObj" readonly/>
-      <ul>
-        <li v-for="(renderable, index) in renderableObject" :key="renderable.id" v-on:click="selectObj(renderable.id)" :class="{selected : (renderable == selectedObject)}">{{`[${index}] : ${renderable.name}, ${renderable.id}`}}</li>
-      </ul>
-    </div>
-  </div>
-  <div
     id="home"
     oncontextmenu="return false"
     ondragstart="return false"
@@ -129,77 +8,49 @@
   >
     <canvas id="glcanvas" width="1024" height="800">SAMPLE</canvas>
   </div>
+  <options-component :web-gl="webGl"></options-component>
+  <console-component :web-gl="webGl"></console-component>
   <prop-component :web-gl="webGl"></prop-component>
-  <globe-controller-component v-if="cameraMode == 0" :web-gl="webGl" :blocks="blocks"></globe-controller-component>
-  <first-person-controller-component v-if="cameraMode == 1" :web-gl="webGl" :blocks="blocks"></first-person-controller-component>
-  <third-person-controller-component v-if="cameraMode == 2" :web-gl="webGl" :blocks="blocks"></third-person-controller-component>
+  <renders-component :web-gl="webGl"></renders-component>
 </template>
 <script>
 //import {WebGL, Cube, Polygon, Rectangle, Point, Line, Cylinder, Obj, Buffer, BufferBatch} from "crispy-waffle";
-import {WebGL, Cube, Polygon, Rectangle, Point, Line, Cylinder, Obj, Buffer, BufferBatch, Sphere} from "@/assets/crispy-waffle";
-  
-import FirstPersonControllerComponent from "./FirstPersonControllerComponent.vue";
-import ThirdPersonControllerComponent from "./ThirdPersonControllerComponent.vue";
-import GlobeControllerComponent from "./GlobeControllerComponent.vue";
-import PropComponent from "./PropComponent.vue";
+import {WebGL, Cube, Polygon, Rectangle, Point, Line, Cylinder, Obj, Buffer, BufferBatch, Sphere, Globe, MapTile} from "@/assets/crispy-waffle";
+
+import { mapGetters } from "vuex";
+
+import PropComponent from "./tools/PropComponent.vue";
+import RendersComponent from "./tools/RendersComponent.vue"
+import ConsoleComponent from "./tools/ConsoleComponent.vue"
+import OptionsComponent from "./tools/OptionsComponent.vue"
 
 export default {
   name: "WebglComponent",
   components: {
-    GlobeControllerComponent,
-    FirstPersonControllerComponent,
-    ThirdPersonControllerComponent,
+    OptionsComponent,
+    ConsoleComponent,
     PropComponent,
+    RendersComponent,
   },
   data() {
     return {
       fps : 0,
-      selectedObject: undefined,
-      cameraMode: 0,
-      drawTools: true,
-      renderTools: true,
-      showDraw: false,
-      showRender: false,
-      showConsole : false,
-      consoleTools: false,
-      webGl: undefined,
       blocks: undefined,
       loadedObjs: [],
       textures: [],
       images: [],
-      localOptions: {
-        scale: 5.0,
-        rotationX: 0.0,
-        rotationY: 0.0,
-        rotationZ: 0.0,
-        blockSize : 8,
-        maxHeight : 6,
-      },
-      globalOptions: {
-        cullFace : true,
-        depthTest : true,
-        fovyDegree : 70,
-        aspect : undefined,
-        near : 0.1,
-        far : 50000.0,
-        pointSize : 5.0,
-        lineWidth : 3.0,
-        debugMode : false,
-        enableSsao : true,
-        enableGlobalLight : true,
-        enableEdge : true,
-        sunRadius : 2048,
-        wireFrame : false,
-      }
+
+      webGl: undefined,
     };
   },
   mounted() {
-    if (this.consoleTools) {
-      this.initConsole();
-    }
     this.init();
   },
   computed: {
+    ...mapGetters({
+      globalOptions: "getGlobalOptions",
+      selectedObjects: "getSelectedObjects",
+    }),
     renderableObject: {
       get() {
         if (this.webGl) {
@@ -228,46 +79,19 @@ export default {
       this.webGl = webGl;
       webGl.startRender();
       this.initImage();
-      const dist = 2048;
+      const dist = 6378137.0; // globe
+      //const dist = 63781.0;
+      this.blocks = {
+        BLOCK_SIZE : 0,
+        MAX_HEIGHT : 0,
+      }
       this.initPosition(dist * 2);
       //this.base(dist, dist);
       this.baseGlobe(dist);
-      this.initBlocks();
+      //this.initBlocks();
       this.getFps();
     },
-    selectObj(id) {
-      let selectedObject = this.webGl.renderableObjectList.findById(id);
-      if (selectedObject) {
-        this.localOptions.rotationX = selectedObject.rotation[0];
-        this.localOptions.rotationY = selectedObject.rotation[1];
-        this.localOptions.rotationZ = selectedObject.rotation[2];
-        this.selectedObject = selectedObject;
-        this.globalOptions.selectedObjectId = id;
-      }
-      return selectedObject;
-    },
-    diselectObj() {
-      let selectedObject = this.selectedObject;
-      if (selectedObject) {
-        this.localOptions.rotationX = 0;
-        this.localOptions.rotationY = 0;
-        this.localOptions.rotationZ = 0;
-        this.selectedObject = undefined;
-        this.globalOptions.selectedObjectId = undefined;
-      }
-      return selectedObject;
-    },
-    getSelectedObject() {
-      return this.selectedObject;
-    },
-    rotateSelectedObject() {
-      if (this.selectedObject) {
-        this.selectedObject.rotation[0] = this.localOptions.rotationX;
-        this.selectedObject.rotation[1] = this.localOptions.rotationY;
-        this.selectedObject.rotation[2] = this.localOptions.rotationZ;
-        this.selectedObject.dirty = true;
-      }
-    },
+
     uploadObj(e) {
       let _this = this;
       let file = e.target.files[0];
@@ -431,13 +255,12 @@ export default {
       image.onload = () => {
         let options = {
           id : 0,
-          position: { x: 0, y: 0, z: -radius/2 },
+          position: { x: 0, y: 0, z: 0 },
           color: { r: 1.0, g: 1.0, b: 0.0, a: 1.0 },
           image : image,
-          radius: radius / 2,
           rotation: {pitch: 0, roll: 0, heading: 0}
         }
-        let globe = new Sphere(options);
+        let globe = new Globe(options);
         this.webGl.renderableObjectList.push(globe);
         options.color = {r : 0.0, g : 1.0, b : 0.0, a : 1.0};
         options.image = image;
@@ -532,17 +355,17 @@ export default {
         this.initGround(true);
       }
     },
-    setZeroPosition() {
-      const webGl = this.webGl;
-      const camera = webGl.camera;
-      camera.setPosition(0, 0, -0);
-    },
-    removeObj(obj) {
-      if (obj !== undefined) {
-        let renderableObjects = this.webGl.renderableObjectList.get();
-        this.webGl.renderableObjectList.set(renderableObjects.filter((renderableObj) => {
-          return renderableObj.id !== obj.id;
-        }));
+    removeObj(objects) {
+      console.log(objects);
+      if (objects && objects.length > 0) {
+        objects.forEach((object) => {
+          if (object !== undefined) {
+            let renderableObjects = this.webGl.renderableObjectList.get();
+            this.webGl.renderableObjectList.set(renderableObjects.filter((renderableObj) => {
+              return renderableObj.id !== object.id;
+            }));
+          }
+        })
       }
     },
     removeAll() {
@@ -581,7 +404,6 @@ export default {
       let cube = new Cube(options);
       if (isAdd) {
         this.webGl.renderableObjectList.push(cube);
-        //this.webGl.skyBoxObjectList.push(cube);
       } else {
         cube.createRenderableObjectId(this.webGl.renderableObjectList);
       }
@@ -630,32 +452,6 @@ export default {
       }, isAdd);
       return cube;
     },
-    initConsole(consoleLimit = 50000) {
-      const consoleToHtml = function () {
-        let consoleDiv = document.querySelector(".console");
-        if (consoleDiv.textContent.length > consoleLimit) {
-          consoleDiv.textContent = consoleDiv.textContent.substring(
-            40000,
-            consoleDiv.textContent.length
-          );
-        }
-        consoleDiv.textContent += `${new Date().toLocaleString("ko-KR")} >>`;
-        Array.from(arguments).forEach((el) => {
-          consoleDiv.textContent += " ";
-          const insertValue = typeof el === "object" ? JSON.stringify(el) : el;
-          consoleDiv.textContent += insertValue;
-        });
-        consoleDiv.textContent += "\n";
-        consoleDiv.scrollTop = consoleDiv.scrollHeight;
-        window.console.logCopy(...arguments);
-      };
-      window.console.logCopy = window.console.log;
-      window.console.log = consoleToHtml;
-    },
-    unsetConsole() {
-      window.console.logCopy = window.console.log;
-      window.console.log =  window.console.logCopy;
-    }
   },
 };
 </script>
@@ -780,27 +576,6 @@ button.mini-btn:hover, input.mini-btn:hover {
 </style>
 
 <style scoped>
-.dev-tool ul {
-  height: 100px;
-  min-width: 320px;
-  overflow-y: scroll;
-  background-color: #222222;
-  margin: 5px 0px;
-}
-.dev-tool ul > li{
-  font-size: 11px;
-  padding: 7px 5px;
-  cursor: pointer;
-}
-.dev-tool ul > li:nth-child(odd) {
-  background-color: #1b1b1b;
-}
-.dev-tool ul > li.selected {
-  color: red;
-  background-color: #ffff64;
-  font-weight: bold;
-}
-
 div.fps {
   opacity: 0.75;
   text-shadow: -1px 0 #fff, 0 1px #fff, 1px 0 #fff, 0 -1px #fff;

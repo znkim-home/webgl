@@ -19,12 +19,14 @@ class ScreenShaderProcess extends ShaderProcess {
         this.selectionScreen = new Screen([[0.85, 0.7], [1, 0.7], [1, 0.85], [0.85, 0.85]], { reverse: true, forDebug: true, textureLocation: shaderInfo.uniformLocations.selectionTexture });
         this.normalScreen = new Screen([[0.85, 0.55], [1, 0.55], [1, 0.7], [0.85, 0.7]], { reverse: true, forDebug: true, textureLocation: shaderInfo.uniformLocations.normalTexture });
         this.depthScreen = new Screen([[0.85, 0.40], [1, 0.40], [1, 0.55], [0.85, 0.55]], { reverse: true, forDebug: true, textureLocation: shaderInfo.uniformLocations.depthTexture });
-        this.lightMapDepthScreen = new Screen([[0.92, 0.25], [1, 0.25], [1, 0.40], [0.92, 0.40]], { reverse: true, forDebug: true, textureLocation: shaderInfo.uniformLocations.lightMapTexture });
+        this.skyBoxScreen = new Screen([[0.85, 0.25], [1, 0.25], [1, 0.40], [0.85, 0.40]], { reverse: true, forDebug: true, textureLocation: shaderInfo.uniformLocations.skyBoxTexture });
+        this.lightMapDepthScreen = new Screen([[0.92, 0.10], [1, 0.10], [1, 0.25], [0.92, 0.25]], { reverse: true, forDebug: true, textureLocation: shaderInfo.uniformLocations.lightMapTexture });
         this.screens.push(this.mainScreen);
         this.screens.push(this.albedoScreen);
         this.screens.push(this.selectionScreen);
         this.screens.push(this.normalScreen);
         this.screens.push(this.depthScreen);
+        this.screens.push(this.skyBoxScreen);
         this.screens.push(this.lightMapDepthScreen);
         this.noiseTexture = this.buffer.createNoiseTexture();
         this.mainScreen.glTextureNumber = gl.TEXTURE0;
@@ -32,8 +34,9 @@ class ScreenShaderProcess extends ShaderProcess {
         this.selectionScreen.glTextureNumber = gl.TEXTURE2;
         this.normalScreen.glTextureNumber = gl.TEXTURE3;
         this.depthScreen.glTextureNumber = gl.TEXTURE4;
-        this.lightMapDepthScreen.glTextureNumber = gl.TEXTURE5;
-        this.noiseTextureNumber = gl.TEXTURE6;
+        this.skyBoxScreen.glTextureNumber = gl.TEXTURE5;
+        this.lightMapDepthScreen.glTextureNumber = gl.TEXTURE6;
+        this.noiseTextureNumber = gl.TEXTURE7;
     }
     process() {
         const gl = this.gl;

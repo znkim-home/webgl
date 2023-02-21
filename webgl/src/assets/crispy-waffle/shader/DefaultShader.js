@@ -1,5 +1,11 @@
 const attributes = ["aVertexPosition", "aVertexColor", "aVertexSelectionColor", "aVertexNormal", "aTextureCoordinate"];
-const uniforms = ["uModelViewMatrix", "uProjectionMatrix", "uOrthographicMatrix", "uObjectMatrix", "uRotationMatrix", "uNormalMatrix", "uPointSize", "uNearFar", "uPositionType", "uTexture", "uTextureType"];
+const uniforms = [
+    "uProjectionMatrix",
+    "uModelRotationMatrix", "uModelPositionHigh", "uModelPositionLow",
+    "uObjectRotationMatrix", "uObjectPositionHigh", "uObjectPositionLow",
+    "uNormalMatrix", "uPointSize", "uNearFar",
+    "uTexture", "uTextureType"
+];
 const vertexShaderSource = `
   attribute vec3 aVertexPosition;
   attribute vec4 aVertexColor;
@@ -7,15 +13,19 @@ const vertexShaderSource = `
   attribute vec3 aVertexNormal;
   attribute vec2 aTextureCoordinate;
   
-  uniform mat4 uModelViewMatrix;
   uniform mat4 uProjectionMatrix;
-  uniform mat4 uOrthographicMatrix;
-  uniform mat4 uObjectMatrix;
-  uniform mat4 uRotationMatrix;
+
+  uniform mat4 uModelRotationMatrix;
+  uniform vec3 uModelPositionHigh;
+  uniform vec3 uModelPositionLow;
+
+  uniform mat4 uObjectRotationMatrix;
+  uniform vec3 uObjectPositionHigh;
+  uniform vec3 uObjectPositionLow;
+
   uniform mat4 uNormalMatrix;
   uniform float uPointSize;
   uniform vec2 uNearFar;
-  uniform int uPositionType; // 1: plane, 2: depth, basic
 
   varying vec4 vColor;
   varying vec4 vSelectionColor;
@@ -23,32 +33,38 @@ const vertexShaderSource = `
   varying vec2 vTextureCoordinate;
   varying float vDepth;
 
+  vec4 getPosition() {
+    vec4 transformedPosition = uObjectRotationMatrix * vec4(aVertexPosition, 1.0);
+		vec3 highDifference = uObjectPositionHigh.xyz - uModelPositionHigh.xyz;
+		vec3 lowDifference = (uObjectPositionLow.xyz + transformedPosition.xyz) - uModelPositionLow.xyz;
+		vec4 pos4 = vec4(highDifference.xyz + lowDifference.xyz, 1.0);
+    return pos4;
+  }
   vec4 getOrthoPosition() {
-    vec4 transformedPosition = uObjectMatrix * vec4(aVertexPosition, 1.0);
-    vec4 orthoPosition = uModelViewMatrix * vec4(transformedPosition.xyz, 1.0);
+    //vec4 transformedPosition = uObjectRotationMatrix * vec4(aVertexPosition, 1.0);
+    vec4 transformedPosition = getPosition();
+    vec4 orthoPosition = uModelRotationMatrix * transformedPosition;
     return orthoPosition;
   }
   vec3 getRotatedNormal() {
-    vec3 rotatedModelNormal = (uRotationMatrix * vec4(aVertexNormal, 1.0)).xyz;
+    vec3 rotatedModelNormal = (uObjectRotationMatrix * vec4(aVertexNormal, 1.0)).xyz;
     vec3 rotatedNormal = normalize(uNormalMatrix * vec4(rotatedModelNormal, 1.0)).xyz;
     return rotatedNormal;
   }
   float calcDepth(float zValue) {
     return -(zValue / uNearFar.y);
   }
-
   void main(void) {
+    vec4 orthoPosition = getOrthoPosition();
+    
     vColor = aVertexColor;
     vSelectionColor = aVertexSelectionColor;
-    gl_PointSize = uPointSize;
-
-    vec4 orthoPosition = getOrthoPosition();
     vTransformedNormal = getRotatedNormal();
-
-    vDepth = calcDepth(orthoPosition.z);
-    gl_Position = uProjectionMatrix * orthoPosition;
-    
     vTextureCoordinate = aTextureCoordinate;
+    vDepth = calcDepth(orthoPosition.z);
+    
+    gl_PointSize = uPointSize;
+    gl_Position = uProjectionMatrix * orthoPosition;
   }
 `;
 const fragmentShaderSource = `
@@ -61,7 +77,7 @@ const fragmentShaderSource = `
   varying float vDepth;
 
   uniform sampler2D uTexture;
-  uniform int uTextureType; // default : color, 1 : texture, 2 : reverseY, 3 : depth
+  uniform int uTextureType;
   
   vec3 encodeNormal(in vec3 normal) {
     return normal.xyz * 0.5 + 0.5;
@@ -75,20 +91,17 @@ const fragmentShaderSource = `
     enc -= enc.yzww * vec4(1.0/255.0, 1.0/255.0, 1.0/255.0, 0.0);
     return enc;
   }
-
   void main(void) {
     if (uTextureType == 1) {
-      //gl_FragColor = vec4(vColor.xyz, vColor.a);
-      gl_FragColor = texture2D(uTexture, vec2(vTextureCoordinate.x, 1.0 - vTextureCoordinate.y));
+      vec2 textureCoordinateReverseY = vec2(vTextureCoordinate.x, 1.0 - vTextureCoordinate.y);
+      gl_FragColor = texture2D(uTexture, textureCoordinateReverseY);
     } else if (uTextureType == 2) {
       gl_FragColor = vec4(vSelectionColor.xyz, vSelectionColor.a);
     } else if (uTextureType == 3) {
       gl_FragColor = packDepth(vDepth);
     } else if (uTextureType == 4) {
       gl_FragColor = vec4(encodeNormal(vTransformedNormal), 1.0);
-    } else if (uTextureType == 5) {
-      gl_FragColor = vec4(vColor.xyz, vColor.a);
-    }  else {
+    } else {
       gl_FragColor = vec4(vColor.xyz, vColor.a);
     }
   }

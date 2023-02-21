@@ -1,5 +1,11 @@
 const attributes = ["aVertexPosition", "aVertexColor", "aVertexSelectionColor", "aVertexNormal", "aTextureCoordinate"];
-const uniforms = ["uModelViewMatrix", "uProjectionMatrix", "uOrthographicMatrix", "uObjectMatrix", "uRotationMatrix", "uNormalMatrix", "uPointSize", "uPositionType", "uNearFar", "uTexture", "uTextureType"];
+const uniforms = [
+    "uOrthographicMatrix",
+    "uModelRotationMatrix", "uModelPositionHigh", "uModelPositionLow",
+    "uObjectRotationMatrix", "uObjectPositionHigh", "uObjectPositionLow",
+    "uNormalMatrix", "uPointSize", "uNearFar",
+    "uTexture", "uTextureType"
+];
 const vertexShaderSource = `
   attribute vec3 aVertexPosition;
   attribute vec4 aVertexColor;
@@ -7,11 +13,16 @@ const vertexShaderSource = `
   attribute vec3 aVertexNormal;
   attribute vec2 aTextureCoordinate;
   
-  uniform mat4 uModelViewMatrix;
-  uniform mat4 uProjectionMatrix;
   uniform mat4 uOrthographicMatrix;
-  uniform mat4 uObjectMatrix;
-  uniform mat4 uRotationMatrix;
+
+  uniform mat4 uModelRotationMatrix;
+  uniform vec3 uModelPositionHigh;
+  uniform vec3 uModelPositionLow;
+
+  uniform mat4 uObjectRotationMatrix;
+  uniform vec3 uObjectPositionHigh;
+  uniform vec3 uObjectPositionLow;
+
   uniform mat4 uNormalMatrix;
   uniform float uPointSize;
   uniform vec2 uNearFar;
@@ -21,13 +32,20 @@ const vertexShaderSource = `
   varying vec3 vTransformedNormal;
   varying float vDepth;
 
+  vec4 getPosition() {
+    vec4 transformedPosition = uObjectRotationMatrix * vec4(aVertexPosition, 1.0);
+		//vec3 highDifference = uObjectPositionHigh.xyz - uModelPositionHigh.xyz;
+		//vec3 lowDifference = (uObjectPositionLow.xyz + transformedPosition.xyz) - uModelPositionLow.xyz;
+		//vec4 pos4 = vec4(highDifference.xyz + lowDifference.xyz, 1.0);
+    return transformedPosition;
+  }
   vec4 getOrthoPosition() {
-    vec4 transformedPosition = uObjectMatrix * vec4(aVertexPosition, 1.0);
-    vec4 orthoPosition = uModelViewMatrix * vec4(transformedPosition.xyz, 1.0);
+    vec4 transformedPosition = getPosition();
+    vec4 orthoPosition = transformedPosition;
     return orthoPosition;
   }
   vec3 getRotatedNormal() {
-    vec3 rotatedModelNormal = (uRotationMatrix * vec4(aVertexNormal, 1.0)).xyz;
+    vec3 rotatedModelNormal = (uObjectRotationMatrix * vec4(aVertexNormal, 1.0)).xyz;
     vec3 rotatedNormal = normalize(uNormalMatrix * vec4(rotatedModelNormal, 1.0)).xyz;
     return rotatedNormal;
   }

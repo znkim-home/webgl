@@ -154,7 +154,7 @@ export default class WebGL {
     this.camera = new Camera({fovyDegree : this.globalOptions.fovyDegree});
     if (!Renderable.globalOptions) Renderable.globalOptions = this.globalOptions;
 
-    let radius = 2048 * 2;
+    let radius = 6378137 * 1.5;
     this.sun = new Sun({
       position:{x:0, y:0, z: radius},
       radius: radius,
@@ -162,12 +162,12 @@ export default class WebGL {
     this.sun.rotationOrbit(0.7853, 0.7853, vec3.fromValues(0,0,0));
 
     let skyBoxImageList: Array<any> = [
-      { index : 0, path : "/image/skyboxes/lightblue/right.png", loadedImage : undefined},
-      { index : 1, path : "/image/skyboxes/lightblue/left.png", loadedImage : undefined},
-      { index : 2, path : "/image/skyboxes/lightblue/front.png", loadedImage : undefined},
-      { index : 3, path : "/image/skyboxes/lightblue/back.png", loadedImage : undefined},
-      { index : 4, path : "/image/skyboxes/lightblue/bottom.png", loadedImage : undefined},
-      { index : 5, path : "/image/skyboxes/lightblue/top.png", loadedImage : undefined},
+      { index : 0, path : "/image/skyboxes/space/right.png", loadedImage : undefined},
+      { index : 1, path : "/image/skyboxes/space/left.png", loadedImage : undefined},
+      { index : 2, path : "/image/skyboxes/space/front.png", loadedImage : undefined},
+      { index : 3, path : "/image/skyboxes/space/back.png", loadedImage : undefined},
+      { index : 4, path : "/image/skyboxes/space/bottom.png", loadedImage : undefined},
+      { index : 5, path : "/image/skyboxes/space/top.png", loadedImage : undefined},
     ];
     let loadedCount = 0;
     skyBoxImageList.forEach((texture, index) => {
@@ -178,32 +178,16 @@ export default class WebGL {
         if (skyBoxImageList.length == loadedCount) {
           let skybox = new SkyBox({
             id : 8613,
-            position: { x: 0, y: 0, z: -15000 },
+            position: { x: 0, y: 0, z: 0},
             color: { r: 0.5, g: 0.5, b: 0.5, a: 1.0 },
             images : skyBoxImageList,
-            size: { width: 30000, height:30000, length:30000 }
+            size: { width: 1000000000, height:1000000000, length:1000000000 }
           });
           this.skyBoxObjectList.push(skybox);
         }
       }
       image.src = texture.path;
     })
-    
-    /*let skyBoxImage = new Image(); 
-    skyBoxImage.onload = () => {
-      let skybox = new SkyBox({
-        id : 8613,
-        position: { x: 0, y: 0, z: 0 },
-        color: { r: 0.5, g: 0.5, b: 0.5, a: 1.0 },
-        image : skyBoxImage,
-        size: { width: 5000, height:5000, length:5000 }
-      });
-      this.skyBoxObjectList.push(skybox);
-    }
-    skyBoxImage.src = "/image/cube/wood.jpg";*/
-    //skyBoxImage.src = "/image/skybox.png";
-    //skyBoxImage.src = "/image/map.jpg";
-
 
     this.frameBufferObjs.push(this.getMainFbo());
     this.frameBufferObjs.push(this.getAlbedoFbo());
@@ -301,8 +285,9 @@ export default class WebGL {
   }
   getAlbedoFbo() {
     const textureType = 1;
+    const clearColor = vec3.fromValues(1.0, 1.0, 1.0);
     if (!this.albedoFbo) {
-      this.albedoFbo = new FrameBufferObject(this.gl, this.canvas, this.defaultShaderInfo, {name:"albedo" ,textureType}, this.globalOptions);
+      this.albedoFbo = new FrameBufferObject(this.gl, this.canvas, this.defaultShaderInfo, {name:"albedo" , textureType, clearColor}, this.globalOptions);
     }
     return this.albedoFbo;
   }
@@ -340,8 +325,8 @@ export default class WebGL {
       this.lightMapFbo = new FrameBufferObject(this.gl, this.canvas, this.defaultShaderInfo, {
         name:"light" , 
         textureType : textureType,
-        width : 2048,
-        height : 2048,
+        width : 4096,
+        height : 4096,
     }, this.globalOptions);
     }
     return this.lightMapFbo;

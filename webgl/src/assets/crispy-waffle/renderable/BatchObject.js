@@ -15,10 +15,11 @@ export default class BatchObject extends Renderable {
         this.textureCoordinates = options.textureCoordinates;
     }
     render(gl, shaderInfo, frameBufferObjs) {
-        let tm = this.getTransformMatrix();
-        let rm = this.getRotationMatrix();
-        gl.uniformMatrix4fv(shaderInfo.uniformLocations.objectMatrix, false, tm);
-        gl.uniformMatrix4fv(shaderInfo.uniformLocations.rotationMatrix, false, rm);
+        let objectRotationMatrix = this.getRotationMatrix();
+        let objectPositionHighLow = this.getPositionHighLow();
+        gl.uniformMatrix4fv(shaderInfo.uniformLocations.objectRotationMatrix, false, objectRotationMatrix);
+        gl.uniform3fv(shaderInfo.uniformLocations.objectPositionHigh, objectPositionHighLow[0]);
+        gl.uniform3fv(shaderInfo.uniformLocations.objectPositionLow, objectPositionHighLow[1]);
         let buffer = this.getBuffer(gl);
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffer.indicesGlBuffer);
         if (buffer.normalGlBuffer) {
@@ -45,7 +46,7 @@ export default class BatchObject extends Renderable {
         frameBufferObjs.forEach((frameBufferObj) => {
             frameBufferObj.bind();
             if (buffer.indicesLength) {
-                gl.drawElements(gl.TRIANGLES, buffer.indicesLength, gl.UNSIGNED_SHORT, 0);
+                gl.drawElements(Renderable.globalOptions.drawElementsType, buffer.indicesLength, gl.UNSIGNED_SHORT, 0);
             }
             frameBufferObj.unbind();
         });

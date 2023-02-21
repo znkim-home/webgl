@@ -15,10 +15,13 @@ class DefaultShaderProcess extends ShaderProcess {
         this.shader.useProgram();
         let projectionMatrix = mat4.create();
         mat4.perspective(projectionMatrix, this.camera.fovyRadian, globalOptions.aspect, globalOptions.near, globalOptions.far);
-        let modelViewMatrix = this.camera.getModelViewMatrix();
+        let modelRotationMatrix = this.camera.getRotationMatrix();
         let normalMatrix = this.camera.getNormalMatrix();
+        let positionHighLow = this.camera.getPositionHighLow();
         gl.uniformMatrix4fv(shaderInfo.uniformLocations.projectionMatrix, false, projectionMatrix);
-        gl.uniformMatrix4fv(shaderInfo.uniformLocations.modelViewMatrix, false, modelViewMatrix);
+        gl.uniformMatrix4fv(shaderInfo.uniformLocations.modelRotationMatrix, false, modelRotationMatrix);
+        gl.uniform3fv(shaderInfo.uniformLocations.modelPositionHigh, positionHighLow[0]);
+        gl.uniform3fv(shaderInfo.uniformLocations.modelPositionLow, positionHighLow[1]);
         gl.uniformMatrix4fv(shaderInfo.uniformLocations.normalMatrix, false, normalMatrix);
         gl.uniform2fv(shaderInfo.uniformLocations.nearFar, vec2.fromValues(globalOptions.near, globalOptions.far));
         gl.uniform1f(shaderInfo.uniformLocations.pointSize, globalOptions.pointSize);

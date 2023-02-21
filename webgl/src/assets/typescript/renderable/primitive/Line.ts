@@ -22,8 +22,11 @@ export default class Line extends Renderable {
     if (options?.color) this.color = vec4.set(this.color, options?.color.r, options?.color.g, options?.color.b, options?.color.a);
   }
   render(gl: WebGLRenderingContext | WebGL2RenderingContext, shaderInfo: ShaderInfoInterface, frameBufferObjs: FrameBufferObject[]) {
-    let tm = this.getTransformMatrix();
-    gl.uniformMatrix4fv(shaderInfo.uniformLocations.objectMatrix, false, tm);
+    let objectRotationMatrix: mat4 = this.getRotationMatrix();
+    let objectPositionHighLow: vec3[] = this.getPositionHighLow();
+    gl.uniformMatrix4fv(shaderInfo.uniformLocations.objectRotationMatrix, false, objectRotationMatrix);
+    gl.uniform3fv(shaderInfo.uniformLocations.objectPositionHigh, objectPositionHighLow[0]);
+    gl.uniform3fv(shaderInfo.uniformLocations.objectPositionLow, objectPositionHighLow[1]);
 
     let buffer = this.getBuffer(gl);
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffer.indicesGlBuffer);

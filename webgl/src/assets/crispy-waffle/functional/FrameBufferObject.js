@@ -86,6 +86,9 @@ export default class FrameBufferObject {
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
         const pixelsF32 = new Float32Array([pixels[0] / 255.0, pixels[1] / 255.0, pixels[2] / 255.0, pixels[3] / 255.0]);
         const result = this.unpackDepth(pixelsF32) * this.globalOptions.far;
+        if (result < 1000) {
+            console.log(":");
+        }
         return result;
     }
     convertIdToColor(id) {

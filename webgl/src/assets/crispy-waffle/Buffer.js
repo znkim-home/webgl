@@ -38,6 +38,30 @@ export default class Buffer {
         gl.generateMipmap(gl.TEXTURE_2D);
         return texture;
     }
+    createCubeTexture(images) {
+        let gl = this.gl;
+        //let texWrap = gl.CLAMP_TO_EDGE;
+        let texture = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_CUBE_MAP, texture);
+        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+        const faceInfos = [
+            gl.TEXTURE_CUBE_MAP_POSITIVE_X,
+            gl.TEXTURE_CUBE_MAP_NEGATIVE_X,
+            gl.TEXTURE_CUBE_MAP_POSITIVE_Y,
+            gl.TEXTURE_CUBE_MAP_NEGATIVE_Y,
+            gl.TEXTURE_CUBE_MAP_POSITIVE_Z,
+            gl.TEXTURE_CUBE_MAP_NEGATIVE_Z
+        ];
+        faceInfos.forEach((faceInfo, index) => {
+            const format = gl.RGBA;
+            const type = gl.UNSIGNED_BYTE;
+            gl.texImage2D(faceInfo, 0, gl.RGBA, format, type, images[index].loadedImage);
+        });
+        //gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+        //gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.NEAREST_MIPMAP_NEAREST);
+        gl.generateMipmap(gl.TEXTURE_CUBE_MAP);
+        return texture;
+    }
     createNoiseTexture() {
         const NOISE_SIZE = 4;
         let pixels = new Uint8Array(NOISE_SIZE * NOISE_SIZE * NOISE_SIZE);

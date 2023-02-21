@@ -33,6 +33,32 @@ export default class Revolutor {
     }
     return verticesMatrix;
   }
+  static revoluteRange(positions: Array<vec3>, indices: Indices, density: number, lonlatRange: any): VerticesMatrix {
+    let longitudeOffset = lonlatRange.longitudeMin + 180;
+
+    let origin = vec3.fromValues(0.0, 0.0, 0.0);
+    //let angleOffset = (360 / density);
+    let angleOffset = ((lonlatRange.longitudeMin + lonlatRange.longitudeMax + 360) / density);
+    let verticesMatrix = new VerticesMatrix();
+    for (let i = 0; i <= density; i++) {
+      let vertices = new Vertices();
+      let angle = Math.radian(i * angleOffset);
+      positions.forEach((position, index) => {
+        let rotatedPosition = vec3.rotateZ(vec3.create(), position, origin, angle);
+        let textureCoordinateX = (i / density);
+        let textureCoordinateY = 1 - (index / (positions.length - 1));
+        let startTextureCoordinate = vec2.fromValues(textureCoordinateX, textureCoordinateY);
+        let vertex = new Vertex.Builder()
+          .position(rotatedPosition)
+          .textureCoordinate(startTextureCoordinate)
+          .index(indices.getAndNext())
+          .build();
+        vertices.push(vertex);
+      });
+      verticesMatrix.push(vertices);
+    }
+    return verticesMatrix;
+  }
   static convertTriangles(verticesMatrix: VerticesMatrix): Array<Triangle> {
     let triangles: Array<Triangle> = []; 
     for (let loop = 0; loop < verticesMatrix.length - 1; loop++) {

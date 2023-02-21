@@ -1,7 +1,7 @@
 import Buffer from '../../Buffer.js';
 import Renderable from '../../abstract/Renderable.js';
-import Triangle from '../../geometry/Triangle.js';
-import Tessellator from '../../functional/Tessellator.js';
+import Indices from '../../topology/Indices.js';
+import Revolutor from '../../functional/Revolutor.js';
 import { mat4, vec3, vec4 } from 'gl-matrix'; // eslint-disable-line no-unused-vars
 export default class Sphere extends Renderable {
     constructor(options) {
@@ -12,7 +12,7 @@ export default class Sphere extends Renderable {
         this.triangles = [];
         this.radius = 1.0;
         this.height = 3.0;
-        this.density = 32;
+        this.density = 64;
         this.name = "Untitled Cylinder";
         if (options === null || options === void 0 ? void 0 : options.radius)
             this.radius = options.radius;
@@ -37,10 +37,11 @@ export default class Sphere extends Renderable {
         return mat4.multiply(tm, tm, pitchMatrix);
     }
     render(gl, shaderInfo, frameBufferObjs) {
-        let tm = this.getTransformMatrix();
-        let rm = this.getRotationMatrix();
-        gl.uniformMatrix4fv(shaderInfo.uniformLocations.objectMatrix, false, tm);
-        gl.uniformMatrix4fv(shaderInfo.uniformLocations.rotationMatrix, false, rm);
+        let objectRotationMatrix = this.getRotationMatrix();
+        let objectPositionHighLow = this.getPositionHighLow();
+        gl.uniformMatrix4fv(shaderInfo.uniformLocations.objectRotationMatrix, false, objectRotationMatrix);
+        gl.uniform3fv(shaderInfo.uniformLocations.objectPositionHigh, objectPositionHighLow[0]);
+        gl.uniform3fv(shaderInfo.uniformLocations.objectPositionLow, objectPositionHighLow[1]);
         let buffer = this.getBuffer(gl);
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffer.indicesGlBuffer);
         gl.enableVertexAttribArray(shaderInfo.attributeLocations.vertexPosition);
@@ -58,7 +59,7 @@ export default class Sphere extends Renderable {
                 gl.enableVertexAttribArray(shaderInfo.attributeLocations.textureCoordinate);
                 buffer.bindBuffer(buffer.textureGlBuffer, 2, shaderInfo.attributeLocations.textureCoordinate);
             }
-            gl.drawElements(gl.TRIANGLES, buffer.indicesLength, gl.UNSIGNED_SHORT, 0);
+            gl.drawElements(Renderable.globalOptions.drawElementsType, buffer.indicesLength, gl.UNSIGNED_SHORT, 0);
             frameBufferObj.unbind();
         });
     }
@@ -77,7 +78,7 @@ export default class Sphere extends Renderable {
             let normals = [];
             let textureCoordinates = [];
             this.coordinates = [];
-            let angleOffset = (180 / (this.density));
+            let angleOffset = (180 / this.density);
             let origin = vec3.fromValues(0.0, 0.0, 0.0);
             let rotateVec3 = vec3.fromValues(0.0, 0.0, this.radius);
             for (let i = 0; i <= this.density; i++) {
@@ -85,58 +86,36 @@ export default class Sphere extends Renderable {
                 let rotated = vec3.rotateX(vec3.create(), rotateVec3, origin, angle);
                 this.coordinates.push(rotated);
             }
-            let topPositions = this.coordinates.map((coordinate) => vec3.fromValues(coordinate[0], coordinate[1], coordinate[2]));
-            let bbox = this.getMinMax(topPositions);
-            bbox.minz = this.position[2];
-            bbox.maxz = this.position[2] + this.height;
-            if (Tessellator.validateCCW(topPositions) < 0) {
-                topPositions.reverse();
-            }
-            let testTriangles = [];
-            angleOffset = (360 / this.density);
-            for (let i = 0; i < this.density; i++) {
-                let angle = Math.radian(i * angleOffset);
-                let nextAngle = Math.radian((i + 1) * angleOffset);
-                topPositions.forEach((position, index) => {
-                    let nextPosition = topPositions.getNext(index);
-                    let startPosition = vec3.rotateZ(vec3.create(), position, origin, angle);
-                    let startNextPosition = vec3.rotateZ(vec3.create(), nextPosition, origin, angle);
-                    let rotatedPosition = vec3.rotateZ(vec3.create(), position, origin, nextAngle);
-                    let rotatedNextPosition = vec3.rotateZ(vec3.create(), nextPosition, origin, nextAngle);
-                    testTriangles.push(new Triangle(startPosition, startNextPosition, rotatedNextPosition));
-                    testTriangles.push(new Triangle(startPosition, rotatedNextPosition, rotatedPosition));
-                });
-            }
-            let triangles = [];
-            triangles = triangles.concat(testTriangles);
-            this.triangles = triangles;
+            let outerPositions = this.coordinates.map((coordinate) => vec3.fromValues(coordinate[0], coordinate[1], coordinate[2]));
+            let indicesObject = new Indices();
+            let verticesMatrix = Revolutor.revolute(outerPositions, indicesObject, this.density);
+            let triangles = Revolutor.convertTriangles(verticesMatrix);
+            let indices = [];
             triangles.forEach((triangle) => {
-                let trianglePositions = triangle.positions;
-                let normal = triangle.getNormal();
-                trianglePositions.forEach((position) => {
-                    position.forEach((value) => positions.push(value));
-                    normal.forEach((value) => normals.push(value));
-                    color.forEach((value) => colors.push(value));
-                    selectionColor.forEach((value) => selectionColors.push(value));
-                    let xoffset = bbox.maxx - bbox.minx;
-                    let yoffset = bbox.maxy - bbox.miny;
-                    let zoffset = bbox.maxz - bbox.minz;
-                    if (normal[0] == 1 || normal[0] == -1) {
-                        textureCoordinates.push((position[1] - bbox.miny) / yoffset);
-                        textureCoordinates.push((position[2] - bbox.minz) / zoffset);
+                let validation = triangle.validate();
+                triangle.vertices.forEach(vertex => {
+                    if (vertex.color === undefined) {
+                        vertex.color = this.color;
                     }
-                    else if (normal[1] == 1 || normal[1] == -1) {
-                        textureCoordinates.push((position[0] - bbox.minx) / xoffset);
-                        textureCoordinates.push((position[2] - bbox.minz) / zoffset);
-                    }
-                    else if (normal[2] == 1 || normal[2] == -1) {
-                        textureCoordinates.push((position[0] - bbox.minx) / xoffset);
-                        textureCoordinates.push((position[1] - bbox.miny) / yoffset);
+                    if (validation) {
+                        indices.push(vertex.index);
                     }
                 });
             });
-            let indices = new Uint16Array(positions.length / 3);
-            this.buffer.indicesVBO = indices.map((obj, index) => index);
+            verticesMatrix.forEach((vertices) => {
+                vertices.forEach((vertex, index) => {
+                    let position = vertex.position;
+                    let normal = vertex.normal;
+                    let color = vertex.color;
+                    let textureCoordinate = vertex.textureCoordinate;
+                    position.forEach((value) => positions.push(value));
+                    normal.forEach((value) => normals.push(value));
+                    this.color.forEach((value) => colors.push(value));
+                    selectionColor.forEach((value) => selectionColors.push(value));
+                    textureCoordinate.forEach((value) => textureCoordinates.push(value));
+                });
+            });
+            this.buffer.indicesVBO = new Uint16Array(indices);
             this.buffer.positionsVBO = new Float32Array(positions);
             this.buffer.normalVBO = new Float32Array(normals);
             this.buffer.colorVBO = new Float32Array(colors);
@@ -165,3 +144,4 @@ export default class Sphere extends Renderable {
         return vec4.fromValues(r, g, b, 1.0);
     }
 }
+Sphere.objectName = "Sphere";

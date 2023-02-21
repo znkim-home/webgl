@@ -16,8 +16,11 @@ export default class Point extends Renderable {
             this.color = vec4.set(this.color, options === null || options === void 0 ? void 0 : options.color.r, options === null || options === void 0 ? void 0 : options.color.g, options === null || options === void 0 ? void 0 : options.color.b, options === null || options === void 0 ? void 0 : options.color.a);
     }
     render(gl, shaderInfo, frameBufferObjs) {
-        let tm = this.getTransformMatrix();
-        gl.uniformMatrix4fv(shaderInfo.uniformLocations.objectMatrix, false, tm);
+        let objectRotationMatrix = this.getRotationMatrix();
+        let objectPositionHighLow = this.getPositionHighLow();
+        gl.uniformMatrix4fv(shaderInfo.uniformLocations.objectRotationMatrix, false, objectRotationMatrix);
+        gl.uniform3fv(shaderInfo.uniformLocations.objectPositionHigh, objectPositionHighLow[0]);
+        gl.uniform3fv(shaderInfo.uniformLocations.objectPositionLow, objectPositionHighLow[1]);
         let buffer = this.getBuffer(gl);
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffer.indicesGlBuffer);
         frameBufferObjs.forEach((frameBufferObj) => {
@@ -63,3 +66,4 @@ export default class Point extends Renderable {
         return this.buffer;
     }
 }
+Point.objectName = "Point";

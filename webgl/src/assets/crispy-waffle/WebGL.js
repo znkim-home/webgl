@@ -3,19 +3,25 @@ import Shader from './Shader.js';
 import Camera from './Camera.js';
 import Sun from './Sun.js';
 import FrameBufferObject from './functional/FrameBufferObject.js';
+import Renderable from './abstract/Renderable.js';
 import RenderableObjectList from './functional/RenderableObjectList.js';
 import { DefaultShader } from './shader/DefaultShader.js';
 import DefaultShaderProcess from './shader/DefaultShaderProcess.js';
 import { ScreenShader } from './shader/ScreenShader.js';
 import ScreenShaderProcess from './shader/ScreenShaderProcess.js';
+import { SkyBoxShader } from './shader/SkyBoxShader.js';
+import SkyBoxShaderProcess from './shader/SkyBoxShaderProcess.js';
 import { LightMapShader } from './shader/LightMapShader.js';
 import LightMapShaderProcess from './shader/LightMapShaderProcess.js';
+import SkyBox from './renderable/SkyBox.js';
 Math.degree = (radian) => radian * 180 / Math.PI;
 Math.radian = (degree) => degree * Math.PI / 180;
 Math.randomInt = () => Math.round(Math.random() * 10);
 Array.prototype.get = function (index) { return this[this.loopIndex(index)]; };
 Array.prototype.getPrev = function (index) { return this[this.loopIndex(index - 1)]; };
 Array.prototype.getNext = function (index) { return this[this.loopIndex(index + 1)]; };
+Array.prototype.getPrevIndex = function (index) { return this.loopIndex(index - 1); };
+Array.prototype.getNextIndex = function (index) { return this.loopIndex(index + 1); };
 Array.prototype.loopIndex = function (index) {
     if (index < 0)
         return index % this.length + this.length;
@@ -26,6 +32,7 @@ export default class WebGL {
     constructor(canvas, globalOptions = {}) {
         this.frameBufferObjs = [];
         this.defaultFrameBufferObjs = [];
+        this.skyBoxFrameBufferObjs = [];
         this.lightMapFrameBufferObjs = [];
         this._fps = {
             then: 0,
@@ -33,6 +40,7 @@ export default class WebGL {
             frames: [],
         };
         this.renderableObjectList = new RenderableObjectList();
+        this.skyBoxObjectList = new RenderableObjectList();
         this.shaderProcesses = [];
         this.globalOptions = globalOptions;
         this._canvas = canvas;
@@ -45,11 +53,11 @@ export default class WebGL {
             let canvas = this._canvas;
             if (canvas.getContext("webgl2")) {
                 this.gl = canvas.getContext("webgl2");
-                version = "webgl2";
+                version = "webgl 2";
             }
             else if (canvas.getContext("webgl")) {
                 this.gl = canvas.getContext("webgl");
-                version = "webgl";
+                version = "webgl 1";
             }
             if (!this.gl) {
                 throw new Error("Unable to initialize WebGL. Your browser may not support it.");
@@ -78,7 +86,6 @@ export default class WebGL {
                     frameBufferObj.init();
                 }
             });
-            console.log("resizeCanvas");
         }
         this.globalOptions.aspect = (canvas.width / canvas.height);
         return isChanged;
@@ -99,18 +106,51 @@ export default class WebGL {
         this.lightMapShader = new Shader(gl);
         this.lightMapShader.init(LightMapShader);
         this.lightMapShaderInfo = this.lightMapShader.shaderInfo;
+        this.skyBoxShader = new Shader(gl);
+        this.skyBoxShader.init(SkyBoxShader);
+        this.skyBoxShaderInfo = this.skyBoxShader.shaderInfo;
         this.camera = new Camera({ fovyDegree: this.globalOptions.fovyDegree });
-        let radius = 2048 * 2;
+        if (!Renderable.globalOptions)
+            Renderable.globalOptions = this.globalOptions;
+        let radius = 6378137 * 1.5;
         this.sun = new Sun({
             position: { x: 0, y: 0, z: radius },
             radius: radius,
         });
         this.sun.rotationOrbit(0.7853, 0.7853, vec3.fromValues(0, 0, 0));
+        let skyBoxImageList = [
+            { index: 0, path: "/image/skyboxes/space/right.png", loadedImage: undefined },
+            { index: 1, path: "/image/skyboxes/space/left.png", loadedImage: undefined },
+            { index: 2, path: "/image/skyboxes/space/front.png", loadedImage: undefined },
+            { index: 3, path: "/image/skyboxes/space/back.png", loadedImage: undefined },
+            { index: 4, path: "/image/skyboxes/space/bottom.png", loadedImage: undefined },
+            { index: 5, path: "/image/skyboxes/space/top.png", loadedImage: undefined },
+        ];
+        let loadedCount = 0;
+        skyBoxImageList.forEach((texture, index) => {
+            let image = new Image();
+            image.onload = () => {
+                skyBoxImageList[index].loadedImage = image;
+                loadedCount++;
+                if (skyBoxImageList.length == loadedCount) {
+                    let skybox = new SkyBox({
+                        id: 8613,
+                        position: { x: 0, y: 0, z: 0 },
+                        color: { r: 0.5, g: 0.5, b: 0.5, a: 1.0 },
+                        images: skyBoxImageList,
+                        size: { width: 1000000000, height: 1000000000, length: 1000000000 }
+                    });
+                    this.skyBoxObjectList.push(skybox);
+                }
+            };
+            image.src = texture.path;
+        });
         this.frameBufferObjs.push(this.getMainFbo());
         this.frameBufferObjs.push(this.getAlbedoFbo());
         this.frameBufferObjs.push(this.getSelectionFbo());
         this.frameBufferObjs.push(this.getNormalFbo());
         this.frameBufferObjs.push(this.getDepthFbo());
+        this.frameBufferObjs.push(this.getSkyBoxFbo());
         this.frameBufferObjs.push(this.getLightMapFbo());
         this.defaultFrameBufferObjs = [];
         this.defaultFrameBufferObjs.push(this.getMainFbo());
@@ -118,10 +158,21 @@ export default class WebGL {
         this.defaultFrameBufferObjs.push(this.getSelectionFbo());
         this.defaultFrameBufferObjs.push(this.getNormalFbo());
         this.defaultFrameBufferObjs.push(this.getDepthFbo());
+        this.skyBoxFrameBufferObjs = [];
+        this.skyBoxFrameBufferObjs.push(this.getSkyBoxFbo());
         this.lightMapFrameBufferObjs.push(this.getLightMapFbo());
+        let forSceenFrameBufferObjs = [];
+        forSceenFrameBufferObjs.push(this.getMainFbo());
+        forSceenFrameBufferObjs.push(this.getAlbedoFbo());
+        forSceenFrameBufferObjs.push(this.getSelectionFbo());
+        forSceenFrameBufferObjs.push(this.getNormalFbo());
+        forSceenFrameBufferObjs.push(this.getDepthFbo());
+        forSceenFrameBufferObjs.push(this.getSkyBoxFbo());
+        forSceenFrameBufferObjs.push(this.getLightMapFbo());
         this.shaderProcesses.push(new DefaultShaderProcess(gl, this.defaultShader, this.globalOptions, this.camera, this.defaultFrameBufferObjs, this.renderableObjectList));
+        this.shaderProcesses.push(new SkyBoxShaderProcess(gl, this.skyBoxShader, this.globalOptions, this.camera, this.skyBoxFrameBufferObjs, this.skyBoxObjectList));
         this.shaderProcesses.push(new LightMapShaderProcess(gl, this.lightMapShader, this.globalOptions, this.camera, this.lightMapFrameBufferObjs, this.renderableObjectList, this.sun));
-        this.shaderProcesses.push(new ScreenShaderProcess(gl, this.screenShader, this.globalOptions, this.camera, this.frameBufferObjs, this.sun));
+        this.shaderProcesses.push(new ScreenShaderProcess(gl, this.screenShader, this.globalOptions, this.camera, forSceenFrameBufferObjs, this.sun));
         this.shaderProcesses.forEach((shaderProcess) => {
             shaderProcess.preprocess();
         });
@@ -142,6 +193,14 @@ export default class WebGL {
         else {
             this.gl.disable(this.gl.DEPTH_TEST);
         }
+        if (this.globalOptions.wireFrame) {
+            this.globalOptions.drawElementsType = this.gl.LINES;
+        }
+        else {
+            this.globalOptions.drawElementsType = this.gl.TRIANGLES;
+        }
+        //this.globalOptions.far = parseFloat(this.globalOptions.far);
+        //this.globalOptions.near = parseFloat(this.globalOptions.near);
     }
     render(now) {
         now *= 0.001;
@@ -161,10 +220,10 @@ export default class WebGL {
     scene() {
         this.setOptions();
         this.shaderProcesses.forEach((shaderProcess) => {
-            shaderProcess.process(this.globalOptions);
+            shaderProcess.process();
         });
         this.shaderProcesses.forEach((shaderProcess) => {
-            shaderProcess.postprocess(this.globalOptions);
+            shaderProcess.postprocess();
         });
     }
     getMainFbo() {
@@ -177,8 +236,9 @@ export default class WebGL {
     }
     getAlbedoFbo() {
         const textureType = 1;
+        const clearColor = vec3.fromValues(1.0, 1.0, 1.0);
         if (!this.albedoFbo) {
-            this.albedoFbo = new FrameBufferObject(this.gl, this.canvas, this.defaultShaderInfo, { name: "albedo", textureType }, this.globalOptions);
+            this.albedoFbo = new FrameBufferObject(this.gl, this.canvas, this.defaultShaderInfo, { name: "albedo", textureType, clearColor }, this.globalOptions);
         }
         return this.albedoFbo;
     }
@@ -216,11 +276,17 @@ export default class WebGL {
             this.lightMapFbo = new FrameBufferObject(this.gl, this.canvas, this.defaultShaderInfo, {
                 name: "light",
                 textureType: textureType,
-                width: 2048,
-                height: 2048,
+                width: 4096,
+                height: 4096,
             }, this.globalOptions);
         }
         return this.lightMapFbo;
+    }
+    getSkyBoxFbo() {
+        if (!this.skyBoxFbo) {
+            this.skyBoxFbo = new FrameBufferObject(this.gl, this.canvas, this.skyBoxShaderInfo, { name: "skybox" }, this.globalOptions);
+        }
+        return this.skyBoxFbo;
     }
     get fps() {
         return this._fps;

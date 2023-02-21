@@ -30,10 +30,11 @@ export default class Cube extends Renderable {
     }
     // overriding
     render(gl, shaderInfo, frameBufferObjs) {
-        let tm = this.getTransformMatrix();
-        let rm = this.getRotationMatrix();
-        gl.uniformMatrix4fv(shaderInfo.uniformLocations.objectMatrix, false, tm);
-        gl.uniformMatrix4fv(shaderInfo.uniformLocations.rotationMatrix, false, rm);
+        let objectRotationMatrix = this.getRotationMatrix();
+        let objectPositionHighLow = this.getPositionHighLow();
+        gl.uniformMatrix4fv(shaderInfo.uniformLocations.objectRotationMatrix, false, objectRotationMatrix);
+        gl.uniform3fv(shaderInfo.uniformLocations.objectPositionHigh, objectPositionHighLow[0]);
+        gl.uniform3fv(shaderInfo.uniformLocations.objectPositionLow, objectPositionHighLow[1]);
         let buffer = this.getBuffer(gl);
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffer.indicesGlBuffer);
         gl.enableVertexAttribArray(shaderInfo.attributeLocations.vertexNormal);
@@ -52,13 +53,13 @@ export default class Cube extends Renderable {
                 gl.enableVertexAttribArray(shaderInfo.attributeLocations.textureCoordinate);
                 buffer.bindBuffer(buffer.textureGlBuffer, 2, shaderInfo.attributeLocations.textureCoordinate);
             }
-            gl.drawElements(gl.TRIANGLES, buffer.indicesLength, gl.UNSIGNED_SHORT, 0);
+            gl.drawElements(Renderable.globalOptions.drawElementsType, buffer.indicesLength, gl.UNSIGNED_SHORT, 0);
             frameBufferObj.unbind();
         });
     }
     // overriding
     getBuffer(gl) {
-        if (this.buffer === undefined) {
+        if (this.buffer === undefined || this.dirty === true) {
             this.buffer = new Buffer(gl);
             if (this.texture) {
                 this.buffer.texture = this.texture;
@@ -268,7 +269,9 @@ export default class Cube extends Renderable {
             this.buffer.textureGlBuffer = this.buffer.createBuffer(this.buffer.textureVBO);
             this.buffer.indicesGlBuffer = this.buffer.createIndexBuffer(this.buffer.indicesVBO);
             this.buffer.indicesLength = this.buffer.indicesVBO.length;
+            this.dirty = false;
         }
         return this.buffer;
     }
 }
+Cube.objectName = "Cube";

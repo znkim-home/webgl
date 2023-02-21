@@ -51,7 +51,7 @@ export default class Obj extends Renderable {
                 gl.enableVertexAttribArray(shaderInfo.attributeLocations.textureCoordinate);
                 buffer.bindBuffer(buffer.textureGlBuffer, 2, shaderInfo.attributeLocations.textureCoordinate);
             }
-            gl.drawElements(gl.TRIANGLES, buffer.indicesLength, gl.UNSIGNED_SHORT, 0);
+            gl.drawElements(Renderable.globalOptions.drawElementsType, buffer.indicesLength, gl.UNSIGNED_SHORT, 0);
             frameBufferObj.unbind();
         });
     }
@@ -159,3 +159,4 @@ export default class Obj extends Renderable {
         return this.buffer;
     }
 }
+Obj.objectName = ".obj";

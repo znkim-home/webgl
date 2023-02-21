@@ -1,5 +1,6 @@
 import { mat2, mat3, mat4, vec2, vec3, vec4 } from 'gl-matrix'; // eslint-disable-line no-unused-vars
 import BatchObject from '../renderable/BatchObject.js';
+import Renderable from '@/abstract/Renderable.js';
 
 declare global {
   interface Float32Array {
@@ -37,7 +38,7 @@ Float32Array.prototype.concat = function() {
 
 export default class BufferBatch {
 
-  static batch100(gl: WebGLRenderingContext | WebGL2RenderingContext, renderableObjs: Array<RenderableInterface>) {
+  static batch100(gl: WebGLRenderingContext | WebGL2RenderingContext, renderableObjs: Array<Renderable>) {
     let results = [];
     let unit = 1000;
     for (let loop = 0; loop < renderableObjs.length; loop+= unit) {
@@ -47,7 +48,7 @@ export default class BufferBatch {
     return results;
   }
 
-  static batch(gl: WebGLRenderingContext | WebGL2RenderingContext, renderableObjs: Array<RenderableInterface>) {
+  static batch(gl: WebGLRenderingContext | WebGL2RenderingContext, renderableObjs: Array<Renderable>) {
     let positionsList: Array<Array<number>> = [];
     let normalsList: Array<Float32Array> = [];
     let colorsList: Array<Float32Array> = [];

@@ -1,15 +1,7 @@
 import { mat2, mat3, mat4, vec2, vec3, vec4 } from 'gl-matrix'; // eslint-disable-line no-unused-vars
 import FrameBufferObject from '../functional/FrameBufferObject';
 
-declare global {
-  interface RenderableInterface {
-    render(gl: WebGLRenderingContext | WebGL2RenderingContext, shaderInfo: ShaderInfoInterface, frameBufferObjs: Array<FrameBufferObject>): void;
-    getBuffer(gl: WebGLRenderingContext | WebGL2RenderingContext): BufferInterface;
-    position: vec3;
-  }
-}
-
-export default class Renderable implements RenderableInterface {
+export default class Renderable {
   static objectName: string = "Renderable";
   id: number;
   name: string;
@@ -63,6 +55,30 @@ export default class Renderable implements RenderableInterface {
       this.rotationMatrix[14] = 0;
     }
     return this.rotationMatrix;
+  }
+  getPositionHighLow(): vec3[] {
+    let doublePosition = this.position;
+    let xHighLow = this.getDoubleToHighLow(doublePosition[0]);
+    let yHighLow = this.getDoubleToHighLow(doublePosition[1]);
+    let zHighLow = this.getDoubleToHighLow(doublePosition[2]);
+    let positionHigh = vec3.fromValues(xHighLow[0], yHighLow[0], zHighLow[0]);
+    let positionLow = vec3.fromValues(xHighLow[1], yHighLow[1], zHighLow[1]);
+    return [positionHigh, positionLow];
+  }
+  getDoubleToHighLow(value: number): vec2 {
+    let floatHigh = 0.0;
+    let floatLow = 0.0;
+    let double = 0.0;
+    if (value >= 0.0) {
+      double = Math.floor(value / 65536.0) * 65536.0;
+      floatHigh = double;
+      floatLow = value - double;
+    } else {
+      double = Math.floor(-value / 65536.0) * 65536.0;
+      floatHigh = -double;
+      floatLow = value + double;
+    }
+    return vec2.fromValues(floatHigh, floatLow);
   }
   getId(): number {
     return this.id;
