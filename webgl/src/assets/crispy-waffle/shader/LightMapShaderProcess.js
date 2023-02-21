@@ -15,11 +15,8 @@ class LightMapShaderProcess extends ShaderProcess {
         const globalOptions = this.globalOptions;
         this.shader.useProgram();
         let lightMapBuffer = this.frameBufferObjs.get(0);
-        let width = lightMapBuffer.widths[0];
-        let height = lightMapBuffer.heights[0];
         let ortRange = this.sun.getRadius();
-        gl.viewport(0, 0, width, height);
-        gl.lineWidth(globalOptions.lineWidth);
+        gl.viewport(0, 0, lightMapBuffer.widths[0], lightMapBuffer.heights[0]);
         let orthographicMatrix = mat4.create();
         mat4.ortho(orthographicMatrix, -ortRange, ortRange, -ortRange, ortRange, 0, ortRange * 2);
         let modelRotationMatrix = this.camera.getRotationMatrix();
@@ -30,7 +27,6 @@ class LightMapShaderProcess extends ShaderProcess {
         gl.uniform3fv(shaderInfo.uniformLocations.modelPositionHigh, positionHighLow[0]);
         gl.uniform3fv(shaderInfo.uniformLocations.modelPositionLow, positionHighLow[1]);
         gl.uniformMatrix4fv(shaderInfo.uniformLocations.normalMatrix, false, normalMatrix);
-        //gl.uniform2fv(shaderInfo.uniformLocations.nearFar, vec2.fromValues(globalOptions.near, globalOptions.far));
         gl.uniform2fv(shaderInfo.uniformLocations.nearFar, vec2.fromValues(0, ortRange * 2));
         gl.uniform1f(shaderInfo.uniformLocations.pointSize, globalOptions.pointSize);
         gl.uniform1i(shaderInfo.uniformLocations.textureType, 0);

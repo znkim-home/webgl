@@ -1,19 +1,17 @@
 import { mat2, mat3, mat4, vec2, vec3, vec4 } from 'gl-matrix'; // eslint-disable-line no-unused-vars
 
 import ShaderProcess from '../abstract/ShaderProcess';
-import Shader from '../Shader';
 import FrameBufferObject from '../functional/FrameBufferObject';
-import Sun from '../Sun';
-import Camera from '../Camera';
 import Renderable from '../abstract/Renderable';
+import { Camera, Shader, Sun } from '..';
 
 class LightMapShaderProcess extends ShaderProcess {
   screens: Array<Screen>;
+  buffer: Buffer;
+  renderableList: RenderableListInterface;
+  frameBufferObjs: Array<FrameBufferObject>;
   camera: Camera;
   sun: Sun;
-  buffer: Buffer;
-  frameBufferObjs: Array<FrameBufferObject>;
-  renderableList: RenderableListInterface;
   constructor(gl: WebGLRenderingContext | WebGL2RenderingContext, shader: Shader, globalOptions: GlobalOptions, camera: Camera, frameBufferObjs: Array<FrameBufferObject>, renderableList: RenderableListInterface, sun: Sun) {
     super(gl, shader, globalOptions);
     this.camera = camera;
@@ -29,12 +27,8 @@ class LightMapShaderProcess extends ShaderProcess {
     this.shader.useProgram();
 
     let lightMapBuffer = this.frameBufferObjs.get(0);
-    let width = lightMapBuffer.widths[0];
-    let height = lightMapBuffer.heights[0];
-
     let ortRange = this.sun.getRadius();
-    gl.viewport(0, 0, width, height);
-    gl.lineWidth(globalOptions.lineWidth);
+    gl.viewport(0, 0, lightMapBuffer.widths[0], lightMapBuffer.heights[0]);
 
     let orthographicMatrix = mat4.create();
     mat4.ortho(orthographicMatrix, -ortRange, ortRange, -ortRange, ortRange, 0, ortRange * 2);
@@ -46,9 +40,8 @@ class LightMapShaderProcess extends ShaderProcess {
     gl.uniformMatrix4fv(shaderInfo.uniformLocations.modelRotationMatrix, false, modelRotationMatrix);
     gl.uniform3fv(shaderInfo.uniformLocations.modelPositionHigh, positionHighLow[0]);
     gl.uniform3fv(shaderInfo.uniformLocations.modelPositionLow, positionHighLow[1]);
-
+    
     gl.uniformMatrix4fv(shaderInfo.uniformLocations.normalMatrix, false, normalMatrix);
-    //gl.uniform2fv(shaderInfo.uniformLocations.nearFar, vec2.fromValues(globalOptions.near, globalOptions.far));
     gl.uniform2fv(shaderInfo.uniformLocations.nearFar, vec2.fromValues(0, ortRange * 2));
     gl.uniform1f(shaderInfo.uniformLocations.pointSize, globalOptions.pointSize);
     gl.uniform1i(shaderInfo.uniformLocations.textureType, 0);

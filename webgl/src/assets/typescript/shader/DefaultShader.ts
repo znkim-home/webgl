@@ -40,20 +40,23 @@ const vertexShaderSource = `
 		vec4 pos4 = vec4(highDifference.xyz + lowDifference.xyz, 1.0);
     return pos4;
   }
+
   vec4 getOrthoPosition() {
-    //vec4 transformedPosition = uObjectRotationMatrix * vec4(aVertexPosition, 1.0);
     vec4 transformedPosition = getPosition();
     vec4 orthoPosition = uModelRotationMatrix * transformedPosition;
     return orthoPosition;
   }
+
   vec3 getRotatedNormal() {
     vec3 rotatedModelNormal = (uObjectRotationMatrix * vec4(aVertexNormal, 1.0)).xyz;
     vec3 rotatedNormal = normalize(uNormalMatrix * vec4(rotatedModelNormal, 1.0)).xyz;
     return rotatedNormal;
   }
+
   float calcDepth(float zValue) {
     return -(zValue / uNearFar.y);
   }
+
   void main(void) {
     vec4 orthoPosition = getOrthoPosition();
     

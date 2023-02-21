@@ -156,10 +156,10 @@ export default class WebGL {
 
     let radius = 6378137 * 1.5;
     this.sun = new Sun({
-      position:{x:0, y:0, z: radius},
+      position: {x: 0, y: 0, z: radius},
       radius: radius,
     });
-    this.sun.rotationOrbit(0.7853, 0.7853, vec3.fromValues(0,0,0));
+    //this.sun.rotationOrbit(0.7853, 0.7853, vec3.fromValues(0,0,0));
 
     let skyBoxImageList: Array<any> = [
       { index : 0, path : "/image/skyboxes/space/right.png", loadedImage : undefined},
@@ -322,7 +322,7 @@ export default class WebGL {
   getLightMapFbo() {
     const textureType = 5;
     if (!this.lightMapFbo) {
-      this.lightMapFbo = new FrameBufferObject(this.gl, this.canvas, this.defaultShaderInfo, {
+      this.lightMapFbo = new FrameBufferObject(this.gl, this.canvas, this.lightMapShaderInfo, {
         name:"light" , 
         textureType : textureType,
         width : 4096,

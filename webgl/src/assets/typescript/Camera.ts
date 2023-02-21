@@ -1,8 +1,8 @@
 import { mat2, mat3, mat4, vec2, vec3, vec4 } from 'gl-matrix'; // eslint-disable-line no-unused-vars
 
 export default class Camera {
-  _modelViewMatrix: mat4;
   _transformMatrix: mat4;
+  _modelViewMatrix: mat4;
   _rotationMatrix: mat4;
   position: vec3;
   rotation: vec3;
@@ -17,13 +17,13 @@ export default class Camera {
     this.init(options);
     this.getTransformMatrix();
   }
-  get transformMatrix() : mat4 {
+  get transformMatrix(): mat4 {
     return this.getTransformMatrix();
   }
-  get modelViewMatrix() : mat4 {
+  get modelViewMatrix(): mat4 {
     return this.getModelViewMatrix();
   }
-  get rotationMatrix() : mat4 {
+  get rotationMatrix(): mat4 {
     return this.getRotationMatrix();
   } 
   init(options: any) {
@@ -61,9 +61,8 @@ export default class Camera {
     let pitchAxis = this.right;
     let headingMatrix = mat4.fromZRotation(mat4.create(), xValue);
     let pitchMatrix = mat4.fromRotation(mat4.create(), yValue, pitchAxis);
-
     let totalRotationMatrix = mat4.multiply(mat4.create(), headingMatrix, pitchMatrix);
-
+    
     let translatedCameraPosition = vec3.subtract(vec3.create(), this.position, pivotPosition);
     let translatedCameraPositionVec4 = vec4.fromValues(translatedCameraPosition[0], translatedCameraPosition[1], translatedCameraPosition[2], 1.0);
     let transformedCameraPosition = vec4.transformMat4(vec4.create(), translatedCameraPositionVec4, totalRotationMatrix);

@@ -2,7 +2,7 @@ const attributes = ["aVertexPosition", "aTextureCoordinate"];
 const uniforms = ["uIsMain", "uSsaoKernel", "uScreenSize", "uNoiseScale",
     "uAspectRatio", "uProjectionMatrix", "uTangentOfHalfFovy", "uNearFar",
     "uMainTexture", "uAlbedoTexture", "uSelectionTexture", "uNormalTexture",
-    "uDepthTexture", "uNoiseTexture", "uSkyBoxTexture", "uLightMapTexture", "uCameraTransformMatrix", "uSunModelViewMatrix", "uOrthographicMatrix", "uSunNormalMatrix",
+    "uDepthTexture", "uNoiseTexture", "uSkyBoxTexture", "uLightMapTexture", "uCameraTransformMatrix", "uSunModelViewMatrix", "uOrthographicMatrix",
     "uEnableGlobalLight", "uEnableEdge", "uEnableSsao", "uSelectedObjectId"];
 const vertexShaderSource = `
   #pragma vscode_glsllint_stage : vert
@@ -30,7 +30,6 @@ const fragmentShaderSource = `
   uniform mat4 uCameraTransformMatrix;
   uniform mat4 uSunModelViewMatrix;
   uniform mat4 uOrthographicMatrix;
-  uniform mat4 uSunNormalMatrix;
 
   uniform sampler2D uMainTexture;
   uniform sampler2D uAlbedoTexture;

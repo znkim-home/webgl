@@ -1,10 +1,7 @@
-const attributes = ["aVertexPosition", "aVertexColor", "aVertexSelectionColor", "aVertexNormal", "aTextureCoordinate"];
-const uniforms = ["uModelViewMatrix", "uProjectionMatrix", "uOrthographicMatrix", "uObjectMatrix", "uRotationMatrix", "uNormalMatrix", "uPointSize", "uNearFar", "uPositionType", "uCubeTexture", "uTextureType"];
+const attributes = ["aVertexPosition", "aTextureCoordinate"];
+const uniforms = ["uModelViewMatrix", "uProjectionMatrix", "uObjectMatrix", "uCubeTexture"];
 const vertexShaderSource = `
   attribute vec3 aVertexPosition;
-  attribute vec4 aVertexColor;
-  attribute vec4 aVertexSelectionColor;
-  attribute vec3 aVertexNormal;
   attribute vec3 aTextureCoordinate;
   
   uniform mat4 uModelViewMatrix;

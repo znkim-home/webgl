@@ -30,11 +30,16 @@ export default class Shader {
         let uniformLocations = {};
         shaderObject.uniforms.forEach((uniform) => {
             if (uniform[0] !== 'u') {
-                throw new Error("Shader: uniform variable name is incorrect.");
+                throw new Error("Shader: uniform variable name is incorrect. : " + uniform);
             }
             let result = uniform.replace('u', '');
             result = result.replace(/^[A-Z]/, char => char.toLowerCase());
-            uniformLocations[result] = gl.getUniformLocation(shaderProgram, uniform);
+            let uniformLocation = gl.getUniformLocation(shaderProgram, uniform);
+            if (uniformLocation == null) {
+                console.warn("Shader: uniform variable name is null. : " + uniform);
+                //throw new Error("Shader: uniform variable name is null. : " + uniform);
+            }
+            uniformLocations[result] = uniformLocation;
         });
         this._shaderInfo = {
             shaderProgram,

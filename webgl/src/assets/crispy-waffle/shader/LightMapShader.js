@@ -3,8 +3,7 @@ const uniforms = [
     "uOrthographicMatrix",
     "uModelRotationMatrix", "uModelPositionHigh", "uModelPositionLow",
     "uObjectRotationMatrix", "uObjectPositionHigh", "uObjectPositionLow",
-    "uNormalMatrix", "uPointSize", "uNearFar",
-    "uTexture", "uTextureType"
+    "uNormalMatrix", "uPointSize", "uNearFar"
 ];
 const vertexShaderSource = `
   attribute vec3 aVertexPosition;
@@ -34,34 +33,37 @@ const vertexShaderSource = `
 
   vec4 getPosition() {
     vec4 transformedPosition = uObjectRotationMatrix * vec4(aVertexPosition, 1.0);
-		//vec3 highDifference = uObjectPositionHigh.xyz - uModelPositionHigh.xyz;
-		//vec3 lowDifference = (uObjectPositionLow.xyz + transformedPosition.xyz) - uModelPositionLow.xyz;
-		//vec4 pos4 = vec4(highDifference.xyz + lowDifference.xyz, 1.0);
+		vec3 highDifference = uObjectPositionHigh - uModelPositionHigh;
+		vec3 lowDifference = uObjectPositionLow - uModelPositionLow;
+		vec4 pos4 = vec4(highDifference + lowDifference, 1.0);
     return transformedPosition;
   }
+
   vec4 getOrthoPosition() {
     vec4 transformedPosition = getPosition();
-    vec4 orthoPosition = transformedPosition;
+    vec4 orthoPosition = uModelRotationMatrix * transformedPosition;
     return orthoPosition;
   }
+
   vec3 getRotatedNormal() {
     vec3 rotatedModelNormal = (uObjectRotationMatrix * vec4(aVertexNormal, 1.0)).xyz;
     vec3 rotatedNormal = normalize(uNormalMatrix * vec4(rotatedModelNormal, 1.0)).xyz;
     return rotatedNormal;
   }
+
   float calcDepth(float zValue) {
     return -(zValue / uNearFar.y);
   }
 
   void main(void) {
+    vec4 orthoPosition = getOrthoPosition();
+    
     vColor = aVertexColor;
     vSelectionColor = aVertexSelectionColor;
-    gl_PointSize = uPointSize;
-
-    vec4 orthoPosition = getOrthoPosition();
     vTransformedNormal = getRotatedNormal();
-
     vDepth = calcDepth(orthoPosition.z);
+    
+    gl_PointSize = uPointSize;
     gl_Position = uOrthographicMatrix * orthoPosition;
   }
 `;
@@ -72,9 +74,6 @@ const fragmentShaderSource = `
   varying vec4 vSelectionColor;
   varying vec3 vTransformedNormal;
   varying float vDepth;
-
-  uniform sampler2D uTexture;
-  uniform int uTextureType;
 
   vec4 packDepth(float depth) {
     vec4 enc = vec4(1.0, 255.0, 65025.0, 16581375.0) * vDepth;

@@ -95,8 +95,6 @@ export default class Elipsoid extends Renderable {
                 let rotatedHorizontalDot = vec3.dot(horizontalVec3, rotatedHorizontalVec3);
                 let dotRatio = (rotatedHorizontalDot / originDot);
                 let addRadius = (radiusOffset * dotRatio);
-                //addRadius = addRadius > 0 ? verticalRadius + addRadius : addRadius - verticalRadius;
-                console.log(addRadius);
                 vec3.set(rotatedHorizontalVec3, rotatedHorizontalVec3[0], rotatedHorizontalVec3[1], addRadius);
                 this.coordinates.push(rotatedHorizontalVec3);
             }
