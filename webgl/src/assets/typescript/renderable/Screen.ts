@@ -36,8 +36,8 @@ export default class Screen extends Renderable {
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffer.indicesGlBuffer);
     gl.bindTexture(gl.TEXTURE_2D, buffer.texture);
     gl.enableVertexAttribArray(shaderInfo.attributeLocations.textureCoordinate);
-    
     buffer.bindBuffer(buffer.textureGlBuffer, 2, shaderInfo.attributeLocations.textureCoordinate);
+    
     gl.enableVertexAttribArray(shaderInfo.attributeLocations.vertexPosition);
     buffer.bindBuffer(buffer.postionsGlBuffer, 3, shaderInfo.attributeLocations.vertexPosition);
 

@@ -54,10 +54,11 @@ export default class Obj extends Renderable {
     buffer.bindBuffer(buffer.selectionColorGlBuffer, 4, shaderInfo.attributeLocations.vertexSelectionColor);
     frameBufferObjs.forEach((frameBufferObj) => {
       frameBufferObj.bind();
-      if (this.image || this.texture) {
+      let textureCoordinateLocation = shaderInfo.attributeLocations.textureCoordinate;
+      if ((this.image || this.texture) && textureCoordinateLocation > -1) {
         gl.bindTexture(gl.TEXTURE_2D, buffer.texture);
-        gl.enableVertexAttribArray(shaderInfo.attributeLocations.textureCoordinate);
-        buffer.bindBuffer(buffer.textureGlBuffer, 2, shaderInfo.attributeLocations.textureCoordinate);
+        gl.enableVertexAttribArray(textureCoordinateLocation);
+        buffer.bindBuffer(buffer.textureGlBuffer, 2, textureCoordinateLocation);
       }
       gl.drawElements(Renderable.globalOptions.drawElementsType, buffer.indicesLength, gl.UNSIGNED_SHORT, 0);
       frameBufferObj.unbind();

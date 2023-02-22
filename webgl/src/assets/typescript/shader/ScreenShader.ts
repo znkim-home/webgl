@@ -124,10 +124,10 @@ const fragmentShaderSource = `
 		mat3 tbn = mat3(tangent, bitangent, normal);   
 		for (int i = 0; i < kernelSize; i++) {    	
       vec3 rotatedKernel = tbn * vec3(uSsaoKernel[i].x, uSsaoKernel[i].y, uSsaoKernel[i].z);
-      occlusionA += getOcclusion(origin, rotatedKernel, 3.0);
-      occlusionB += getOcclusion(origin, rotatedKernel, 10.0);
-      occlusionC += getOcclusion(origin, rotatedKernel, 20.0);
-      occlusionD += getOcclusion(origin, rotatedKernel, 50.0);
+      occlusionA += getOcclusion(origin, rotatedKernel, 1.0);
+      occlusionB += getOcclusion(origin, rotatedKernel, 3.0);
+      occlusionC += getOcclusion(origin, rotatedKernel, 7.0);
+      occlusionD += getOcclusion(origin, rotatedKernel, 10.0);
     }
 
     float tolerance = 0.80;

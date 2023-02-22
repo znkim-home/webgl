@@ -8,7 +8,7 @@ export default createStore({
       fovyDegree : 70,
       aspect : undefined,
       near : 0.1,
-      far : 20000000.0,
+      far : 100000000.0,
       pointSize : 5.0,
       lineWidth : 3.0,
       debugMode : true,

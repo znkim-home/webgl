@@ -1,4 +1,5 @@
 <template>
+  <div class="dev-info fps" style="right: 0px; bottom: 13px">{{`[X : ${cameraPosition[0]}, Y : ${cameraPosition[1]}, Z : ${cameraPosition[2]}]`}}</div>
   <div class="dev-info fps" style="right: 0px; bottom: 0px">{{`${fps} FPS`}}</div>
   <div
     id="home"
@@ -35,6 +36,7 @@ export default {
   data() {
     return {
       fps : 0,
+      cameraPosition: [],
       blocks: undefined,
       loadedObjs: [],
       textures: [],
@@ -70,6 +72,7 @@ export default {
       setInterval(() => {
         if (webGl) {
           this.fps = webGl.fps.frame;
+          this.cameraPosition = webGl.fps.cameraPosition;
         }
       }, 100);
     },

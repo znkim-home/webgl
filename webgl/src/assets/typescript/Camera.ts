@@ -24,7 +24,7 @@ export default class Camera {
     return this.getModelViewMatrix();
   }
   get rotationMatrix(): mat4 {
-    return this.getRotationMatrix();
+    return this.getModelViewRotationMatrixRelToEye();
   } 
   init(options: any) {
     this.position = vec3.fromValues(0, 0, 0); // [x, y ,z]
@@ -189,10 +189,20 @@ export default class Camera {
     }
     return this._transformMatrix;
   }
-  getRotationMatrix(): mat4 {
+  getModelViewRotationMatrixRelToEye(): mat4 {
     if (!this._rotationMatrix || this.dirty) {
       this.getTransformMatrix();
-      this._rotationMatrix = mat4.clone(this._transformMatrix);
+      this._rotationMatrix = mat4.clone(this.getModelViewMatrix());
+      this._rotationMatrix[12] = 0;
+      this._rotationMatrix[13] = 0;
+      this._rotationMatrix[14] = 0;
+      return this._rotationMatrix;
+    }
+    return this._rotationMatrix;
+  }
+  getModelViewMatrixRelToEye(): mat4 {
+    if (!this._rotationMatrix || this.dirty) {
+      this._rotationMatrix = mat4.clone(this.getTransformMatrix());
       this._rotationMatrix[12] = 0;
       this._rotationMatrix[13] = 0;
       this._rotationMatrix[14] = 0;

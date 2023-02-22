@@ -30,6 +30,13 @@ export default class Shader {
       }
       let result = attribute.replace('a', '');
       result = result.replace(/^[A-Z]/, char => char.toLowerCase());
+
+      let attributeLocation = gl.getAttribLocation(shaderProgram, attribute);
+      if (attributeLocation < 0) {
+        console.warn("Shader: attribute variable name is null. : " + attribute);
+        //throw new Error("Shader: attribute variable name is null. : " + attribute;
+      }
+
       attributeLocations[result] = gl.getAttribLocation(shaderProgram, attribute);
     });
     let uniformLocations: any = {};

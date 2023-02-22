@@ -1,4 +1,4 @@
-const attributes = ["aVertexPosition", "aVertexColor", "aVertexSelectionColor", "aVertexNormal", "aTextureCoordinate"];
+const attributes = ["aVertexPosition", "aVertexColor", "aVertexSelectionColor", "aVertexNormal"];
 const uniforms = [
   "uOrthographicMatrix", 
   "uModelRotationMatrix", "uModelPositionHigh", "uModelPositionLow", 
@@ -11,7 +11,6 @@ const vertexShaderSource = `
   attribute vec4 aVertexColor;
   attribute vec4 aVertexSelectionColor;
   attribute vec3 aVertexNormal;
-  attribute vec2 aTextureCoordinate;
   
   uniform mat4 uOrthographicMatrix;
 
@@ -34,10 +33,10 @@ const vertexShaderSource = `
 
   vec4 getPosition() {
     vec4 transformedPosition = uObjectRotationMatrix * vec4(aVertexPosition, 1.0);
-		vec3 highDifference = uObjectPositionHigh - uModelPositionHigh;
-		vec3 lowDifference = uObjectPositionLow - uModelPositionLow;
-		vec4 pos4 = vec4(highDifference + lowDifference, 1.0);
-    return transformedPosition;
+		vec3 highDifference = uObjectPositionHigh.xyz - uModelPositionHigh.xyz;
+		vec3 lowDifference = (uObjectPositionLow.xyz + transformedPosition.xyz) - uModelPositionLow.xyz;
+		vec4 pos4 = vec4(highDifference.xyz + lowDifference.xyz, 1.0);
+    return pos4;
   }
 
   vec4 getOrthoPosition() {

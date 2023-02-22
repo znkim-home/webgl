@@ -15,7 +15,7 @@ module.exports = {
   "rules": {
     "prefer-default-export": "off",
     "no-undef": "off",
-    "no-unused-vars": "warn",
+    "no-unused-vars": "off",
     // "no-console": "warn",
     // "no-eq-null": "error",
     // "no-undef-init": "error",

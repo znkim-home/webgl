@@ -88,7 +88,7 @@ export default {
           let depth = webGl.depthFbo.getDepth(mouseX, mouseY);
           let normal = webGl.normalFbo.getNormal(mouseX, mouseY);
           let position = this.getScreenPosition(ratioX, ratioY, canvas.width, canvas.height, depth);
-          let rm = camera.getRotationMatrix();
+          let rm = camera.getModelViewMatrixRelToEye();
           let normalVec4 = vec4.fromValues(normal[0], normal[1], normal[2], 1.0);
           let rotatedNormal = vec4.transformMat4(vec4.create(), normalVec4, rm);
           let heading = Math.atan2(rotatedNormal[0], rotatedNormal[2]);
@@ -203,7 +203,7 @@ export default {
         width : width,
         height : height,
       }, 1);
-      let rotationMatrix = camera.getRotationMatrix();
+      let rotationMatrix = camera.getModelViewMatrixRelToEye();
       let ray4 = vec4.transformMat4(vec4.create(), vec4.fromValues(ray[0], ray[1], ray[2], 1), rotationMatrix);
       return vec3.fromValues(ray4[0], ray4[1], ray4[2]);
     },

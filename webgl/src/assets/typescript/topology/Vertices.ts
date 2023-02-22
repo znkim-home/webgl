@@ -45,7 +45,6 @@ export default class Vertices {
       let next = vertices.getNext(loop);
       if (!crnt.normal) {
         crnt.normal = Vertices.calcNormal(prev.position, crnt.position, next.position);
-        //console.log(crnt.normal);
       }
       if (!crnt.color) {
         crnt.color = vec4.fromValues(0.5, 0.5, 0.5, 1.0);

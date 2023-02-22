@@ -198,7 +198,7 @@ export default class Sun {
   getRotationMatrix(): mat4 {
     if (!this._rotationMatrix || this.dirty) {
       let transformMatrix = this.getTransformMatrix();
-      this._rotationMatrix = mat4.clone(transformMatrix);
+      this._rotationMatrix = mat4.clone(this.getModelViewMatrix());
       this._rotationMatrix[12] = 0;
       this._rotationMatrix[13] = 0;
       this._rotationMatrix[14] = 0;

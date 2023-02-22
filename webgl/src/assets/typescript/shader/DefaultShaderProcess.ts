@@ -25,7 +25,7 @@ class DefaultShaderProcess extends ShaderProcess {
 
     let projectionMatrix = mat4.create();
     mat4.perspective(projectionMatrix, this.camera.fovyRadian, globalOptions.aspect, globalOptions.near, globalOptions.far);
-    let modelRotationMatrix = this.camera.getRotationMatrix();
+    let modelRotationMatrix = this.camera.getModelViewRotationMatrixRelToEye();
     let normalMatrix = this.camera.getNormalMatrix();
     let positionHighLow: vec3[] = this.camera.getPositionHighLow();
 

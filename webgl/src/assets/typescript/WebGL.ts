@@ -154,12 +154,12 @@ export default class WebGL {
     this.camera = new Camera({fovyDegree : this.globalOptions.fovyDegree});
     if (!Renderable.globalOptions) Renderable.globalOptions = this.globalOptions;
 
-    let radius = 6378137 * 1.5;
+    let radius = 6378137 * 1.1;
     this.sun = new Sun({
       position: {x: 0, y: 0, z: radius},
       radius: radius,
     });
-    //this.sun.rotationOrbit(0.7853, 0.7853, vec3.fromValues(0,0,0));
+    this.sun.rotationOrbit(0.7853, 0.7853, vec3.fromValues(0,0,0));
 
     let skyBoxImageList: Array<any> = [
       { index : 0, path : "/image/skyboxes/space/right.png", loadedImage : undefined},
@@ -263,6 +263,8 @@ export default class WebGL {
     fpsObject.frame = Math.round(fpsObject.frame * 10) / 10;
     fpsObject.frame = fpsObject.frame.toFixed(1);
 
+    fpsObject.cameraPosition = this.camera.position;
+    
     this.scene();
     requestAnimationFrame(this.render.bind(this));
   }

@@ -14,7 +14,7 @@
       <h2>OBJECT INFO</h2>
       <input type="number" class="mini-btn" v-model="renderableObject.length" readonly/>
       <ul>
-        <li v-for="(renderable, index) in renderableObject" :key="renderable.id" v-on:click="this.$parent.selectObjects(renderable.id)" :class="{selected : (renderable == selectedObject)}">{{`[${index}] : ${renderable.name}, ${renderable.id}`}}</li>
+        <li v-for="(renderable, index) in renderableObject" :key="renderable.id" v-on:click="this.$parent.selectObjects(renderable.id)" :class="{selected : (renderable == selectedObjects[0])}">{{`[${index}] : ${renderable.name}, ${renderable.id}`}}</li>
       </ul>
     </div>
   </div>
@@ -22,6 +22,8 @@
 <script>
 import {mat2, mat3, mat4, vec2, vec3, vec4} from 'gl-matrix';
 import {WebGL, Cube, Polygon, Rectangle, Cone, Point, Line, Cylinder, Sphere, Obj, Ring, Tube} from "@/assets/crispy-waffle";
+
+import { mapGetters } from "vuex";
 
 export default {
   name: "RendersComponent",
@@ -34,6 +36,10 @@ export default {
     };
   },
   computed: {
+    ...mapGetters({
+      globalOptions: "getGlobalOptions",
+      selectedObjects: "getSelectedObjects",
+    }),
     renderableObject: {
       get() {
         if (this.webGl) {

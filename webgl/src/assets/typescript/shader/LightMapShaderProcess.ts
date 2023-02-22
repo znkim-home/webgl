@@ -32,9 +32,10 @@ class LightMapShaderProcess extends ShaderProcess {
 
     let orthographicMatrix = mat4.create();
     mat4.ortho(orthographicMatrix, -ortRange, ortRange, -ortRange, ortRange, 0, ortRange * 2);
-    let modelRotationMatrix = this.camera.getRotationMatrix();
-    let normalMatrix = this.camera.getNormalMatrix();
-    let positionHighLow: vec3[] = this.camera.getPositionHighLow();
+    
+    let modelRotationMatrix = this.sun.getRotationMatrix();
+    let normalMatrix = this.sun.getNormalMatrix();
+    let positionHighLow: vec3[] = this.sun.getPositionHighLow();
 
     gl.uniformMatrix4fv(shaderInfo.uniformLocations.orthographicMatrix, false, orthographicMatrix);
     gl.uniformMatrix4fv(shaderInfo.uniformLocations.modelRotationMatrix, false, modelRotationMatrix);
