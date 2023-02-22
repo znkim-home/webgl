@@ -28,10 +28,10 @@ export default class MapTile extends Renderable {
     this.init(options);
   }
   init(options: any) {
-    //let equatorialRadius = 6378137.0; // equatorialRadius m
-    //let polarRadius = 6356752.3142; // polarRadius m
-    let polarRadius = 63567.3142; // polarRadius m
-    let equatorialRadius = 63781.0; // equatorialRadius m
+    let equatorialRadius = 6378137.0; // equatorialRadius m
+    let polarRadius = 6356752.3142; // polarRadius m
+    //let polarRadius = 63567.3142; // polarRadius m
+    //let equatorialRadius = 63781.0; // equatorialRadius m
 
     /*this.lonlatRange = {
       latitudeMin : -90,
@@ -55,7 +55,7 @@ export default class MapTile extends Renderable {
 
     
     this.height = 3.0;
-    this.density = 64;
+    this.density = 4;
     this.name = "Untitled Cylinder";
     if (options?.verticalRadius) this.verticalRadius = options.verticalRadius;
     if (options?.horizontalRadius) this.horizontalRadius = options.horizontalRadius;
@@ -73,10 +73,11 @@ export default class MapTile extends Renderable {
      return mat4.multiply(tm, tm, pitchMatrix);
   }
   render(gl: WebGLRenderingContext | WebGL2RenderingContext, shaderInfo: ShaderInfoInterface, frameBufferObjs: FrameBufferObject[]) {
-    let tm = this.getTransformMatrix();
-    let rm = this.getRotationMatrix();
-    gl.uniformMatrix4fv(shaderInfo.uniformLocations.objectMatrix, false, tm);
-    gl.uniformMatrix4fv(shaderInfo.uniformLocations.rotationMatrix, false, rm);
+    let objectRotationMatrix: mat4 = this.getRotationMatrix();
+    let objectPositionHighLow: vec3[] = this.getPositionHighLow();
+    gl.uniformMatrix4fv(shaderInfo.uniformLocations.objectRotationMatrix, false, objectRotationMatrix);
+    gl.uniform3fv(shaderInfo.uniformLocations.objectPositionHigh, objectPositionHighLow[0]);
+    gl.uniform3fv(shaderInfo.uniformLocations.objectPositionLow, objectPositionHighLow[1]);
 
     let buffer = this.getBuffer(gl);
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, buffer.indicesGlBuffer);
@@ -122,8 +123,7 @@ export default class MapTile extends Renderable {
       let horizontalRadius = this.horizontalRadius;
 
       let lattitudeOffset = (this.lonlatRange.latitudeMin) + 90;
-      //let angleOffset = (180 / this.density);
-      let angleOffset = ((this.lonlatRange.latitudeMin - this.lonlatRange.latitudeMax + 180) / this.density);
+      let angleOffset = ((this.lonlatRange.latitudeMax - this.lonlatRange.latitudeMin) / this.density);
       let origin = vec3.fromValues(0.0, 0.0, 0.0);
       let verticalVec3 = vec3.fromValues(0.0, 0.0, verticalRadius);
       let horizontalVec3 = vec3.fromValues(0.0, 0.0, horizontalRadius);

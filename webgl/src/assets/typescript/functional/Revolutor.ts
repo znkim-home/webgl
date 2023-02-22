@@ -37,12 +37,11 @@ export default class Revolutor {
     let longitudeOffset = lonlatRange.longitudeMin + 180;
 
     let origin = vec3.fromValues(0.0, 0.0, 0.0);
-    //let angleOffset = (360 / density);
-    let angleOffset = ((lonlatRange.longitudeMin + lonlatRange.longitudeMax + 360) / density);
+    let angleOffset = ((lonlatRange.longitudeMax - lonlatRange.longitudeMin) / density);
     let verticesMatrix = new VerticesMatrix();
     for (let i = 0; i <= density; i++) {
       let vertices = new Vertices();
-      let angle = Math.radian(i * angleOffset);
+      let angle = Math.radian(longitudeOffset + (i * angleOffset));
       positions.forEach((position, index) => {
         let rotatedPosition = vec3.rotateZ(vec3.create(), position, origin, angle);
         let textureCoordinateX = (i / density);

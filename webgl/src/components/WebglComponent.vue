@@ -90,7 +90,8 @@ export default {
       }
       this.initPosition(dist * 2);
       //this.base(dist, dist);
-      this.baseGlobe(dist);
+      //this.baseGlobe(dist);
+      this.baseGlobeWMS(dist);
       //this.initBlocks();
       this.getFps();
     },
@@ -253,6 +254,41 @@ export default {
       let y = coordinate[1] - Math.floor(coordinate[1]);
       return [x * unit, y * unit];
     },
+    baseGlobeWMS() {
+      let level = 3;
+      let levelPow = Math.pow(2, level);
+      let latOffset = 180 / levelPow;
+      let lonOffset = 360 / levelPow;
+      for (let x = 0; x < levelPow; x++) {
+        for (let y = 0; y < levelPow; y++) {
+          let latitudeMin = (latOffset * y) - 90;
+          let latitudeMax = (latOffset * (y + 1)) - 90;
+          let longitudeMin = (lonOffset * x) - 180;
+          let longitudeMax = (lonOffset * (x + 1)) - 180;
+          let lonlatRange = {latitudeMin, latitudeMax, longitudeMin, longitudeMax}
+
+          let image = new Image(); 
+          image.crossOrigin = "";
+          image.onload = () => {
+            let options = {
+              position: { x: 0, y: 0, z: 0 },
+              color: { r: 1.0, g: 1.0, b: 0.0, a: 1.0 },
+              image : image,
+              rotation: {pitch: 0, roll: 0, heading: 0},
+              lonlatRange : lonlatRange
+            }
+            let globe = new MapTile(options);
+            this.webGl.renderableObjectList.push(globe);
+            options.color = {r : 0.0, g : 1.0, b : 0.0, a : 1.0};
+            options.image = image;
+          }
+          image.src = `https://tile.openstreetmap.org/${level}/${x}/${y}.png`;
+          //image.src = `https://maps.gnosis.earth/ogcapi/collections/blueMarble/map/tiles/WebMercatorQuad/${level}/${y}/${x}.jpg`
+        } 
+      }
+
+
+    },
     baseGlobe(radius = 500) {
       let image = new Image(); 
       image.onload = () => {
@@ -263,7 +299,7 @@ export default {
           image : image,
           rotation: {pitch: 0, roll: 0, heading: 0}
         }
-        let globe = new Globe(options);
+        let globe = new MapTile(options);
         this.webGl.renderableObjectList.push(globe);
         options.color = {r : 0.0, g : 1.0, b : 0.0, a : 1.0};
         options.image = image;
