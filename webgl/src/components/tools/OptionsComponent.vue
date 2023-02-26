@@ -12,25 +12,25 @@
     </div>
     <div v-show="isShow">
       <div class="block-group">
-        <button class="mini-btn" v-on:click="initPosition()">InitPos</button>
+        <button class="mini-btn" v-on:click="this.$parent.initPosition()">InitPos</button>
         <button class="mini-btn" v-on:click="this.$parent.removeObj(selectedObjects)">Remove</button>
         <button class="mini-btn" v-on:click="this.$parent.removeAll()">RemoveAll</button>
       </div>
       <div class="block-group">
         <label>SCALE</label>
-        <input type="range" v-model="localOptions.scale" min="1" max="20" step="1" />
+        <input type="range" v-model.number="localOptions.scale" min="1" max="20" step="1" :title="localOptions.scale"/>
       </div>
       <div class="block-group">
         <label>HEADING</label>
-        <input type="range" v-model="localOptions.rotationZ" min="0" max="360" step="1" v-on:input="rotateSelectedObject"/>
+        <input type="range" v-model.number="localOptions.rotationZ" min="0" max="360" step="1" v-on:input="rotateSelectedObject" :title="localOptions.rotationZ"/>
       </div>
       <div class="block-group">
         <label>PITCH</label>
-        <input type="range" v-model="localOptions.rotationX" min="0" max="360" step="1" v-on:input="rotateSelectedObject"/>
+        <input type="range" v-model.number="localOptions.rotationX" min="0" max="360" step="1" v-on:input="rotateSelectedObject" :title="localOptions.rotationX"/>
       </div>
       <div class="block-group">
         <label>ROLL</label>
-        <input type="range" v-model="localOptions.rotationY" min="0" max="360" step="1" v-on:input="rotateSelectedObject"/>
+        <input type="range" v-model.number="localOptions.rotationY" min="0" max="360" step="1" v-on:input="rotateSelectedObject" :title="localOptions.rotationY"/>
       </div>
       <h2>CAMERA OPTIONS</h2>
       <button class="mini-btn" v-on:click="localOptions.cameraMode = 0">Orbit</button>
@@ -38,20 +38,20 @@
       <button class="mini-btn" v-on:click="localOptions.cameraMode = 2">ThirdPerson</button>
       <div class="block-group">
         <label>FOVY</label>
-        <input type="range" v-model="globalOptions.fovyDegree" min="15" max="180" step="1" />
+        <input type="range" v-model.number="globalOptions.fovyDegree" min="15" max="180" step="1" :title="globalOptions.fovyDegree" />
       </div>
       <div class="block-group">
         <label>NEAR</label>
-        <input type="range" v-model="globalOptions.near" min="0.1" max="100000000.0" step="1" />
+        <input type="range" v-model.number="globalOptions.near" min="0.1" max="100000000.0" step="1" :title="globalOptions.near" />
       </div>
       <div class="block-group">
         <label>FAR</label>
-        <input type="range" v-model="globalOptions.far" min="0.1" max="100000000.0" step="1" />
+        <input type="range" v-model.number="globalOptions.far" min="0.1" max="100000000.0" step="1" :title="globalOptions.far"/>
       </div>
       <h2>SUN OPTIONS</h2>
       <div class="block-group">
         <label>RADIUS</label>
-        <input type="range" v-model="globalOptions.sunRadius" min="0" max="8192" step="1" />
+        <input type="range" v-model.number="globalOptions.sunRadius" min="0" max="8192" step="1" :title="globalOptions.sunRadius" />
       </div>
       <h2>WEBGL OPTIONS</h2>
       <div class="block-group">

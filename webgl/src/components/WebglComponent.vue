@@ -82,17 +82,13 @@ export default {
       this.webGl = webGl;
       webGl.startRender();
       this.initImage();
-      const dist = 6378137.0; // globe
-      //const dist = 63781.0;
+      const dist = 6378137.0;
       this.blocks = {
         BLOCK_SIZE : 0,
         MAX_HEIGHT : 0,
       }
-      this.initPosition(dist * 2);
-      //this.base(dist, dist);
-      //this.baseGlobe(dist);
+      this.initPosition(dist * 4);
       this.baseGlobeWMS(dist);
-      //this.initBlocks();
       this.getFps();
     },
 
@@ -211,7 +207,7 @@ export default {
       }
       return createdList;
     },
-    initPosition(dist = 2048) {
+    initPosition(dist = 6378137.0 * 4) {
       const camera = this.webGl.camera;
       camera.init();
       camera.setPosition(0, 0, dist);
@@ -255,7 +251,7 @@ export default {
       return [x * unit, y * unit];
     },
     baseGlobeWMS() {
-      let level = 3;
+      let level = 5;
       let levelPow = Math.pow(2, level);
       let latOffset = 180 / levelPow;
       let lonOffset = 360 / levelPow;
@@ -266,7 +262,6 @@ export default {
           let longitudeMin = (lonOffset * x) - 180;
           let longitudeMax = (lonOffset * (x + 1)) - 180;
           let lonlatRange = {latitudeMin, latitudeMax, longitudeMin, longitudeMax}
-
           let image = new Image(); 
           image.crossOrigin = "";
           image.onload = () => {
@@ -283,6 +278,7 @@ export default {
             options.image = image;
           }
           image.src = `https://tile.openstreetmap.org/${level}/${x}/${y}.png`;
+          //image.src = `https://tile-c.openstreetmap.fr/hot/${level}/${x}/${y}.png`;
           //image.src = `https://maps.gnosis.earth/ogcapi/collections/blueMarble/map/tiles/WebMercatorQuad/${level}/${y}/${x}.jpg`
         } 
       }

@@ -17,7 +17,6 @@
         <li v-for="(prop, index) in this.$parent.$data.textures" 
           :key="index" v-on:click="selectTexture(index)" 
           :class="{selected : (selectedTexture === index)}" 
-          :title="this.$parent.$data.images[index].src"
           :style="{'background-image' : 'url(' + this.$parent.$data.images[index].src + ')'}">{{index}}</li>
       </ul>
       <h2>PROPS</h2>
@@ -28,15 +27,15 @@
       <h2>OBJECT OPTIONS</h2>
       <div class="block-group">
         <label>HEIGHT</label>
-        <input type="range" v-model="localOptions.height" min="0" max="5000" step="1" v-on:input="rotateSelectedObject"/>
+        <input type="range" v-model="localOptions.height" min="0" max="5000" step="1" v-on:input="rotateSelectedObject" :title="localOptions.height"/>
       </div>
       <div class="block-group">
         <label>INNER-RADIUS</label>
-        <input type="range" v-model="localOptions.innerRadius" min="0" max="500" step="1" v-on:input="rotateSelectedObject"/>
+        <input type="range" v-model="localOptions.innerRadius" min="0" max="500" step="1" v-on:input="rotateSelectedObject" :title="localOptions.innerRadius"/>
       </div>
       <div class="block-group">
         <label>OUTER-RADIUS</label>
-        <input type="range" v-model="localOptions.outerRadius" min="0" max="500" step="1" v-on:input="rotateSelectedObject"/>
+        <input type="range" v-model="localOptions.outerRadius" min="0" max="500" step="1" v-on:input="rotateSelectedObject" :title="localOptions.outerRadius"/>
       </div>
       <input type="file" class="mini-btn" id="fileUpload" accept=".obj,.jpg" v-on:change="readObj"/>
     </div>

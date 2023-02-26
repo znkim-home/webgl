@@ -2,6 +2,7 @@ import { mat2, mat3, mat4, vec2, vec3, vec4 } from 'gl-matrix';
 import Vertex from './Vertex';
 
 export default class Vertices {
+  static defaultColor: vec4 = vec4.fromValues(0.5, 0.5, 0.5, 1.0);
   vertices: Array<Vertex>;
   isCW: boolean;
   constructor(vertices?: Array<Vertex>, isCW?: boolean) {
@@ -47,7 +48,7 @@ export default class Vertices {
         crnt.normal = Vertices.calcNormal(prev.position, crnt.position, next.position);
       }
       if (!crnt.color) {
-        crnt.color = vec4.fromValues(0.5, 0.5, 0.5, 1.0);
+        crnt.color = Vertices.defaultColor;
       }
     }
   }
