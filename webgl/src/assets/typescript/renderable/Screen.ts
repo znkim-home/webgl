@@ -94,7 +94,6 @@ export default class Screen extends Renderable {
       this.buffer.indicesGlBuffer = this.buffer.createIndexBuffer(this.buffer.indicesVBO);
       this.buffer.textureGlBuffer = this.buffer.createBuffer(this.buffer.textureVBO);
       this.buffer.indicesLength = this.buffer.indicesVBO.length;
-      this.dirty = false;
     }
     return this.buffer;
   }

@@ -84,7 +84,7 @@ export default class Cone extends Renderable {
   }
   // overriding
   getBuffer(gl: WebGLRenderingContext | WebGL2RenderingContext) {
-    if (this.buffer === undefined || this.dirty === true) {
+    if (this.buffer === undefined) {
       this.buffer = new Buffer(gl);
       if (this.texture) {
         this.buffer.texture = this.texture;
@@ -156,7 +156,6 @@ export default class Cone extends Renderable {
       this.buffer.indicesGlBuffer = this.buffer.createIndexBuffer(this.buffer.indicesVBO);
       this.buffer.textureGlBuffer = this.buffer.createBuffer(this.buffer.textureVBO);
       this.buffer.indicesLength = this.buffer.indicesVBO.length;
-      this.dirty = false;
     }
     return this.buffer;
   }

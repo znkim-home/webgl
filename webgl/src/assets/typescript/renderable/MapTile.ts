@@ -55,7 +55,7 @@ export default class MapTile extends Renderable {
 
     
     this.height = 3.0;
-    this.density = 4;
+    this.density = 8;
     this.name = "Untitled Cylinder";
     if (options?.verticalRadius) this.verticalRadius = options.verticalRadius;
     if (options?.horizontalRadius) this.horizontalRadius = options.horizontalRadius;
@@ -104,7 +104,7 @@ export default class MapTile extends Renderable {
   }
   // overriding
   getBuffer(gl: WebGLRenderingContext | WebGL2RenderingContext) {
-    if (this.buffer === undefined || this.dirty === true) {
+    if (this.buffer === undefined) {
       this.buffer = new Buffer(gl);
       if (this.texture) {
         this.buffer.texture = this.texture;
@@ -186,7 +186,6 @@ export default class MapTile extends Renderable {
       this.buffer.indicesGlBuffer = this.buffer.createIndexBuffer(this.buffer.indicesVBO);
       this.buffer.textureGlBuffer = this.buffer.createBuffer(this.buffer.textureVBO);
       this.buffer.indicesLength = this.buffer.indicesVBO.length;
-      this.dirty = false;
     }
     return this.buffer;
   }
@@ -195,20 +194,5 @@ export default class MapTile extends Renderable {
     let g = Math.round(Math.random() * 10) / 10;
     let b = Math.round(Math.random() * 10) / 10;
     return vec4.fromValues(r, g, b, 1.0);
-  }
-  radiusAtLatitudeDeg(latDeg: number){
-    var latRad = latDeg * Math.PI/180.0;
-    var a = 6378137.0; // equatorialRadius
-    var b = 6356752.3142; // polarRadius
-    var a2 = 40680631590769.0; // equatorialRadiusSquared;
-    var b2 = 40408299984087.05552164; //polarRadiusSquared;
-    
-    var sin = Math.sin(latRad);
-    var cos = Math.cos(latRad);
-    var sin2 = sin * sin;
-    var cos2 = cos * cos;
-    
-    var radius = (a * b) / (Math.sqrt(a2 * sin2 + b2 * cos2));
-    return radius;
   }
 }

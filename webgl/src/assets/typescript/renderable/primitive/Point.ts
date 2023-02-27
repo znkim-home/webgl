@@ -47,7 +47,7 @@ export default class Point extends Renderable {
     });
   }
   getBuffer(gl: WebGLRenderingContext | WebGL2RenderingContext) {
-    if (this.buffer === undefined || this.dirty === true) {
+    if (this.buffer === undefined) {
       this.buffer = new Buffer(gl);
 
       let colors: Array<number> = [];
@@ -68,8 +68,6 @@ export default class Point extends Renderable {
       this.buffer.selectionColorGlBuffer = this.buffer.createBuffer(this.buffer.selectionColorVBO);
       this.buffer.indicesGlBuffer = this.buffer.createIndexBuffer(this.buffer.indicesVBO);
       this.buffer.indicesLength = this.buffer.indicesVBO.length;
-      
-      this.dirty = false;
     }
     return this.buffer;
   }

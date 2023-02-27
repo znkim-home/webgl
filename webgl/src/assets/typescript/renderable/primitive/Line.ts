@@ -65,8 +65,6 @@ export default class Line extends Renderable {
       this.buffer.selectionColorGlBuffer = this.buffer.createBuffer(this.buffer.selectionColorVBO);
       this.buffer.indicesGlBuffer = this.buffer.createIndexBuffer(this.buffer.indicesVBO);
       this.buffer.indicesLength = this.buffer.indicesVBO.length;
-
-      this.dirty = false;
     }
     return this.buffer;
   }

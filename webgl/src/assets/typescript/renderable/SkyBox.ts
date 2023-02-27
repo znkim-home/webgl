@@ -50,7 +50,7 @@ export default class SkyBox extends Renderable {
   }
   // overriding
   getBuffer(gl: WebGLRenderingContext | WebGL2RenderingContext) {
-    if (this.buffer === undefined || this.dirty === true) {
+    if (this.buffer === undefined) {
       this.buffer = new Buffer(gl);
       let w = this.size[0]/2;
       let l = this.size[1]/2;
@@ -317,7 +317,6 @@ export default class SkyBox extends Renderable {
       this.buffer.textureGlBuffer = this.buffer.createBuffer(this.buffer.textureVBO);
       this.buffer.indicesGlBuffer = this.buffer.createIndexBuffer(this.buffer.indicesVBO);
       this.buffer.indicesLength = this.buffer.indicesVBO.length;
-      this.dirty = false;
     }
     return this.buffer;
   }

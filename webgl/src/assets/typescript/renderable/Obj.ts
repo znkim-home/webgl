@@ -66,7 +66,7 @@ export default class Obj extends Renderable {
   }
   // overriding
   getBuffer(gl: WebGLRenderingContext | WebGL2RenderingContext) {
-    if (this.buffer === undefined || this.dirty === true) {
+    if (this.buffer === undefined) {
       this.buffer = new Buffer(gl);
       let color = this.color;
       let selectionColor = this.selectionColor;
@@ -165,7 +165,6 @@ export default class Obj extends Renderable {
       this.buffer.indicesGlBuffer = this.buffer.createIndexBuffer(this.buffer.indicesVBO);
       this.buffer.textureGlBuffer = this.buffer.createBuffer(this.buffer.textureVBO);
       this.buffer.indicesLength = this.buffer.indicesVBO.length;
-      this.dirty = false;
     }
     return this.buffer;
   }

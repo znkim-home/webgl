@@ -5,8 +5,10 @@ import Renderable from '../abstract/Renderable.js';
 import FrameBufferObject from '../functional/FrameBufferObject';
 
 export default class BatchObject extends Renderable {
+  static objectName: string = "Batched Object";
   buffer: BufferInterface;
   name: string;
+  indices: Uint16Array;
   colors: Float32Array;
   selectionColors: Float32Array;
   positions: Float32Array;
@@ -21,6 +23,7 @@ export default class BatchObject extends Renderable {
 
   init(options: any): void {
     this.name = "Untitled BatchObject";
+    this.indices = options.indices;
     this.colors = options.colors;
     this.selectionColors = options.selectionColors;
     this.positions = options.positions;
@@ -68,42 +71,38 @@ export default class BatchObject extends Renderable {
   }
   // overriding
   getBuffer(gl: WebGLRenderingContext | WebGL2RenderingContext): BufferInterface {
-    if (this.buffer === undefined || this.dirty === true) {
+    if (this.buffer === undefined) {
       this.buffer = new Buffer(gl);
 
       let selectionColor = this.selectionColor;
 
+      let indices = this.indices;
       let colors = this.colors;
       let selectionColors = this.selectionColors;
       let positions = this.positions;
       let normals = this.normals;
       let textureCoordinates = this.textureCoordinates;
       let textures = this.textures;
-      
-      this.buffer.texture = textures[0];
-
-      let indices = new Uint16Array(positions.length/3);
-      this.buffer.indicesVBO = indices.map((obj, index) => index);
-      this.buffer.positionsVBO = new Float32Array(positions);
-      this.buffer.normalVBO = new Float32Array(normals);
-
-
       let oneSelectionColor: number[] = [];
-      positions.forEach((obj, index) => {
+      colors.forEach((obj, index) => {
         selectionColor.forEach((value) => oneSelectionColor.push(value));
       });
-      this.buffer.colorVBO = new Float32Array(colors);
-      //this.buffer.selectionColorVBO = new Float32Array(selectionColors);
+      
+      this.buffer.indicesVBO = indices;
+      this.buffer.colorVBO = colors;
       this.buffer.selectionColorVBO = new Float32Array(oneSelectionColor);
-      this.buffer.textureVBO = new Float32Array(textureCoordinates);
-      this.buffer.positionsGlBuffer = this.buffer.createBuffer(this.buffer.positionsVBO);
+      this.buffer.positionsVBO = positions;
+      this.buffer.texture = textures[0];
+      this.buffer.normalVBO = normals;
+      this.buffer.textureVBO = textureCoordinates;
+      
+      this.buffer.indicesGlBuffer = this.buffer.createIndexBuffer(this.buffer.indicesVBO);
       this.buffer.colorGlBuffer = this.buffer.createBuffer(this.buffer.colorVBO);
       this.buffer.selectionColorGlBuffer = this.buffer.createBuffer(this.buffer.selectionColorVBO);
+      this.buffer.positionsGlBuffer = this.buffer.createBuffer(this.buffer.positionsVBO);
       this.buffer.normalGlBuffer = this.buffer.createBuffer(this.buffer.normalVBO);
-      this.buffer.indicesGlBuffer = this.buffer.createIndexBuffer(this.buffer.indicesVBO);
       this.buffer.textureGlBuffer = this.buffer.createBuffer(this.buffer.textureVBO);
       this.buffer.indicesLength = this.buffer.indicesVBO.length;
-      this.dirty = false;
     }
     return this.buffer;
   }
