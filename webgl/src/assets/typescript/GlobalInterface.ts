@@ -31,6 +31,23 @@ declare global {
     wireFrame: boolean;
     drawElementsType: number;
   }
+  interface BufferSet {
+    indicesVBO: Uint16Array;
+    positionsVBO: Float32Array;
+    colorVBO: Float32Array;
+    selectionColorVBO: Float32Array;
+    normalVBO: Float32Array;
+    textureVBO: Float32Array;
+    texture: WebGLTexture;
+    
+    postionsGlBuffer: WebGLBuffer;
+    colorGlBuffer: WebGLBuffer;
+    selectionColorGlBuffer: WebGLBuffer;
+    normalGlBuffer: WebGLBuffer;
+    indicesGlBuffer: WebGLBuffer;
+    textureGlBuffer: WebGLBuffer;
+    indicesLength: number;
+  }
   interface Math {
     radian(a: number): number;
     degree(a: number): number;

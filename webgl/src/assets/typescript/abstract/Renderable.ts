@@ -1,11 +1,15 @@
 import { mat2, mat3, mat4, vec2, vec3, vec4 } from 'gl-matrix'; // eslint-disable-line no-unused-vars
 import FrameBufferObject from '../functional/FrameBufferObject';
+import BoundingBox from '../functional/BoundingBox';
 
 export default class Renderable {
+  static globalOptions : GlobalOptions;
   static objectName: string = "Renderable";
+
   id: number;
   name: string;
   buffer: any;
+  bufferSet: BufferSet;
   position: vec3;
   rotation: vec3;
   color: vec4;
@@ -13,7 +17,7 @@ export default class Renderable {
   transformMatrix: mat4;
   rotationMatrix: mat4;
   dirty: boolean;
-  static globalOptions : any;
+  boundingBox: BoundingBox;
   constructor() {
     if (this.constructor === Renderable) {
       throw new Error("Renderable is abstract class. Created an instance of an abstract class.");
@@ -30,8 +34,16 @@ export default class Renderable {
     throw new Error("render() is abstract method. Abstract methods must be overriding.");
   }
   // eslint-disable-next-line no-unused-vars
+  postRender(gl: WebGLRenderingContext | WebGL2RenderingContext): void {
+    if (!this.boundingBox) {
+      let positionsVBO = this.buffer.positionsVBO;
+      this.boundingBox = new BoundingBox(positionsVBO);
+      console.log("AutoBoundaring");
+    }
+  }
+  // eslint-disable-next-line no-unused-vars
   getBuffer(gl: WebGLRenderingContext | WebGL2RenderingContext): BufferInterface { 
-    throw new Error("render() is abstract method. Abstract methods must be overriding.");
+    throw new Error("getBuffer() is abstract method. Abstract methods must be overriding.");
   }
   getTransformMatrix(): mat4 {
     if (!this.transformMatrix || this.dirty === true) {

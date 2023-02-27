@@ -1,5 +1,9 @@
+import Renderable from "../abstract/Renderable";
+import BoundingBox from "./BoundingBox";
+
 export default class RenderableObjectList {
-  renderableObjects: Array<any>;
+  renderableObjects: Array<Renderable>;
+  boundingBoxObjects: Array<BoundingBox>;
   length: number;
   constructor() {
     this.init();
@@ -7,18 +11,19 @@ export default class RenderableObjectList {
   init(): void {
     this.renderableObjects = [];
   }
-  findById(id: number): Array<any> {
-    return this.renderableObjects.find((renderableObject) => {
+  findById(id: number): Renderable | undefined {
+    let finded = this.renderableObjects.find((renderableObject: Renderable) => {
       return renderableObject.id === id;
-    });
+    })
+    return finded;
   }
-  public set(renderableObjects: Array<any>): void {
+  public set(renderableObjects: Array<Renderable>): void {
     this.renderableObjects = renderableObjects;
   }
   public get(): Array<any> {
     return this.renderableObjects;
   }
-  push(renderableObject: any): void {
+  push(renderableObject: Renderable): void {
     this.renderableObjects.push(renderableObject);
   }
   pop(): any {

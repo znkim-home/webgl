@@ -1,4 +1,5 @@
 import { vec3 } from 'gl-matrix';
+
 export default class BoundingBox {
   origin: vec3;
   minimumX: number;
@@ -7,9 +8,9 @@ export default class BoundingBox {
   maximumX: number;
   maximumY: number;
   maximumZ: number;
-  constructor(positions: Array<vec3>) {
+  constructor(positionsVBO: Float32Array) {
     this.init();
-    this.calcBoundary(positions);
+    this.calcBoundary(positionsVBO);
   }
   init(): void {
     this.origin = vec3.fromValues(0, 0, 0);
@@ -20,15 +21,20 @@ export default class BoundingBox {
     this.maximumY = Number.MIN_SAFE_INTEGER;
     this.maximumZ = Number.MIN_SAFE_INTEGER;
   }
-  calcBoundary(positions: Array<vec3>): void {
-    if (positions.length > 0) {
-      positions.forEach((position) => {
-        this.minimumX = this.minimumX > position[0] ? position[0] : this.minimumX;
-        this.minimumY = this.minimumY > position[1] ? position[1] : this.minimumY;
-        this.minimumZ = this.minimumZ > position[2] ? position[2] : this.minimumZ;
-        this.maximumX = this.maximumX < position[0] ? position[0] : this.maximumX;
-        this.maximumY = this.maximumY < position[1] ? position[1] : this.maximumY;
-        this.maximumZ = this.maximumZ < position[2] ? position[2] : this.maximumZ;
+  calcBoundary(positionsVBO: Float32Array): void {
+    if (positionsVBO.length > 0) {
+      positionsVBO.forEach((positionVBO, index) => {
+        let number = index % 2;
+        if (number == 0) {
+          this.minimumX = this.minimumX > positionVBO ? positionVBO : this.minimumX;
+          this.maximumX = this.maximumX < positionVBO ? positionVBO : this.maximumX;
+        } else if (number == 1) {
+          this.minimumY = this.minimumY > positionVBO ? positionVBO : this.minimumY;
+          this.maximumY = this.maximumY < positionVBO ? positionVBO : this.maximumY;
+        } else {
+          this.minimumZ = this.minimumZ > positionVBO ? positionVBO : this.minimumZ;
+          this.maximumZ = this.maximumZ < positionVBO ? positionVBO : this.maximumZ;
+        }
       });
       this.calcOrigin();
     } else {
