@@ -45,6 +45,7 @@ class DefaultShaderProcess extends ShaderProcess {
     this.renderableList.get().forEach((renderableObj: Renderable) => {
       (renderableObj.getId() === undefined) ? renderableObj.createRenderableObjectId(this.renderableList) : undefined;
       renderableObj.render(gl, shaderInfo, this.frameBufferObjs);
+      renderableObj.postRender(gl, shaderInfo, this.frameBufferObjs);
     });
   }
   postprocess() {}

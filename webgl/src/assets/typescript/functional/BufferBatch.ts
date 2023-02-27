@@ -104,7 +104,6 @@ export default class BufferBatch {
       console.log("========================");
       return;
     }
-    
     let result: Array<any> = [];
     for (let loop = 0; loop < floatObjs.length; loop++) {
       this.concat(result, floatObjs[loop]);

@@ -28,7 +28,6 @@ export default class SkyBox extends Renderable {
     if (options?.image) this.image = options.image;
     if (options?.images) this.images = options.images;
   }
-  // overriding
   render(gl: WebGLRenderingContext | WebGL2RenderingContext, shaderInfo: ShaderInfoInterface, frameBufferObjs: FrameBufferObject[]) {
     let tm = this.getTransformMatrix();
     let rm = this.getRotationMatrix();
@@ -48,7 +47,6 @@ export default class SkyBox extends Renderable {
       frameBufferObj.unbind();
     });
   }
-  // overriding
   getBuffer(gl: WebGLRenderingContext | WebGL2RenderingContext) {
     if (this.buffer === undefined || this.dirty === true) {
       this.buffer = new Buffer(gl);

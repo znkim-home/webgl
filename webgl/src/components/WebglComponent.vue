@@ -251,7 +251,7 @@ export default {
       return [x * unit, y * unit];
     },
     baseGlobeWMS() {
-      let level = 5;
+      let level = 4;
       let levelPow = Math.pow(2, level);
       let latOffset = 180 / levelPow;
       let lonOffset = 360 / levelPow;
@@ -282,8 +282,6 @@ export default {
           //image.src = `https://maps.gnosis.earth/ogcapi/collections/blueMarble/map/tiles/WebMercatorQuad/${level}/${y}/${x}.jpg`
         } 
       }
-
-
     },
     baseGlobe(radius = 500) {
       let image = new Image(); 

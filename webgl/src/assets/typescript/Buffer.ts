@@ -39,7 +39,6 @@ export default class Buffer {
     gl.generateMipmap(gl.TEXTURE_2D);
     return texture;
   }
-
   createCubeTexture(images: Array<any>): WebGLTexture{
     let gl = this.gl;
     //let texWrap = gl.CLAMP_TO_EDGE;
@@ -59,8 +58,8 @@ export default class Buffer {
       const type = gl.UNSIGNED_BYTE;
       gl.texImage2D(faceInfo, 0, gl.RGBA, format, type, images[index].loadedImage);
     });
-    //gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-    //gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.NEAREST_MIPMAP_NEAREST);
+    gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.NEAREST_MIPMAP_NEAREST);
     gl.generateMipmap(gl.TEXTURE_CUBE_MAP);
     return texture;
   }

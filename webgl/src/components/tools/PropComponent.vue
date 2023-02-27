@@ -52,7 +52,7 @@ export default {
   },
   data() {
     return {
-      isShow : true,
+      isShow : false,
       propList : [],
       localOptions: {
         height: 200.0,

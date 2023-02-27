@@ -30,16 +30,6 @@ export default class MapTile extends Renderable {
   init(options: any) {
     let equatorialRadius = 6378137.0; // equatorialRadius m
     let polarRadius = 6356752.3142; // polarRadius m
-    //let polarRadius = 63567.3142; // polarRadius m
-    //let equatorialRadius = 63781.0; // equatorialRadius m
-
-    /*this.lonlatRange = {
-      latitudeMin : -90,
-      latitudeMax : 90,
-      longitudeMin : -180,
-      longitudeMax : 180,
-    };*/
-
     this.lonlatRange = {
       latitudeMin : -90,
       latitudeMax : 0,
@@ -48,12 +38,9 @@ export default class MapTile extends Renderable {
     };
 
     if (options?.lonlatRange) this.lonlatRange = options.lonlatRange;
-
     this.triangles = [];
     this.verticalRadius = polarRadius;
     this.horizontalRadius = equatorialRadius;
-
-    
     this.height = 3.0;
     this.density = 4;
     this.name = "Untitled Cylinder";
