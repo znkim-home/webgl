@@ -251,7 +251,7 @@ export default {
       return [x * unit, y * unit];
     },
     baseGlobeWMS() {
-      let level = 4;
+      let level = 3;
       let levelPow = Math.pow(2, level);
       let latOffset = 180 / levelPow;
       let lonOffset = 360 / levelPow;
@@ -277,8 +277,9 @@ export default {
             options.color = {r : 0.0, g : 1.0, b : 0.0, a : 1.0};
             options.image = image;
           }
-          image.src = `https://tile.openstreetmap.org/${level}/${x}/${y}.png`;
-          //image.src = `https://tile-c.openstreetmap.fr/hot/${level}/${x}/${y}.png`;
+          
+          //image.src = `https://tile.openstreetmap.org/${level}/${x}/${y}.png`;
+          image.src = `https://tile-c.openstreetmap.fr/hot/${level}/${x}/${y}.png`;
           //image.src = `https://maps.gnosis.earth/ogcapi/collections/blueMarble/map/tiles/WebMercatorQuad/${level}/${y}/${x}.jpg`
         } 
       }

@@ -68,17 +68,11 @@ export default {
         var timesince = nowTouch - this.recentTouch;
 
         if ((timesince < 300) && (timesince > 0)) {
-          //console.log("doubleTouch");
           this.controllerStatus.zoomStatus = true;
           this.controllerStatus.zoomCameraPosition = camera.position;
           this.controllerStatus.zoomCameraRay = this.getRay(0.5, 0.5, canvas.width, canvas.height);
 
           let depth = webGl.depthFbo.getDepth(canvas.width/2, canvas.height/2);
-
-          console.log(depth);
-          if (depth < 1000) {
-            depth = -2000;
-          }
           let scaledRay = vec3.scale(vec3.create(), this.controllerStatus.zoomCameraRay, depth * 0.25);
           let position = vec3.add(vec3.create(), camera.position, scaledRay);
           camera.setPosition(position[0], position[1], position[2]);
@@ -95,6 +89,7 @@ export default {
           this.controllerStatus.zoomCameraPosition = camera.position;
           this.controllerStatus.zoomCameraRay = this.getRay(0.5, 0.5, canvas.width, canvas.height);
         } else if (e.targetTouches.length == 1) {
+          let depth = webGl.depthFbo.getDepth(canvas.width/2, canvas.height/2);
           let pos = vec3.fromValues(0, 0, 0);
           this.controllerStatus.pivotPosition = pos;
           this.controllerStatus.pivotPositionDepth = depth;
