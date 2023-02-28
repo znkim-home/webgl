@@ -88,6 +88,7 @@ export default {
         MAX_HEIGHT : 0,
       }
       this.initPosition(dist * 4);
+      this.baseGlobeWMS4326(dist);
       this.baseGlobeWMS(dist);
       this.getFps();
     },
@@ -250,8 +251,35 @@ export default {
       let y = coordinate[1] - Math.floor(coordinate[1]);
       return [x * unit, y * unit];
     },
+    convertCoordinates(lon, lat) {
+        var x = (lon * 20037508.34) / 180;
+        var y = Math.log(Math.tan(((90 + lat) * Math.PI) / 360)) / (Math.PI / 180);
+        y = (y * 20037508.34) / 180;
+        return [x, y];
+    },
+    baseGlobeWMS4326() {
+      let url = 'https://ahocevar.com/geoserver/wms';
+      const DEAFULT_PARAM = {
+        SERVICE     : 'WMS',
+        VERSION     : '1.1.1',
+        REQUEST     : 'GetMap',
+        SRS         : 'EPSG:900913',
+        CRS         : 'EPSG:900913',
+        WIDTH       : 256,
+        HEIGHT      : 256,
+        FORMAT      : 'image/png',
+        TRANSPARENT : true
+      };
+      let params = Object.assign({}, DEAFULT_PARAM, {});
+      let requestParam = new URLSearchParams(params);
+    
+
+      requestParam.set('BBOX', '-22.5,-157.5,0,-135');
+      url = url + '?' + requestParam.toString();
+      console.log(url);
+    },
     baseGlobeWMS() {
-      let level = 3;
+      let level = 5;
       let levelPow = Math.pow(2, level);
       let latOffset = 180 / levelPow;
       let lonOffset = 360 / levelPow;
@@ -278,8 +306,8 @@ export default {
             options.image = image;
           }
           
-          //image.src = `https://tile.openstreetmap.org/${level}/${x}/${y}.png`;
-          image.src = `https://tile-c.openstreetmap.fr/hot/${level}/${x}/${y}.png`;
+          image.src = `https://tile.openstreetmap.org/${level}/${x}/${y}.png`;
+          //image.src = `https://tile-c.openstreetmap.fr/hot/${level}/${x}/${y}.png`;
           //image.src = `https://maps.gnosis.earth/ogcapi/collections/blueMarble/map/tiles/WebMercatorQuad/${level}/${y}/${x}.jpg`
         } 
       }

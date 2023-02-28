@@ -42,7 +42,7 @@ export default class MapTile extends Renderable {
     this.verticalRadius = polarRadius;
     this.horizontalRadius = equatorialRadius;
     this.height = 3.0;
-    this.density = 8;
+    this.density = 4;
     this.name = "Untitled Cylinder";
     if (options?.verticalRadius) this.verticalRadius = options.verticalRadius;
     if (options?.horizontalRadius) this.horizontalRadius = options.horizontalRadius;
@@ -108,6 +108,10 @@ export default class MapTile extends Renderable {
 
       let verticalRadius = this.verticalRadius;
       let horizontalRadius = this.horizontalRadius;
+
+      this.lonlatRange;
+      this.lonlatRange;
+
 
       let lattitudeOffset = (this.lonlatRange.latitudeMin) + 90;
       let angleOffset = ((this.lonlatRange.latitudeMax - this.lonlatRange.latitudeMin) / this.density);
@@ -181,5 +185,22 @@ export default class MapTile extends Renderable {
     let g = Math.round(Math.random() * 10) / 10;
     let b = Math.round(Math.random() * 10) / 10;
     return vec4.fromValues(r, g, b, 1.0);
+  }
+  geographicToMercatorProjection(longitude: number, latitude: number): vec2 {
+    let degToRadFactor = Math.PI / 180;
+    let lonRad = longitude * degToRadFactor;
+    let latRad = latitude * degToRadFactor;
+    return this.geographicRadianToMercatorProjection(lonRad, latRad);
+  }
+  geographicRadianToMercatorProjection(longitude: number, latitude: number): vec2 {
+    const equatorialRadius = 6378137.0;
+    const PI = Math.PI;
+    const x = equatorialRadius * longitude;
+    let scale = 0;
+    if (x !== 0) {
+      scale = x / (longitude * 180 / PI);
+    }
+    let y = 180.0 / PI * Math.log(Math.abs(Math.tan(PI / 4.0 + latitude / 2.0))) * scale;
+    return vec2.fromValues(x, y);
   }
 }
