@@ -9,6 +9,7 @@ import Revolutor from '../functional/Revolutor.js'
 
 import { mat2, mat3, mat4, vec2, vec3, vec4 } from 'gl-matrix';
 import FrameBufferObject from '../functional/FrameBufferObject.js';
+import BoundingBox from '../functional/BoundingBox.js';
 
 export default class MapTile extends Renderable {
   static objectName: string = "Elipsoid";
@@ -42,7 +43,7 @@ export default class MapTile extends Renderable {
     this.verticalRadius = polarRadius;
     this.horizontalRadius = equatorialRadius;
     this.height = 3.0;
-    this.density = 4;
+    this.density = 3;
     this.name = "Untitled Cylinder";
     if (options?.verticalRadius) this.verticalRadius = options.verticalRadius;
     if (options?.horizontalRadius) this.horizontalRadius = options.horizontalRadius;
@@ -108,10 +109,6 @@ export default class MapTile extends Renderable {
 
       let verticalRadius = this.verticalRadius;
       let horizontalRadius = this.horizontalRadius;
-
-      this.lonlatRange;
-      this.lonlatRange;
-
 
       let lattitudeOffset = (this.lonlatRange.latitudeMin) + 90;
       let angleOffset = ((this.lonlatRange.latitudeMax - this.lonlatRange.latitudeMin) / this.density);

@@ -79,7 +79,6 @@ export default class BufferBatch {
       this.concatIndices(result, floatObjs[loop], indicesLength);
       //indicesLength += floatObjs[loop].length; // no indicesLength only indicesMaxLength
       let indicesMaxValue = Math.max(...floatObjs[loop]);
-      console.log(indicesLength, indicesMaxValue, floatObjs[loop].length);
       indicesLength += indicesMaxValue + 1;
     }
     return new Uint16Array(result);

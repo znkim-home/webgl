@@ -16,7 +16,7 @@
 </template>
 <script>
 //import {WebGL, Cube, Polygon, Rectangle, Point, Line, Cylinder, Obj, Buffer, BufferBatch} from "crispy-waffle";
-import {WebGL, Cube, Polygon, Rectangle, Point, Line, Cylinder, Obj, Buffer, BufferBatch, Sphere, Globe, MapTile} from "@/assets/crispy-waffle";
+import {WebGL, Cube, Polygon, Rectangle, Point, Line, Cylinder, Obj, Buffer, BufferBatch, Sphere, Globe, MapTile, WebMapTileService} from "@/assets/crispy-waffle";
 
 import { mapGetters } from "vuex";
 
@@ -88,8 +88,13 @@ export default {
         MAX_HEIGHT : 0,
       }
       this.initPosition(dist * 4);
-      this.baseGlobeWMS4326(dist);
-      this.baseGlobeWMS(dist);
+      //this.baseGlobeWMS(1);
+      //this.baseGlobeWMS(2);
+      //this.baseGlobeWMSColors(4);
+
+      let url = `https://services.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/tile/`;
+      let wmts = new WebMapTileService(url, this.webGl.renderableObjectList);
+
       this.getFps();
     },
 
@@ -257,29 +262,57 @@ export default {
         y = (y * 20037508.34) / 180;
         return [x, y];
     },
-    baseGlobeWMS4326() {
+    baseGlobeWMS4326(bbox) {
       let url = 'https://ahocevar.com/geoserver/wms';
       const DEAFULT_PARAM = {
         SERVICE     : 'WMS',
-        VERSION     : '1.1.1',
+        VERSION     : '1.3.0',
         REQUEST     : 'GetMap',
         SRS         : 'EPSG:900913',
         CRS         : 'EPSG:900913',
+        //CRS         : 'EPSG:4326',
         WIDTH       : 256,
         HEIGHT      : 256,
         FORMAT      : 'image/png',
-        TRANSPARENT : true
+        TRANSPARENT : true,
+        LAYERS: 'ne:NE1_HR_LC_SR_W_DR',
+        //TILED: 'true',
+        //STYLES: '',
       };
       let params = Object.assign({}, DEAFULT_PARAM, {});
       let requestParam = new URLSearchParams(params);
-    
-
-      requestParam.set('BBOX', '-22.5,-157.5,0,-135');
+      requestParam.set('BBOX', '-22.5,-157.5,0,-135'); //'-22.5,-157.5,0,-135'
       url = url + '?' + requestParam.toString();
-      console.log(url);
+      console.log(bbox, url);
+      return url;
     },
-    baseGlobeWMS() {
-      let level = 5;
+    baseGlobeWMSColors(wmsLevel) {
+
+
+      let level = wmsLevel;
+      let levelPow = Math.pow(2, level);
+      let latOffset = 180 / levelPow;
+      let lonOffset = 360 / levelPow;
+      for (let x = 0; x < levelPow; x++) {
+        for (let y = 0; y < levelPow; y++) {
+          let latitudeMin = (latOffset * y) - 90;
+          let latitudeMax = (latOffset * (y + 1)) - 90;
+          let longitudeMin = (lonOffset * x) - 180;
+          let longitudeMax = (lonOffset * (x + 1)) - 180;
+          let lonlatRange = {latitudeMin, latitudeMax, longitudeMin, longitudeMax}
+          let options = {
+            position: { x: 0, y: 0, z: 0 },
+            color: { r: 1.0, g: 1.0, b: 0.0, a: 1.0 },
+            rotation: {pitch: 0, roll: 0, heading: 0},
+            lonlatRange : lonlatRange
+          }
+          let globe = new MapTile(options);
+          this.webGl.renderableObjectList.push(globe);
+        } 
+      }
+    },
+    baseGlobeWMS(wmsLevel) {
+      let level = wmsLevel;
       let levelPow = Math.pow(2, level);
       let latOffset = 180 / levelPow;
       let lonOffset = 360 / levelPow;
@@ -305,9 +338,19 @@ export default {
             options.color = {r : 0.0, g : 1.0, b : 0.0, a : 1.0};
             options.image = image;
           }
-          
-          image.src = `https://tile.openstreetmap.org/${level}/${x}/${y}.png`;
+          //image.src = `https://gibs.earthdata.nasa.gov/wmts/epsg4326/best/MODIS_Terra_CorrectedReflectance_TrueColor/default/2015-07-30T00%3A00%3A00Z/250m/${level}/${y}/${x}.jpg`
+          //image.src = `https://assets.ion.cesium.com/3812/${level}/${y}/${x}.png`;
+          //image.src = `https://services.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/tile/${level}/${y}/${x}`
+          //image.src = `https://services.arcgisonline.com/ArcGIS/rest/services/USA_Topo_Maps/MapServer/tile/${level}/${y}/${x}`
+          //image.src = `https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${level}/${y}/${x}`
+          //image.src = `https://services.arcgisonline.com/ArcGIS/rest/services/World_Shaded_Relief/MapServer/tile/${level}/${y}/${x}`
+          //image.src = `https://services.arcgisonline.com/ArcGIS/rest/services/World_Terrain_Base/MapServer/tile/${level}/${y}/${x}`
+          //image.src = `https://services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/${level}/${y}/${x}`
+          //image.src = `https://services.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/tile/${level}/${y}/${x}`;
+          //image.src = this.baseGlobeWMS4326(`${latitudeMin},${longitudeMin},${latitudeMax},${longitudeMax}`);
+          //image.src = `https://tile.openstreetmap.org/${level}/${x}/${y}.png`;
           //image.src = `https://tile-c.openstreetmap.fr/hot/${level}/${x}/${y}.png`;
+          image.src = '/image/chess.png';
           //image.src = `https://maps.gnosis.earth/ogcapi/collections/blueMarble/map/tiles/WebMercatorQuad/${level}/${y}/${x}.jpg`
         } 
       }

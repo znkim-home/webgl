@@ -25,7 +25,11 @@ import BatchObject from "./renderable/BatchObject";
 import GeometryPlane from "./geometry/GeometryPlane";
 import GeometryLine from "./geometry/GeometryLine";
 
+import WebMapTileService from "./functional/WebMapTileService";
+
 export { WebGL, Sun, Shader, Buffer, Camera, BufferBatch, BatchObject};
-export { Obj, Polygon, SkyBox, MapTile } // renderable
+export { Obj, Polygon, SkyBox, MapTile }; // renderable
 export { Cube, Rectangle, Point, Line, Cylinder, Sphere, Ellipsoid, Globe, Cone, Ring, Tube }; // primitive
-export { GeometryLine, GeometryPlane } // geometries
+export { GeometryLine, GeometryPlane }; // geometries
+
+export { WebMapTileService };
